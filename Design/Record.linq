@@ -6,24 +6,27 @@
 #load "Set.linq"
 #load "PrimaryKey.linq"
 
-public interface IRecord : IList
+public interface IRecord : IList<IBin>
 {
 	public string Name { get; }
 	
 	public IEnumerable<IBin> Bins { get; }
 	
 	[AllowNull]
-	public ISet Set { get; internal set; }
+	public ISet Set { get; }
 	
 	public TimeSpan TTL { get; set; }
 	
 	public int? Generation { get; set; }
 	
 	public IPrimaryKey PrimaryKey { get; }
+	
+	public string Tag { get; set; }
+	
+	public Exception LastException { get; }
 }
 
-public class Record<T> : IRecord, IList<IBin>
-	where T : struct
+public class Record : IRecord, IList<IBin>
 {
 	public Record([NotNull] string name, IEnumerable<IBin> bins)
 	{
@@ -49,37 +52,45 @@ public class Record<T> : IRecord, IList<IBin>
 	public int? Generation { get; set; }
 	
 	[AllowNull]
-	T PrimaryKey { get; set; }
+	public IPrimaryKey PrimaryKey { get; }
 	
-	byte[] Digest { get; set; }
+	public string Tag { get; set; }
+	
+	public Exception LastException { get; internal set; }
 	
 	public int Count { get => this._bins.Count; }
 	
 	public bool IsFixedSize { get => false; }
-	
+
 	public bool IsReadOnly { get => false; }
-	
+
+	public bool IsSynchronized { get => false; }
+
+	public object SyncRoot { get => this; }
+
 	private List<IBin> _bins;
-	
+
 	public IBin this[int index] { get => _bins[index]; set => _bins[index] = value; }
-	
+
 	public int IndexOf(IBin bin) => this._bins.FindIndex(b => b.Name == bin.Name);
-	
+
 	public void Insert(int index, IBin bin) => this._bins.Insert(index, bin);
-	
+
 	public void RemoveAt(int index) => this._bins.RemoveAt(index);
-	
+
 	public void Add(IBin bin) => this._bins.Add(bin);
-	
+
 	public void Clear() => this._bins.Clear();
-	
+
 	public bool Contains(IBin bin) => this._bins.Contains(bin);
-	
+
 	public void CopyTo(IBin[] array, int index) => this._bins.CopyTo(array, index);
-	
+
 	public bool Remove(IBin bin) => this._bins.Remove(bin);
-	
-	public IEnumerator<IBin> GetEnumerator() => this._bins.GetEnumerator();
-	
+
+	public IEnumerator GetEnumerator() => this._bins.GetEnumerator();
+
+	IEnumerator<IBin> IEnumerable<IBin>.GetEnumerator() => this._bins.GetEnumerator();
+
 	// TODO POCO
 }

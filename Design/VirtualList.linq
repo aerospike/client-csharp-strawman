@@ -8,7 +8,7 @@ public interface IVirtualList {
 	public bool TryGetList<V>(out V outValue) where V : IConvertible;
 }
 
-public class VirtualList<T> : IVirtualList {
+public class VirtualList : IVirtualList {
 
 	public bool TryGetList<V>(out V outValue) where V : IConvertible;
 }

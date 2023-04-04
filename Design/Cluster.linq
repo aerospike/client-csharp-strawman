@@ -1,6 +1,7 @@
 <Query Kind="Statements">
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
   <Namespace>System.Net.Sockets</Namespace>
+  <Namespace>System.Net</Namespace>
 </Query>
 
 #load "Namespace.linq"
@@ -17,16 +18,31 @@ public interface ICluster
 	
 	public INode[] Nodes { get; }
 	
-	// partition map. we need feedback from server if something bad is happening
-	// 
+	IDictionary<string, IPartition> PartitionMap { get; }
+	
+	// we need feedback from server if something bad is happening
+}
+
+public interface IPartition
+{
+	public INode[][] Replicas { get; }
+	
+	public int[] Regimes { get; }
+	
+	public bool SCMode { get; }
 }
 
 public interface IConnection
 {
 	public Socket Socket { get; }
 	
-	// username and password. should we have a user class?
+	abstract byte[] Username { get; }
+	
+	abstract byte[] Password { get; }
+	
+	// should we have a user class?
 	// password should be coming back masked. should be in constructor of concrete class
+	
 	// LDAP info
 	
 	// SSL, TLS stuff
@@ -53,14 +69,12 @@ public interface INode
 	
 	public IPEndPoint Address { get; }
 	
-	public NodeStates State { get; } // nodeStates is enum
+	public NodeStates State { get; }
 	
-	// partition 
+	public IPartition Partition { get; }
 	
 	// how do we discover what paritions are in the cluster?
-	
 	// Look at Info.Request() in Aerospike documentation. may need to hunt through existing code to find stuff
-	
 	// route to multiple interfaces
 }
 
@@ -77,3 +91,9 @@ public interface IPolicy
 // talk to Tim about this, also get input from Meher
 // look at each policy and determine if stateful and stateless
 // include method to give read out on full set of policies
+
+public enum NodeStates : int
+{
+	CONNECTED = 1,
+	NOT_CONNECTED = 2
+}

@@ -14,6 +14,8 @@ public interface ISet
 	
 	public INamespace Namespace { get; }
 	
+	public Exception LastException { get; }
+	
 	public void Create();
 	
 	public void Insert(IRecord record);
@@ -43,6 +45,8 @@ public class Set : ISet // do not inherit from IList
 	
 	public INamespace Namespace { get; set; }
 	
+	public Exception LastException { get; internal set; }
+	
 	private List<IRecord> _records;
 	
 	public void Create() {
@@ -61,7 +65,6 @@ public class Set : ISet // do not inherit from IList
 	// understand put(primary key), get(primary key, filter queries), query(filter expression), operate(primary key), 
 	// truncate(), delete(primary key, filter queries?), LINQ, dynamic policy support
 	
-	// TODO class called NullSet which extends Set
 	// can we avoid a one to one mapping from our calls to wire protocol? can we translate CDT to expressions?
 	
 	// next step is taking virtual list and thinking about how to implement that

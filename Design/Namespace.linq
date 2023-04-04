@@ -38,7 +38,7 @@ public class Namespace : INamespace
                         .Select(s => new Set(s))
                         .ToList();
 
-        nsSets.Add(NullSet.Instance);
+        nsSets.Add(new NullSet(name));
 
         this.Sets = nsSets.ToArray();
 	}
@@ -73,10 +73,4 @@ public class Namespace : INamespace
 
         return asNamespaces.ToArray();
     }
-	
-	// look at LINQPad driver code for this. ANamespace class, Create(connection). info request that returns string that has regex, parse to get namespaces, sets, and bins
-	// metadata - nodes in cluster
-	// object above this is cluster
-	// Tag at record and bin level. used for consumers
-	// exceptions (LastException property at record and set level?) and logging
 }

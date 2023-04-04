@@ -79,7 +79,9 @@ public interface IBin : IConvertible, IComparable, IFormattable, IComparable<IBi
 	public DatabaseType DatabaseType { get; }
 	
 	[AllowNull]
-	public IRecord Record { get; set; } 
+	public IRecord Record { get; set; }
+	
+	public string Tag { get; set; }
 }
 
 public static class BinHelpers
@@ -113,6 +115,8 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 		
 	[AllowNull]
 	public IRecord Record { get; set; }
+	
+	public string Tag { get; set; }
 	
 	public bool TryGetValue<V>(out V outValue) where V : IConvertible
 	{
