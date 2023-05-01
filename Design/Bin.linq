@@ -144,7 +144,7 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 			}
 			case long ticks:
 			{
-				outValue = new DateTimeOffset(ticks, TimeSpan.Zero); //Need to also implement NanoEpochToDateTime
+				outValue = new DateTimeOffset(ticks, TimeSpan.Zero); // Need to also implement NanoEpochToDateTime
 				return true;
 			}
 		}

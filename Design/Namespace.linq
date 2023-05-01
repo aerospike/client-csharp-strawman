@@ -5,14 +5,22 @@
 #load "Set.linq"
 #load "NullSet.linq"
 #load "Cluster.linq"
+#load "Connection.linq"
 
 public interface INamespace
 {
 	public string Name { get; }
 	
 	public IEnumerable<ISet> Sets { get; set; }
-	
+
+	public DateTimeOffset LastActivity { get; }
+
+	public DateTimeOffset Creation { get; }
+
 	public void Modify(); // example: policies
+	
+	// more metadata regarding memory usage, etc coming out of admin command, lazy evaluation
+	// may want to follow DataStax method of havin separate metadata struct
 }
 
 public class Namespace : INamespace
@@ -46,7 +54,11 @@ public class Namespace : INamespace
 	public string Name { get; }
 	
 	public IEnumerable<ISet> Sets { get; set; }
-	
+
+	public DateTimeOffset LastActivity { get; }
+
+	public DateTimeOffset Creation { get; }
+
 	public void Modify() {
 	}
 	

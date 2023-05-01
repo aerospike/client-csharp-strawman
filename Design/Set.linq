@@ -5,6 +5,7 @@
 #load "Bin.linq"
 #load "Record.linq"
 #load "Namespace.linq"
+#load "PrimaryKey.linq"
 
 public interface ISet
 {
@@ -14,15 +15,48 @@ public interface ISet
 	
 	public INamespace Namespace { get; }
 	
-	public Exception LastException { get; }
+	public IEnumerable<ISecondaryIndex> SecondaryIndexes { get; }
 	
-	public void Create();
+	public Exception LastException { get; }
+
+	public DateTimeOffset LastActivity { get; }
+
+	public DateTimeOffset Creation { get; }
+	
+	public bool IsNullSet { get; }
 	
 	public void Insert(IRecord record);
 	
+	public void Delete(IRecord record);
+	
+	public void Update(IRecord record);
+	
+	public void Touch(IPrimaryKey key); // updates generation and lastUpdated
+
+	public void Insert(IPrimaryKey key, params IBin[] bins);
+
+	public void Delete(IPrimaryKey key);
+
+	public void Update(IPrimaryKey key, params IBin[] bins);
+	
+	public bool Exists(IPrimaryKey key);
+	
 	public void Modify(); // example: policies
 	
-	public void Drop(IBin bin);
+	// how to integrate expression filters?
+	// how to integrate operation/expressions?
+	// may need to schedule more time with Tim to discuss expressions
+}
+
+public interface ISecondaryIndex
+{
+	public ISet Set { get; }
+
+	public IBin Bin { get; }
+	
+	public DateTimeOffset LastActivity { get; }
+	
+	public DateTimeOffset Creation { get; }
 }
 
 public class Set : ISet // do not inherit from IList
@@ -45,21 +79,48 @@ public class Set : ISet // do not inherit from IList
 	
 	public INamespace Namespace { get; set; }
 	
-	public Exception LastException { get; internal set; }
+	public IEnumerable<ISecondaryIndex> SecondaryIndexes { get; }
 	
+	public Exception LastException { get; internal set; }
+
+	public DateTimeOffset LastActivity { get; }
+
+	public DateTimeOffset Creation { get; }
+
 	private List<IRecord> _records;
 	
-	public void Create() {
-	}
+	public bool IsNullSet { get => false; }
 	
 	public void Insert(IRecord record) {
 		this._records.Add(record);
 	}
-	
-	public void Modify() {
+
+	public void Delete(IRecord record) {
+		this._records.Remove(record);
 	}
-	
-	public void Drop(IBin bin) { // TODO would we know the record we are dropping the bin from?
+
+	public void Update(IRecord record) {
+		int index = this._records.FindIndex(r => r.PrimaryKey == record.PrimaryKey);
+		this._records[index] = record;
+	}
+
+	public void Touch(IPrimaryKey key) {
+		int index = this._records.FindIndex(r => r.PrimaryKey == key);
+		// update generation and last updated
+	}
+
+	public void Insert(IPrimaryKey key, params IBin[] bins) {
+		int index = this._records.FindIndex(r => r.PrimaryKey == key);
+		
+	}
+
+	public void Delete(IPrimaryKey key);
+
+	public void Update(IPrimaryKey key, params IBin[] bins);
+
+	public bool Exists(IPrimaryKey key);
+
+	public void Modify() {
 	}
 	
 	// understand put(primary key), get(primary key, filter queries), query(filter expression), operate(primary key), 

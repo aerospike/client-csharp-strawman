@@ -24,6 +24,10 @@ public interface IRecord : IList<IBin>
 	public string Tag { get; set; }
 	
 	public Exception LastException { get; }
+	
+	public DateTimeOffset LastUpdate { get; }
+	
+	public bool Touch(); // return true if record exists, we need to check the wire protocol
 }
 
 public class Record : IRecord, IList<IBin>
@@ -58,6 +62,8 @@ public class Record : IRecord, IList<IBin>
 	
 	public Exception LastException { get; internal set; }
 	
+	public DateTimeOffset LastUpdate { get; }
+	
 	public int Count { get => this._bins.Count; }
 	
 	public bool IsFixedSize { get => false; }
@@ -91,6 +97,10 @@ public class Record : IRecord, IList<IBin>
 	public IEnumerator GetEnumerator() => this._bins.GetEnumerator();
 
 	IEnumerator<IBin> IEnumerable<IBin>.GetEnumerator() => this._bins.GetEnumerator();
+	
+	public bool Touch() {
+		return true;
+	}
 
 	// TODO POCO
 }
