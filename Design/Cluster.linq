@@ -17,6 +17,13 @@
 
 public interface ICluster
 {
+	/// <summary>
+	/// Expected cluster name.  If populated, the clusterName must match the cluster-name field
+	/// in the service section in each server configuration.  This ensures that the specified
+	/// seed nodes belong to the expected cluster on startup.  If not, the client will refuse
+	/// to add the node to the client's view of the cluster.
+	/// <para>Default: null</para>
+	/// </summary>
 	public string Name { get; }
 	
 	public IClient Client { get; }
@@ -47,6 +54,12 @@ public interface ICluster
 	/// </summary>
 	public byte[] Password { get; } // configurable
 
+	/// <summary>
+	/// User administration command socket timeout in milliseconds.
+	/// <para>Default: 0 (no timeout)</para>
+	/// </summary>
+	public int UserCommandTimeout { get; } // configurable
+
 	// should we have a user class?
 	// password should be coming back masked. should be in constructor of concrete class
 
@@ -75,6 +88,12 @@ public interface ICluster
 	/// <para>Default: 5000</para>
 	/// </summary>
 	public int LoginTimeout { get; } // configurable
+
+	/// <summary>
+	/// Info command socket timeout in milliseconds.
+	/// <para>Default: 1000</para>
+	/// </summary>
+	public int InfoCommandTimeout { get; } // configurable
 
 	/// <summary>
 	/// Maximum socket idle in seconds.  Socket connection pools will discard sockets
@@ -147,13 +166,13 @@ public interface ICluster
 	/// Default: true
 	/// </para>
 	/// </summary>
-	public bool FailIfNotConnected { get; } // configurable = true;
+	public bool FailIfNotConnected { get; } // configurable 
 
 	/// <summary>
 	/// How to handle cases when the asynchronous maximum number of concurrent connections 
 	/// have been reached.  
 	/// </summary>
-	public MaxCommandAction MaxCommandAction { get; } // = MaxCommandAction.BLOCK;
+	public MaxCommandAction MaxCommandAction { get; } // configurable
 
 	/// <summary>
 	/// Maximum number of concurrent asynchronous commands that can be active at any point in time.
@@ -176,7 +195,7 @@ public interface ICluster
 	/// <para>ulimit -n</para>
 	/// <para>Default: 100</para>
 	/// </summary>
-	public int MaxCommands { get; } // configurable = 100;
+	public int MaxCommands { get; } // configurable
 
 	/// <summary>
 	/// Maximum number of async commands that can be stored in the delay queue when
@@ -196,7 +215,7 @@ public interface ICluster
 	/// Default: 0 (no delay queue limit)
 	/// </para>
 	/// </summary>
-	public int MaxCommandsInQueue { get; }
+	public int MaxCommandsInQueue { get; } // configurable
 
 	/// <summary>
 	/// Minimum number of asynchronous connections allowed per server node.  Preallocate min connections
@@ -211,7 +230,7 @@ public interface ICluster
 	/// Default: 0
 	/// </para>
 	/// </summary>
-	public int MinConnsPerNode { get; }
+	public int MinConnsPerNode { get; } // configurable
 
 	/// <summary>
 	/// Maximum number of asynchronous connections allowed per server node.  Transactions will go
@@ -229,7 +248,7 @@ public interface ICluster
 	/// Default: -1 (Use maxConnsPerNode)
 	/// </para>
 	/// </summary>
-	public int MaxConnsPerNode { get; }
+	public int MaxConnsPerNode { get; } // configurable
 
 	/// <summary>
 	/// Size of buffer allocated for each async command. The size should be a multiple of 8 KB.
@@ -249,8 +268,236 @@ public interface ICluster
 	/// Default: 128 * 1024 (128 KB)
 	/// </para>
 	/// </summary>
-	public int BufferSize { get; } // = 128 * 1024;
-	
+	public int BufferSize { get; } // configurable
+
+	/// <summary>
+	/// Allow batch to be processed immediately in the server's receiving thread for in-memory
+	/// namespaces. If false, the batch will always be processed in separate service threads.
+	/// <para>
+	/// For batch transactions with smaller sized records (&lt;= 1K per record), inline
+	/// processing will be significantly faster on in-memory namespaces.
+	/// </para>
+	/// <para>
+	/// Inline processing can introduce the possibility of unfairness because the server
+	/// can process the entire batch before moving onto the next command.
+	/// </para>
+	/// <para>
+	/// Default: true
+	/// </para>
+	/// </summary>
+	public bool AllowInline { get; } // configurable
+
+	/// <summary>
+	/// Allow batch to be processed immediately in the server's receiving thread for SSD
+	/// namespaces. If false, the batch will always be processed in separate service threads.
+	/// Server versions &lt; 6.0 ignore this field.
+	/// <para>
+	/// Inline processing can introduce the possibility of unfairness because the server
+	/// can process the entire batch before moving onto the next command.
+	/// </para>
+	/// <para>
+	/// Default: false
+	/// </para>
+	/// </summary>
+	public bool AllowInlineSSD { get; } // configurable
+
+	/// <summary>
+	/// Allow read operations to use replicated data partitions instead of master
+	/// partition. By default, both read and write operations are directed to the
+	/// master partition.
+	/// <para>
+	/// This variable is currently only used in batch read/exists operations. For 
+	/// batch, this variable should only be set to true when the replication factor
+	/// is greater than or equal to the number of nodes in the cluster.
+	/// </para>
+	/// <para>Default: false</para>
+	/// </summary>
+	public bool AllowProleReads { get; } // configruable
+
+	/// <summary>
+	/// Should all batch keys be attempted regardless of errors. This field is used on both
+	/// the client and server. The client handles node specific errors and the server handles
+	/// key specific errors.
+	/// <para>
+	/// If true, every batch key is attempted regardless of previous key specific errors.
+	/// Node specific errors such as timeouts stop keys to that node, but keys directed at
+	/// other nodes will continue to be processed.
+	/// </para>
+	/// <para>
+	/// If false, the server will stop the batch to its node on most key specific errors.
+	/// The exceptions are <see cref="Aerospike.Client.ResultCode.KEY_NOT_FOUND_ERROR"/> and
+	/// <see cref="Aerospike.Client.ResultCode.FILTERED_OUT"/> which never stop the batch.
+	/// The client will stop the entire batch on node specific errors for sync commands
+	/// that are run in sequence (maxConcurrentThreads == 1). The client will not stop
+	/// the entire batch for async commands or sync commands run in parallel.
+	/// </para>
+	/// <para>
+	/// Server versions &lt; 6.0 do not support this field and treat this value as false
+	/// for key specific errors.
+	/// </para>
+	/// <para>Default: true</para>
+	/// </summary>
+	public bool RespondAllKeys { get; } // configruable
+
+	/// <summary>
+	/// Desired consistency guarantee when committing a transaction on the server. The default 
+	/// (COMMIT_ALL) indicates that the server should wait for master and all replica commits to 
+	/// be successful before returning success to the client. 
+	/// <para>
+	/// Default: CommitLevel.COMMIT_ALL
+	/// </para>
+	/// </summary>
+	public CommitLevel CommitLevel { get; } // configruable
+
+	/// <summary>
+	/// Qualify how to handle record deletes based on record generation. The default (NONE)
+	/// indicates that the generation is not used to restrict deletes.
+	/// <para>
+	/// Default: GenerationPolicy.NONE
+	/// </para>
+	/// </summary>
+	public GenerationPolicy GenerationPolicy { get; }
+
+	/// <summary>
+	/// If the transaction results in a record deletion, leave a tombstone for the record.
+	/// This prevents deleted records from reappearing after node failures.
+	/// Valid for Aerospike Server Enterprise Edition only.
+	/// <para>
+	/// Default: false (do not tombstone deleted records).
+	/// </para>
+	/// </summary>
+	public bool DurableDelete { get; } // configurable
+
+	/// <summary>
+	/// Send user defined key in addition to hash digest.
+	/// If true, the key will be stored with the tombstone record on the server.
+	/// <para>
+	/// Default: false (do not send the user defined key)
+	/// </para>
+	/// </summary>
+	public bool SendKey { get; } // configurable
+
+	/// <summary>
+	/// Read policy for AP (availability) namespaces.
+	/// <para>
+	/// Default: <see cref="Aerospike.Client.ReadModeAP.ONE"/>
+	/// </para>
+	/// </summary>
+	public ReadModeAP readModeAP { get; } // configurable
+
+	/// <summary>
+	/// Read policy for SC (strong consistency) namespaces.
+	/// <para>
+	/// Default: <see cref="Aerospike.Client.ReadModeSC.SESSION"/>
+	/// </para>
+	/// </summary>
+	public ReadModeSC readModeSC { get; } // configurable
+
+	/// <summary>
+	/// Record expiration. Also known as ttl (time to live).
+	/// Seconds record will live before being removed by the server.
+	/// <para>
+	/// Expiration values:
+	/// <ul>
+	/// <li>-2: Do not change ttl when record is updated.</li>
+	/// <li>-1: Never expire.</li>
+	/// <li>0: Default to namespace configuration variable "default-ttl" on the server.</li>
+	/// <li>&gt; 0: Actual ttl in seconds.</li>
+	/// </ul>
+	/// </para>
+	/// <para>Default: 0</para>
+	/// </summary>
+	public int Expiration { get; } // configurable
+
+	/// <summary>
+	/// Maximum number of concurrent requests to server nodes at any point in time.
+	/// If there are 16 nodes in the cluster and maxConcurrentNodes is 8, then queries 
+	/// will be made to 8 nodes in parallel.  When a query completes, a new query will 
+	/// be issued until all 16 nodes have been queried.
+	/// <para>Default: 0 (issue requests to all server nodes in parallel)</para>
+	/// </summary>
+	public int MaxConcurrentNodes { get; } // configurable
+
+	/// <summary>
+	/// Number of records to place in queue before blocking.
+	/// Records received from multiple server nodes will be placed in a queue.
+	/// A separate thread consumes these records in parallel.
+	/// If the queue is full, the producer threads will block until records are consumed.
+	/// <para>Default: 5000</para>
+	/// </summary>
+	public int RecordQueueSize { get; } // configurable
+
+	/// <summary>
+	/// Should bin data be retrieved. If false, only record digests (and user keys
+	/// if stored on the server) are retrieved.
+	/// <para>Default: true</para>
+	/// </summary>
+	public bool IncludeBinData { get; } // configurable
+
+	/// <summary>
+	/// Terminate query if cluster is in migration state. If the server supports partition
+	/// queries or the query filter is null (scan), this field is ignored.
+	/// <para>Default: false</para>
+	/// </summary>
+	public bool FailOnClusterChange { get; } // configurable
+
+	/// <summary>
+	/// Is query expected to return less than 100 records per node.
+	/// If true, the server will optimize the query for a small record set.
+	/// This field is ignored for aggregation queries, background queries
+	/// and server versions &lt; 6.0.
+	/// <para>Default: false</para>
+	/// </summary>
+	public bool ShortQuery { get; } // configurable
+
+	/// <summary>
+	/// Approximate number of records to return to client. This number is divided by the
+	/// number of nodes involved in the scan.  The actual number of records returned
+	/// may be less than maxRecords if node record counts are small and unbalanced across
+	/// nodes.
+	/// <para>
+	/// Default: 0 (do not limit record count)
+	/// </para>
+	/// </summary>
+	public long ScanMaxRecords { get; }
+
+	/// <summary>
+	/// Limit returned records per second (rps) rate for each server.
+	/// Do not apply rps limit if recordsPerSecond is zero.
+	/// <para>
+	/// Default: 0
+	/// </para>
+	/// </summary>
+	public int ScanRecordsPerSecond { get; }
+
+	/// <summary>
+	/// Should scan requests be issued in parallel. 
+	/// <para>Default: true</para>
+	/// </summary>
+	public bool ScanConcurrentNodes { get; }
+
+	/// <summary>
+	/// Qualify how to handle writes where the record already exists.
+	/// <para>Default: RecordExistsAction.UPDATE</para>
+	/// </summary>
+	public RecordExistsAction RecordExistsAction { get; }
+
+	/// <summary>
+	/// For client operate(), return a result for every operation.
+	/// <para>
+	/// Some operations do not return results by default (ListOperation.clear() for example).
+	/// This can make it difficult to determine the desired result offset in the returned
+	/// bin's result list.
+	/// </para>
+	/// <para>
+	/// Setting respondAllOps to true makes it easier to identify the desired result offset 
+	/// (result offset equals bin's operate sequence).  If there is a map operation in operate(),
+	/// respondAllOps will be forced to true for that operate() call.
+	/// </para>
+	/// <para>Default: false</para>
+	/// </summary>
+	public bool RespondAllOps { get; }
+
 	public bool Connected { get; }
 
 	public void AddSeeds(IHost[] hosts);
@@ -280,13 +527,6 @@ public interface ICluster
 
 public class Cluster : ICluster
 {
-	/// <summary>
-	/// Expected cluster name.  If populated, the clusterName must match the cluster-name field
-	/// in the service section in each server configuration.  This ensures that the specified
-	/// seed nodes belong to the expected cluster on startup.  If not, the client will refuse
-	/// to add the node to the client's view of the cluster.
-	/// <para>Default: null</para>
-	/// </summary>
 	public string Name { get; }
 	
 	public IClient Client { get; }
@@ -309,10 +549,14 @@ public class Cluster : ICluster
 	public byte[] Username { get; }
 
 	public byte[] Password { get; }
+	
+	public int UserCommandTimeout { get; }
 
 	public int ConnectionTimeout { get; } // = 1000; how do we do defaults in the config manager?
 
 	public int LoginTimeout { get; } // = 5000;
+	
+	public int InfoCommandTimeout { get; } // = 1000;
 	
 	public int MaxSocketIdle { get; }
 
@@ -336,14 +580,53 @@ public class Cluster : ICluster
 	
 	public int BufferSize { get; } // = 128 * 1024;
 
+	public bool AllowInline { get; } // configurable
+
+	public bool AllowInlineSSD { get; } // configurable
+
+	public bool AllowProleReads { get; } // configruable
+
+	public bool RespondAllKeys { get; } // configruable
+
+	public CommitLevel CommitLevel { get; } // configruable
+
+	public GenerationPolicy GenerationPolicy { get; }
+
+	public bool DurableDelete { get; } // configurable
+
+	public bool SendKey { get; } // configurable
+
+	public ReadModeAP readModeAP { get; } // configurable
+
+	public ReadModeSC readModeSC { get; } // configurable
+
+	public int Expiration { get; } // configurable
+
+	public int MaxConcurrentNodes { get; } // configurable
+
+	public int RecordQueueSize { get; } // configurable
+
+	public bool IncludeBinData { get; } // configurable
+
+	public bool FailOnClusterChange { get; } // configurable
+
+	public bool ShortQuery { get; } // configurable
+
+	public long ScanMaxRecords { get; }
+
+	public int ScanRecordsPerSecond { get; }
+
+	public bool ScanConcurrentNodes { get; }
+
+	public RecordExistsAction RecordExistsAction { get; }
+
+	public bool RespondAllOps { get; }
+
 	// Command scheduler.
-	private readonly AsyncScheduler Scheduler { get; }
+	private AsyncScheduler Scheduler { get; }
 
 	// Contiguous pool of byte buffers.
-	private readonly BufferPool BufferPool { get; }
-
-	// Maximum number of concurrent asynchronous commands.
-	internal readonly int MaxCommands { get; }
+	private BufferPool BufferPool { get; }
 
 	// Maximum socket idle to validate connections in transactions.
 	private double maxSocketIdleMillisTran { get; }

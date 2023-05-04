@@ -168,20 +168,7 @@ public class Node : INode
 		this.RebalanceChanged = cluster.RackAware;
 		this.Racks = cluster.RackAware ? new Dictionary<string, int>() : null;
 
-		connectionPools = new Pool<Connection>[cluster.ConnPoolsPerNode];
-		int min = cluster.minConnsPerNode / cluster.ConnPoolsPerNode;
-		int remMin = cluster.minConnsPerNode - (min * cluster.connPoolsPerNode);
-		int max = cluster.maxConnsPerNode / cluster.connPoolsPerNode;
-		int remMax = cluster.maxConnsPerNode - (max * cluster.connPoolsPerNode);
-
-		for (int i = 0; i < connectionPools.Length; i++)
-		{
-			int minSize = i < remMin ? min + 1 : min;
-			int maxSize = i < remMax ? max + 1 : max;
-
-			Pool<Connection> pool = new Pool<Connection>(minSize, maxSize);
-			connectionPools[i] = pool;
-		}
+		ConnectionPool = new Pool<IConnection>(cluster.MinConnsPerNode, cluster.maxConnsPerNode);
 	}
 
 	~Node()

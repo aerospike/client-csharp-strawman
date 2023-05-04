@@ -78,10 +78,8 @@ public interface IClient
 	/// </summary>
 	public List<int> RackIds { get; }
 
-	// global policies
 
-	// log level
-	
+	// log level and context	
 }
 
 public class Client : IClient
@@ -104,7 +102,6 @@ public class Client : IClient
 
 	public Client(string clusterName, IHost[] hosts, TlsPolicy tlsPolicy, AuthModeType authMode)
 	{
-		// set up policies
 		this.AuthMode = authMode;
 
 		// Default TLS names when TLS enabled.
