@@ -5,68 +5,6 @@
 
 #load "Record.linq"
 
-void Main()
-{
-	/*var stringBin = new Bin<string>("binname", "aa");
-	string stringValue;
-	
-	stringBin.TryGetValue(out stringValue).Dump();
-	stringValue.Dump();
-	
-	var intValue = 1;
-	var intBin = new Bin<int>("binname", intValue);
-	bool boolValue;
-	decimal decimalValue;
-	
-	intBin.TryGetValue(out boolValue).Dump();
-	boolValue.Dump();
-	intBin.TryGetValue(out decimalValue).Dump();
-	decimalValue.Dump();
-	
-	var dateTimeOffsetBin = new Bin<string>("binname", DateTimeOffset.Now.ToString());
-	DateTimeOffset dateTimeOffsetValue;
-	
-	dateTimeOffsetBin.TryGetValue(out dateTimeOffsetValue).Dump();
-	dateTimeOffsetValue.Dump();
-
-	//Use Extension Methods
-	
-	var stringBinE = "bb".ToBin("binname");
-	string stringEValue;
-
-	stringBinE.TryGetValue(out stringEValue).Dump();
-	stringEValue.Dump();
-
-	var dateTimeOffsetBinE = DateTimeOffset.Now.ToBin("binname");
-	DateTimeOffset dateTimeOffsetBinEValue;
-	
-	dateTimeOffsetBinE.TryGetValue(out dateTimeOffsetBinEValue).Dump();
-	dateTimeOffsetBinEValue.Dump();
-
-	var dateTimeBinE = DateTime.Now.ToBin("binname");
-	DateTime dateTimeBinEValue;
-
-	dateTimeBinE.TryGetValue(out dateTimeBinEValue).Dump();
-	dateTimeBinEValue.Dump();
-
-	var intBinE = intValue.ToBin("binname");
-	int intBinEValue;
-
-	intBinE.TryGetValue(out intBinEValue).Dump();
-	intBinEValue.Dump();
-
-	intBinE.Equals(intValue).Dump();
-	intBinE.Equals(2).Dump();
-	intBinE.Equals(intBin).Dump();*/
-
-	var geoJson = new GeoJSON("a place");
-	var geoJsonBin = new Bin<GeoJSON>("binname", geoJson);
-	geoJsonBin.Dump();
-	geoJsonBin.Equals("a place").Dump();
-	geoJsonBin.Value.Dump();
-	geoJsonBin.Value.Value.Dump();
-}
-
 public interface IBin : IConvertible, IComparable, IFormattable, IComparable<IBin>, IEquatable<IBin>
 {
 	public string Name { get; }
@@ -92,9 +30,9 @@ public static class BinHelpers
 	public static Bin<T> ToBin<T>(this T value, string binName) where T : struct => new Bin<T>(binName, value);
 	public static Bin<byte[]> ToBin(this byte[] value, string binName) => new Bin<byte[]>(binName, value);
 	public static Bin<GeoJSON> ToBin(this GeoJSON value, string binName) => new Bin<GeoJSON>(binName, value);
-	// TODO: Blob, ByteSegment, HLL, Inifinity, Wildcard, List, Map, Null, Array, Wildcard, any others?
+	// TODO: Blob, ByteSegment, HLL, Inifinity, Wildcard, List, Map, Null, Array, Wildcard
 	// IEnumerable pattern for collection types
-	//All the different Bin types we can support Can use T4 here!
+	// All the different Bin types we can support Can use T4 here!
 }
 
 [System.Diagnostics.DebuggerDisplay("{ToString()}")]
@@ -155,14 +93,14 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 	
 	private DatabaseType MapTypeToDatabaseType() {
 		if (typeof(T) == typeof(string)) {
-			return DatabaseType.STRING;
+			return DatabaseType.String;
 		}
 		
 		switch (this.Value)
 		{
 			case string s:
 			{
-				return DatabaseType.STRING;
+				return DatabaseType.String;
 			}
 			case int i:
 			case bool b:
@@ -174,12 +112,12 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 			case ulong uLong:
 			case ushort uShort:
 			{
-				return DatabaseType.INTEGER;
+				return DatabaseType.Integer;
 			}
 			case double d:
 			case float f:
 			{
-				return DatabaseType.DOUBLE;
+				return DatabaseType.Double;
 			}
 			case byte[] b:
 			{
@@ -191,9 +129,9 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 			}
 		}
 		
-		return DatabaseType.NULL;
+		return DatabaseType.Null;
 		
-		// TODO: DateTimeOffset, DateTime, Blob, ByteSegment, GeoJSON, HLL, Infinity, Wildcard, List, Map, Null, Array, Wildcard, any others?
+		// TODO: DateTimeOffset, DateTime, Blob, ByteSegment, GeoJSON, HLL, Infinity, Wildcard, List, Map, Null, Array, Wildcard
 	}
 
 	public object ToObject() => this.Value;
@@ -541,16 +479,16 @@ public class GeoJSON : IEquatable<string>, IEquatable<GeoJSON>, IComparable<GeoJ
 public enum DatabaseType : int
 {
 	// Server types.
-	NULL = 0,
-	INTEGER = 1,
-	DOUBLE = 2,
-	STRING = 3,
+	Null = 0,
+	Integer = 1,
+	Double = 2,
+	String = 3,
 	BLOB = 4,
-	CSHARP_BLOB = 8,
-	BOOL = 17,
+	CsharpBLOB = 8,
+	Bool = 17,
 	HLL = 18,
-	MAP = 19,
-	LIST = 20,
+	Map = 19,
+	List = 20,
 	GEOJSON = 23
 }
 

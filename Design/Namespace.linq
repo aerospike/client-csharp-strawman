@@ -16,11 +16,8 @@ public interface INamespace
 	public DateTimeOffset LastActivity { get; }
 
 	public DateTimeOffset Creation { get; }
-
-	public void Modify(); // example: policies
 	
 	// more metadata regarding memory usage, etc coming out of admin command, lazy evaluation
-	// may want to follow DataStax method of havin separate metadata struct
 }
 
 public class Namespace : INamespace
@@ -58,9 +55,6 @@ public class Namespace : INamespace
 	public DateTimeOffset LastActivity { get; }
 
 	public DateTimeOffset Creation { get; }
-
-	public void Modify() {
-	}
 	
 	public static IEnumerable<Namespace> Create(IConnection connection)
     {

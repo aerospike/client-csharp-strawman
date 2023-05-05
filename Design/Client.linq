@@ -24,7 +24,7 @@ public interface IClient
 	/// </para>
 	/// <para>Default: null (no IP address translation)</para>
 	/// </summary>
-	public Dictionary<IPAddress, IPAddress> IpMap { get; }
+	public Dictionary<IPAddress, IPAddress> IPMap { get; } 
 
 	/// <summary>
 	/// Should use "services-alternate" instead of "services" in info request during cluster
@@ -32,13 +32,13 @@ public interface IClient
 	/// uses to talk to nodes.  "services-alternate" can be used in place of providing a client "ipMap".
 	/// <para>Default: false (use original "services" info request)</para>
 	/// </summary>
-	public bool UseServicesAlternate { get; }
+	public bool UseServicesAlternate { get; } // configurable
 
 	/// <summary>
 	/// Authentication mode.
 	/// <para>Default: AuthMode.INTERNAL</para>
 	/// </summary>
-	public AuthModeType AuthMode { get; } //= AuthMode.INTERNAL;
+	public AuthModeType AuthMode { get; } //= AuthMode.INTERNAL; configurable
 
 	// Is authentication enabled
 	public bool AuthEnabled { get; }
@@ -54,7 +54,7 @@ public interface IClient
 	/// </para>
 	/// <para>Default: false</para>
 	/// </summary>
-	public bool RackAware { get; }
+	public bool RackAware { get; } // configurable
 
 	/// <summary>
 	/// Rack where this client instance resides. If <see cref="Aerospike.Client.ClientPolicy.rackIds"/> is set,
@@ -65,7 +65,7 @@ public interface IClient
 	/// </para>
 	/// <para>Default: 0</para>
 	/// </summary>
-	public int RackId { get; }
+	public int RackId { get; } // configurable
 
 	/// <summary>
 	/// List of acceptable racks in order of preference.
@@ -76,8 +76,7 @@ public interface IClient
 	/// </para>
 	/// <para>Default: null</para>
 	/// </summary>
-	public List<int> RackIds { get; }
-
+	public List<int> RackIds { get; } // configurable
 
 	// log level and context	
 }
@@ -86,7 +85,7 @@ public class Client : IClient
 {
 	public ICluster Cluster { get; }
 	
-	public Dictionary<IPAddress, IPAddress> IpMap { get; }
+	public Dictionary<IPAddress, IPAddress> IPMap { get; }
 
 	public bool UseServicesAlternate { get; }
 	
@@ -122,58 +121,13 @@ public class Client : IClient
 		}
 		else
 		{
-			if (authMode == AuthModeType.EXTERNAL || authMode == AuthModeType.PKI)
+			if (authMode == AuthModeType.External || authMode == AuthModeType.PKI)
 			{
 				throw new AerospikeException("TLS is required for authentication mode: " + authMode);
 			}
 		}
 
-		// process and store dynamic config values
-		IpMap = ipMap;
-		UseServicesAlternate = useServicesAlternate;
-		RackAware = rackAware;
-
-		if (RackIds != null && rackIds.Count > 0)
-		{
-			RackIds = rackIds.ToArray();
-		}
-		else
-		{
-			RackIds = new int[] { rackId };
-		}
-
-		// TODO username and password is at connection level
-		if (authMode == AuthModeType.PKI) 
-		{
-			this.AuthEnabled = true;
-			this.user = null;
-		}
-		else if (policy.user != null && policy.user.Length > 0)
-		{
-			this.AuthEnabled = true;
-			this.user = ByteUtil.StringToUtf8(policy.user);
-
-			// Only store clear text password if external authentication is used.
-			if (authMode != AuthModeType.INTERNAL)
-			{
-				this.password = ByteUtil.StringToUtf8(policy.password);
-			}
-
-			string pass = policy.password;
-
-			if (pass == null)
-			{
-				pass = "";
-			}
-
-			pass = AdminCommand.HashPassword(pass);
-			this.passwordHash = ByteUtil.StringToUtf8(pass);
-		}
-		else
-		{
-			this.authEnabled = false;
-			this.user = null;
-		}
+		// process and store dynamic config values placeholder
 		
 		this.Cluster = new Cluster(clusterName, hosts, tlsPolicy);
 	}
@@ -188,14 +142,14 @@ public enum AuthModeType
 	/// Use internal authentication when user/password defined. Hashed password is stored
 	/// on the server. Do not send clear password. This is the default.
 	/// </summary>
-	INTERNAL,
+	Internal,
 
 	/// <summary>
 	/// Use external authentication (like LDAP) when user/password defined. Specific external
 	/// authentication is configured on server. If TLS defined, send clear password on node
 	/// login via TLS. Throw exception if TLS is not defined.
 	/// </summary>
-	EXTERNAL,
+	External,
 
 	/// <summary>
 	/// Use external authentication (like LDAP) when user/password defined. Specific external
@@ -203,7 +157,7 @@ public enum AuthModeType
 	/// not TLS is defined. This mode should only be used for testing purposes because it is
 	/// not secure authentication.
 	/// </summary>
-	EXTERNAL_INSECURE,
+	ExternalInsecure,
 
 	/// <summary>
 	/// Authentication and authorization based on a certificate.  No user name or

@@ -30,12 +30,7 @@ public interface INode
 	
 	public Pool<IConnection> ConnectionPool { get; }
 
-	public volatile bool Active { get; set; } // = true;
-	
-	// how do we discover what paritions are in the cluster?
-	// Look at Info.Request() in Aerospike documentation. 
-	// may need to hunt through existing code to find stuff, may need to run commands to see what they return or look at server c code
-	// route to multiple interfaces
+	public bool Active { get; set; } // = true;
 
 	/// <summary>
 	/// Request current status from server node.
@@ -87,21 +82,6 @@ public interface INode
 		get { return Volatile.Read(ref sessionToken); }
 	}
 
-	public bool HasQueryShow
-	{
-		get { return (features & HAS_QUERY_SHOW) != 0; }
-	}
-
-	public bool HasBatchAny
-	{
-		get { return (features & HAS_BATCH_ANY) != 0; }
-	}
-
-	public bool HasPartitionQuery
-	{
-		get { return (features & HAS_PARTITION_QUERY) != 0; }
-	}
-
 	/// <summary>
 	/// Close all server node socket connections.
 	/// </summary>
@@ -138,7 +118,7 @@ public class Node : INode
 	private DateTime? SessionExpiration { get; }
 	private volatile Dictionary<string, int> Racks { get; }
 	private uint ConnectionIter { get; }
-	private volatile int ErrorCount { get; set; }
+	private int ErrorCount { get; set; }
 	private int PeersGeneration { get; } // = -1;
 	private int PartitionGeneration { get; } // = -1;
 	private int RebalanceGeneration { get; } // = -1;
@@ -146,7 +126,7 @@ public class Node : INode
 	private int ReferenceCount { get; }
 	private int Failures { get; }
 	private uint Features { get; }
-	private volatile int PerformLogin { get; set; }
+	private int PerformLogin { get; set; }
 	private bool PartitionChanged { get; } // = true;
 	private bool RebalanceChanged { get; }
 
@@ -165,10 +145,10 @@ public class Node : INode
 		this.SessionToken = nv.SessionToken;
 		this.SessionExpiration = nv.SessionExpiration;
 		this.Features = nv.Features;
-		this.RebalanceChanged = cluster.RackAware;
-		this.Racks = cluster.RackAware ? new Dictionary<string, int>() : null;
+		this.RebalanceChanged = cluster.Client.RackAware;
+		this.Racks = cluster.Client.RackAware ? new Dictionary<string, int>() : null;
 
-		ConnectionPool = new Pool<IConnection>(cluster.MinConnsPerNode, cluster.maxConnsPerNode);
+		ConnectionPool = new Pool<IConnection>(cluster.MinConnsPerNode, cluster.MaxConnsPerNode);
 	}
 
 	~Node()
@@ -270,21 +250,6 @@ public class Node : INode
 	/// </summary>
 	public bool HasRack(string ns, int rackId);
 
-	public bool HasQueryShow
-	{
-		get { return (features & HAS_QUERY_SHOW) != 0; }
-	}
-
-	public bool HasBatchAny
-	{
-		get { return (features & HAS_BATCH_ANY) != 0; }
-	}
-
-	public bool HasPartitionQuery
-	{
-		get { return (features & HAS_PARTITION_QUERY) != 0; }
-	}
-
 	/// <summary>
 	/// Return node name, host address and cluster id in string format.
 	/// </summary>
@@ -310,12 +275,9 @@ public class Node : INode
 	internal void CloseOnError(IConnection conn);
 }
 
-
-
 public enum NodeStates : int
 {
-	CONNECTED = 1,
-	NOT_CONNECTED = 2
+	Connected = 1,
+	NotConnected = 2
 	// investigate other node states
-	// AdminInfoCommand - figure out command to get back state
 }

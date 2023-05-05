@@ -40,12 +40,6 @@ public interface ISet
 	public void Update(IPrimaryKey key, params IBin[] bins);
 	
 	public bool Exists(IPrimaryKey key);
-	
-	public void Modify(); // example: policies
-	
-	// how to integrate expression filters?
-	// how to integrate operation/expressions?
-	// may need to schedule more time with Tim to discuss expressions
 }
 
 public interface ISecondaryIndex
@@ -119,19 +113,4 @@ public class Set : ISet // do not inherit from IList
 	public void Update(IPrimaryKey key, params IBin[] bins);
 
 	public bool Exists(IPrimaryKey key);
-
-	public void Modify() {
-	}
-	
-	// understand put(primary key), get(primary key, filter queries), query(filter expression), operate(primary key), 
-	// truncate(), delete(primary key, filter queries?), LINQ, dynamic policy support
-	
-	// can we avoid a one to one mapping from our calls to wire protocol? can we translate CDT to expressions?
-	
-	// next step is taking virtual list and thinking about how to implement that
-	// Policy, Client, Cluster, and config management as one block of work, dynamic config, look into performance metrics for auditing, logging
-	// policy should not be at statement level, make imuttable 
-	// LINQ and queries
-	
-	// build pipeline, talk to Julian. look into MS Build. should be a plug in
 }
