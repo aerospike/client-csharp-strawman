@@ -1,6 +1,5 @@
 <Query Kind="Program">
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
-  <Namespace>System.Json</Namespace>
 </Query>
 
 public interface IPrimaryKey

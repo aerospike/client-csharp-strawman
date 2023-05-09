@@ -1,9 +1,23 @@
 <Query Kind="Program">
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
-  <Namespace>System.Json</Namespace>
 </Query>
 
 #load "Record.linq"
+
+
+void Main()
+{
+	// Creating and using a string bin
+	var stringBin = new Bin<string>("binName", "aa");
+	string stringValue;
+	stringBin.TryGetValue(out stringValue).Dump();
+	stringValue.Dump();
+	
+	// Creating and using a GeoJSON bin
+	var geoJson = new GeoJSON("a place");
+	var geoJsonBin = new Bin<GeoJSON>("binName", geoJson);
+	geoJsonBin.Equals("a place").Dump();
+}
 
 public interface IBin : IConvertible, IComparable, IFormattable, IComparable<IBin>, IEquatable<IBin>
 {
@@ -19,7 +33,7 @@ public interface IBin : IConvertible, IComparable, IFormattable, IComparable<IBi
 	[AllowNull]
 	public IRecord Record { get; set; }
 	
-	public string Tag { get; set; }
+	public object Tag { get; set; }
 }
 
 public static class BinHelpers
@@ -54,7 +68,7 @@ public class Bin<T> : IBin, IComparable<Bin<T>>, IEquatable<Bin<T>>
 	[AllowNull]
 	public IRecord Record { get; set; }
 	
-	public string Tag { get; set; }
+	public object Tag { get; set; }
 	
 	public bool TryGetValue<V>(out V outValue) where V : IConvertible
 	{
@@ -409,7 +423,7 @@ public class GeoJSON : IEquatable<string>, IEquatable<GeoJSON>, IComparable<GeoJ
 	}
 	
 	// TODO J object version. which library should we use? microsoft version. Research this
-	public GeoJSON([NotNull] JsonObject value)
+	public GeoJSON([NotNull] object value)
 	{
 		this.Value = value.ToString();
 	}
@@ -484,7 +498,6 @@ public enum DatabaseType : int
 	Double = 2,
 	String = 3,
 	BLOB = 4,
-	CsharpBLOB = 8,
 	Bool = 17,
 	HLL = 18,
 	Map = 19,

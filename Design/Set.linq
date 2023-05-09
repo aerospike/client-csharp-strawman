@@ -1,4 +1,4 @@
-<Query Kind="Statements">
+<Query Kind="Program">
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
 </Query>
 
@@ -6,6 +6,17 @@
 #load "Record.linq"
 #load "Namespace.linq"
 #load "PrimaryKey.linq"
+
+void Main()
+{
+	// Create a set with no records, and then insert a record
+	var setA = new Set("setA");
+	setA.Insert(new Record("record", new List<IBin> { new Bin<int>("binIntName", 1234) }));
+
+	// Create a set with record list
+	var recordList = new List<IRecord> { new Record("record", new List<IBin> { new Bin<int>("binIntName", 1234) })};
+	var setB = new Set("setB", recordList);
+}
 
 public interface ISet
 {
@@ -105,7 +116,6 @@ public class Set : ISet // do not inherit from IList
 
 	public void Insert(IPrimaryKey key, params IBin[] bins) {
 		int index = this._records.FindIndex(r => r.PrimaryKey == key);
-		
 	}
 
 	public void Delete(IPrimaryKey key);

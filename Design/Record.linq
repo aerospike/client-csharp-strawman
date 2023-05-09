@@ -1,10 +1,20 @@
-<Query Kind="Statements">
+<Query Kind="Program">
   <Namespace>System.Diagnostics.CodeAnalysis</Namespace>
 </Query>
 
 #load "Bin.linq"
 #load "Set.linq"
 #load "PrimaryKey.linq"
+
+void Main()
+{
+	// Creating a record and add a bin to it
+	var recordBins = new List<IBin> { new Bin<string>("binAName", "aa"), new Bin<string>("binBName", "bb") };
+	var record = new Record("recordName", recordBins).Dump();
+	var intBin = new Bin<int>("binIntName", 1234);
+	record.Add(intBin);
+	record.Dump();
+}
 
 public interface IRecord : IList<IBin>
 {
@@ -21,7 +31,7 @@ public interface IRecord : IList<IBin>
 	
 	public IPrimaryKey PrimaryKey { get; }
 	
-	public string Tag { get; set; }
+	public object Tag { get; set; }
 	
 	public Exception LastException { get; }
 	
@@ -58,7 +68,7 @@ public class Record : IRecord, IList<IBin>
 	[AllowNull]
 	public IPrimaryKey PrimaryKey { get; }
 	
-	public string Tag { get; set; }
+	public object Tag { get; set; }
 	
 	public Exception LastException { get; internal set; }
 	
@@ -85,6 +95,8 @@ public class Record : IRecord, IList<IBin>
 	public void RemoveAt(int index) => this._bins.RemoveAt(index);
 
 	public void Add(IBin bin) => this._bins.Add(bin);
+	
+	public void Add(IEnumerable<IBin> bins);
 
 	public void Clear() => this._bins.Clear();
 
