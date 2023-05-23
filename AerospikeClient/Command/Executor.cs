@@ -39,7 +39,7 @@ namespace Aerospike.Client
 			threads.Add(new ExecutorThread(this, command));
 		}
 
-		public void Execute(int maxConcurrent)
+		public async Task Execute(int maxConcurrent)
 		{
 			// Initialize maximum number of threads to run in parallel.
 			this.maxConcurrentThreads = (maxConcurrent == 0 || maxConcurrent >= threads.Count) ? threads.Count : maxConcurrent;
@@ -138,13 +138,13 @@ namespace Aerospike.Client
 			this.command = command;
 		}
 
-		public void Run(object obj)
+		public async Task Run(object obj)
 		{
 			try
 			{
 				if (command.IsValid())
 				{
-					command.Execute();
+					await command.Execute();
 				}
 				parent.ThreadCompleted();
 			}

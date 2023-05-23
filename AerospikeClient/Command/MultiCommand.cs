@@ -75,7 +75,7 @@ namespace Aerospike.Client
 			this.first = first;
 		}
 
-		public void ExecuteAndValidate()
+		public async Task ExecuteAndValidate()
 		{
 			if (clusterKey != 0)
 			{
@@ -83,12 +83,12 @@ namespace Aerospike.Client
 				{
 					QueryValidate.Validate(node, ns, clusterKey);
 				}
-				base.Execute();
+				await base.Execute();
 				QueryValidate.Validate(node, ns, clusterKey);
 			}
 			else
 			{
-				base.Execute();
+				await base.Execute();
 			}
 		}
 
@@ -102,7 +102,7 @@ namespace Aerospike.Client
 			return true;
 		}
 
-		protected internal sealed override void ParseResult(Connection conn)
+		protected internal sealed override async Task ParseResult(Connection conn)
 		{
 			// Read blocks of records.  Do not use thread local receive buffer because each
 			// block will likely be too big for a cache.  Also, scan callbacks can nest
@@ -116,7 +116,7 @@ namespace Aerospike.Client
 			while (true)
 			{
 				// Read header
-				conn.ReadFully(protoBuf, 8);
+				await conn.ReadFully(protoBuf, 8);
 
 				long proto = ByteUtil.BytesToLong(protoBuf, 0);
 				int size = (int)(proto & 0xFFFFFFFFFFFFL);
@@ -141,7 +141,7 @@ namespace Aerospike.Client
 				}
 
 				// Read remaining message bytes in group.
-				conn.ReadFully(buf, size);
+				await conn.ReadFully(buf, size);
 				conn.UpdateLastUsed();
 
 				ulong type = (ulong)((proto >> 48) & 0xff);

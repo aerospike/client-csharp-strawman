@@ -121,7 +121,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if write fails</exception>
-		void Put(WritePolicy policy, Key key, params Bin[] bins);
+		Task Put(WritePolicy policy, Key key, params Bin[] bins);
 
 		//-------------------------------------------------------
 		// String Operations
@@ -137,7 +137,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if append fails</exception>
-		void Append(WritePolicy policy, Key key, params Bin[] bins);
+		Task Append(WritePolicy policy, Key key, params Bin[] bins);
 
 		/// <summary>
 		/// Prepend bin string values to existing record bin values.
@@ -149,7 +149,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs </param>
 		/// <exception cref="AerospikeException">if prepend fails</exception>
-		void Prepend(WritePolicy policy, Key key, params Bin[] bins);
+		Task Prepend(WritePolicy policy, Key key, params Bin[] bins);
 
 		//-------------------------------------------------------
 		// Arithmetic Operations
@@ -165,7 +165,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if add fails</exception>
-		void Add(WritePolicy policy, Key key, params Bin[] bins);
+		Task Add(WritePolicy policy, Key key, params Bin[] bins);
 
 		//-------------------------------------------------------
 		// Delete Operations
@@ -179,7 +179,7 @@ namespace Aerospike.Client
 		/// <param name="policy">delete configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if delete fails</exception>
-		bool Delete(WritePolicy policy, Key key);
+		Task<bool> Delete(WritePolicy policy, Key key);
 
 		/// <summary>
 		/// Delete records for specified keys. If a key is not found, the corresponding result
@@ -192,7 +192,7 @@ namespace Aerospike.Client
 		/// <param name="deletePolicy">delete configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		BatchResults Delete(BatchPolicy batchPolicy, BatchDeletePolicy deletePolicy, Key[] keys);
+		Task<BatchResults> Delete(BatchPolicy batchPolicy, BatchDeletePolicy deletePolicy, Key[] keys);
 
 		/// <summary>
 		/// Remove records in specified namespace/set efficiently.  This method is many orders of magnitude 
@@ -214,7 +214,7 @@ namespace Aerospike.Client
 		/// If specified, value must be before the current time.
 		/// Pass in null to delete all records in namespace/set regardless of last update time.
 		/// </param>
-		void Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate);
+		Task Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate);
 
 		//-------------------------------------------------------
 		// Touch Operations
@@ -227,7 +227,7 @@ namespace Aerospike.Client
 		/// <param name="policy">write configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if touch fails</exception>
-		void Touch(WritePolicy policy, Key key);
+		Task Touch(WritePolicy policy, Key key);
 
 		//-------------------------------------------------------
 		// Existence-Check Operations
@@ -241,7 +241,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		bool Exists(Policy policy, Key key);
+		Task<bool> Exists(Policy policy, Key key);
 
 		/// <summary>
 		/// Check if multiple record keys exist in one batch call.
@@ -250,7 +250,7 @@ namespace Aerospike.Client
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchExists">which contains results for keys that did complete</exception>
-		bool[] Exists(BatchPolicy policy, Key[] keys);
+		Task<bool[]> Exists(BatchPolicy policy, Key[] keys);
 
 		//-------------------------------------------------------
 		// Read Record Operations
@@ -264,7 +264,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults </param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		Record Get(Policy policy, Key key);
+		Task<Record> Get(Policy policy, Key key);
 
 		/// <summary>
 		/// Read record header and bins for specified key.
@@ -275,7 +275,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="binNames">bins to retrieve</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		Record Get(Policy policy, Key key, params string[] binNames);
+		Task<Record> Get(Policy policy, Key key, params string[] binNames);
 
 		/// <summary>
 		/// Read record generation and expiration only for specified key.  Bins are not read.
@@ -285,7 +285,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		Record GetHeader(Policy policy, Key key);
+		Task<Record> GetHeader(Policy policy, Key key);
 
 		//-------------------------------------------------------
 		// Batch Read Operations
@@ -302,7 +302,7 @@ namespace Aerospike.Client
 		/// The returned records are located in the same list.</param>
 		/// <returns>true if all batch key requests succeeded</returns>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		bool Get(BatchPolicy policy, List<BatchRead> records);
+		Task<bool> Get(BatchPolicy policy, List<BatchRead> records);
 
 		/// <summary>
 		/// Read multiple records for specified keys in one batch call.
@@ -312,7 +312,7 @@ namespace Aerospike.Client
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		Record[] Get(BatchPolicy policy, Key[] keys);
+		Task<Record[]> Get(BatchPolicy policy, Key[] keys);
 
 		/// <summary>
 		/// Read multiple record headers and bins for specified keys in one batch call.
@@ -323,7 +323,7 @@ namespace Aerospike.Client
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <param name="binNames">array of bins to retrieve</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		Record[] Get(BatchPolicy policy, Key[] keys, params string[] binNames);
+		Task<Record[]> Get(BatchPolicy policy, Key[] keys, params string[] binNames);
 
 		/// <summary>
 		/// Read multiple records for specified keys using read operations in one batch call.
@@ -334,7 +334,7 @@ namespace Aerospike.Client
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <param name="ops">array of read operations on record</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		Record[] Get(BatchPolicy policy, Key[] keys, params Operation[] ops);
+		Task<Record[]> Get(BatchPolicy policy, Key[] keys, params Operation[] ops);
 
 		/// <summary>
 		/// Read multiple record header data for specified keys in one batch call.
@@ -344,7 +344,7 @@ namespace Aerospike.Client
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		Record[] GetHeader(BatchPolicy policy, Key[] keys);
+		Task<Record[]> GetHeader(BatchPolicy policy, Key[] keys);
 
 		//-------------------------------------------------------
 		// Join methods
@@ -360,7 +360,7 @@ namespace Aerospike.Client
 		/// <param name="binNames">array of bins to retrieve</param>
 		/// <param name="joins">array of join definitions</param>
 		/// <exception cref="AerospikeException">if main read or join reads fail</exception>
-		Record Join(BatchPolicy policy, Key key, string[] binNames, params Join[] joins);
+		Task<Record> Join(BatchPolicy policy, Key key, string[] binNames, params Join[] joins);
 
 		/// <summary>
 		/// Read all bins in left record and then join with right records.  Each join bin name
@@ -371,7 +371,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique main record identifier</param>
 		/// <param name="joins">array of join definitions</param>
 		/// <exception cref="AerospikeException">if main read or join reads fail</exception>
-		Record Join(BatchPolicy policy, Key key, params Join[] joins);
+		Task<Record> Join(BatchPolicy policy, Key key, params Join[] joins);
 
 		//-------------------------------------------------------
 		// Generic Database Operations
@@ -391,7 +391,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="operations">database operations to perform</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Record Operate(WritePolicy policy, Key key, params Operation[] operations);
+		Task<Record> Operate(WritePolicy policy, Key key, params Operation[] operations);
 
 		//-------------------------------------------------------
 		// Batch Read/Write Operations
@@ -413,7 +413,7 @@ namespace Aerospike.Client
 		/// <param name="records">list of unique record identifiers and read/write operations</param>
 		/// <returns>true if all batch sub-commands succeeded</returns>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		bool Operate(BatchPolicy policy, List<BatchRecord> records);
+		Task<bool> Operate(BatchPolicy policy, List<BatchRecord> records);
 
 		/// <summary>
 		/// Perform read/write operations on multiple keys. If a key is not found, the corresponding result
@@ -427,7 +427,7 @@ namespace Aerospike.Client
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <param name="ops">database operations to perform</param>
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		BatchResults Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops);
+		Task<BatchResults> Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops);
 
 		//-------------------------------------------------------
 		// Scan Operations
@@ -448,7 +448,7 @@ namespace Aerospike.Client
 		/// <param name="callback">read callback method - called with record data</param>
 		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
 		/// <exception cref="AerospikeException">if scan fails</exception>
-		void ScanAll(ScanPolicy policy, string ns, string setName, ScanCallback callback, params string[] binNames);
+		Task ScanAll(ScanPolicy policy, string ns, string setName, ScanCallback callback, params string[] binNames);
 
 		/// <summary>
 		/// Read all records in specified namespace and set for one node only.
@@ -465,7 +465,7 @@ namespace Aerospike.Client
 		/// <param name="callback">read callback method - called with record data</param>
 		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
 		/// <exception cref="AerospikeException">if scan fails</exception>
-		void ScanNode(ScanPolicy policy, string nodeName, string ns, string setName, ScanCallback callback, params string[] binNames);
+		Task ScanNode(ScanPolicy policy, string nodeName, string ns, string setName, ScanCallback callback, params string[] binNames);
 
 		/// <summary>
 		/// Read all records in specified namespace and set for one node only.
@@ -481,7 +481,7 @@ namespace Aerospike.Client
 		/// <param name="callback">read callback method - called with record data</param>
 		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
 		/// <exception cref="AerospikeException">if scan fails</exception>
-		void ScanNode(ScanPolicy policy, Node node, string ns, string setName, ScanCallback callback, params string[] binNames);
+		Task ScanNode(ScanPolicy policy, Node node, string ns, string setName, ScanCallback callback, params string[] binNames);
 
 		/// <summary>
 		/// Read records in specified namespace, set and partition filter.
@@ -497,7 +497,7 @@ namespace Aerospike.Client
 		/// <param name="callback">read callback method - called with record data</param>
 		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
 		/// <exception cref="AerospikeException">if scan fails</exception>
-		void ScanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, string ns, string setName, ScanCallback callback, params string[] binNames);
+		Task ScanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, string ns, string setName, ScanCallback callback, params string[] binNames);
 
 		//---------------------------------------------------------------
 		// User defined functions
@@ -514,7 +514,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		RegisterTask Register(Policy policy, string clientPath, string serverPath, Language language);
+		Task<RegisterTask> Register(Policy policy, string clientPath, string serverPath, Language language);
 
 		/// <summary>
 		/// Register package located in a resource containing user defined functions with server.
@@ -528,7 +528,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		RegisterTask Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language);
+		Task<RegisterTask> Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language);
 
 		/// <summary>
 		/// Register UDF functions located in a code string with server. Example:
@@ -559,7 +559,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		RegisterTask RegisterUdfString(Policy policy, string code, string serverPath, Language language);
+		Task<RegisterTask> RegisterUdfString(Policy policy, string code, string serverPath, Language language);
 
 		/// <summary>
 		/// Remove user defined function from server nodes.
@@ -567,7 +567,7 @@ namespace Aerospike.Client
 		/// <param name="policy">info configuration parameters, pass in null for defaults</param>
 		/// <param name="serverPath">location of UDF on server nodes.  Example: mylua.lua </param>
 		/// <exception cref="AerospikeException">if remove fails</exception>
-		void RemoveUdf(InfoPolicy policy, string serverPath);
+		Task RemoveUdf(InfoPolicy policy, string serverPath);
 
 		/// <summary>
 		/// Execute user defined function on server and return results.
@@ -583,7 +583,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">user defined function</param>
 		/// <param name="args">arguments passed in to user defined function</param>
 		/// <exception cref="AerospikeException">if transaction fails</exception>
-		object Execute(WritePolicy policy, Key key, string packageName, string functionName, params Value[] args);
+		Task<object> Execute(WritePolicy policy, Key key, string packageName, string functionName, params Value[] args);
 
 		/// <summary>
 		/// Execute user defined function on server for each key and return results.
@@ -602,7 +602,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">user defined function</param>
 		/// <param name="functionArgs">arguments passed in to user defined function</param>
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		BatchResults Execute(BatchPolicy batchPolicy, BatchUDFPolicy udfPolicy, Key[] keys, string packageName, string functionName, params Value[] functionArgs);
+		Task<BatchResults> Execute(BatchPolicy batchPolicy, BatchUDFPolicy udfPolicy, Key[] keys, string packageName, string functionName, params Value[] functionArgs);
 
 		//----------------------------------------------------------
 		// Query/Execute
@@ -621,7 +621,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">function name</param>
 		/// <param name="functionArgs">to pass to function name, if any</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		ExecuteTask Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs);
+		Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs);
 
 		/// <summary>
 		/// Apply operations on records that match the background query statement filter.
@@ -634,7 +634,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations);
+		Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, params Operation[] operations);
 
 		//--------------------------------------------------------
 		// Query functions
@@ -647,7 +647,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="action">action methods to be called for each record</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		void Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
+		Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
 
 		/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -657,7 +657,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		RecordSet Query(QueryPolicy policy, Statement statement);
+		Task<RecordSet> Query(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
@@ -675,7 +675,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		void Query(QueryPolicy policy, Statement statement, QueryListener listener);
+		Task Query(QueryPolicy policy, Statement statement, QueryListener listener);
 
 		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
@@ -701,7 +701,7 @@ namespace Aerospike.Client
 		/// </param>
 		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		void Query
+		Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
@@ -746,7 +746,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">aggregation function name</param>
 		/// <param name="functionArgs">arguments to pass to function name, if any</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		ResultSet QueryAggregate
+		Task<ResultSet> QueryAggregate
 		(
 			QueryPolicy policy,
 			Statement statement,
@@ -765,7 +765,7 @@ namespace Aerospike.Client
 		/// </param>
 		/// <param name="action">action methods to be called for each aggregation object</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		void QueryAggregate(QueryPolicy policy, Statement statement, Action<Object> action);
+		Task QueryAggregate(QueryPolicy policy, Statement statement, Action<Object> action);
 
 		/// <summary>
 		/// Execute query, apply statement's aggregation function, and return result iterator. 
@@ -783,7 +783,7 @@ namespace Aerospike.Client
 		/// query definition with aggregate functions already initialized by SetAggregateFunction().
 		/// </param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		ResultSet QueryAggregate(QueryPolicy policy, Statement statement);
+		Task<ResultSet> QueryAggregate(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Create scalar secondary index.
@@ -798,7 +798,7 @@ namespace Aerospike.Client
 		/// <param name="binName">bin name that data is indexed on</param>
 		/// <param name="indexType">underlying data type of secondary index</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		IndexTask CreateIndex
+		Task<IndexTask> CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -823,7 +823,7 @@ namespace Aerospike.Client
 		/// <param name="indexCollectionType">index collection type</param>
 		/// <param name="ctx">optional context to index on elements within a CDT</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		IndexTask CreateIndex
+		Task<IndexTask> CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -846,7 +846,7 @@ namespace Aerospike.Client
 		/// <param name="setName">optional set name - equivalent to database table</param>
 		/// <param name="indexName">name of secondary index</param>
 		/// <exception cref="AerospikeException">if index drop fails</exception>
-		IndexTask DropIndex(Policy policy, string ns, string setName, string indexName);
+		Task<IndexTask> DropIndex(Policy policy, string ns, string setName, string indexName);
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication
@@ -861,7 +861,7 @@ namespace Aerospike.Client
 		/// <param name="ns">namespace - equivalent to database name</param>
 		/// <param name="filter">expression filter</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter);
+		Task SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter);
 
 		//-------------------------------------------------------
 		// User administration
@@ -875,14 +875,14 @@ namespace Aerospike.Client
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
 		/// <param name="roles">variable arguments array of role names.  Predefined roles are listed in Role.cs</param>		
-		void CreateUser(AdminPolicy policy, string user, string password, IList<string> roles);
+		Task CreateUser(AdminPolicy policy, string user, string password, IList<string> roles);
 
 		/// <summary>
 		/// Remove user from cluster.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
-		void DropUser(AdminPolicy policy, string user);
+		Task DropUser(AdminPolicy policy, string user);
 
 		/// <summary>
 		/// Change user's password.
@@ -890,7 +890,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
-		void ChangePassword(AdminPolicy policy, string user, string password);
+		Task ChangePassword(AdminPolicy policy, string user, string password);
 
 		/// <summary>
 		/// Add roles to user's list of roles.
@@ -898,7 +898,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		void GrantRoles(AdminPolicy policy, string user, IList<string> roles);
+		Task GrantRoles(AdminPolicy policy, string user, IList<string> roles);
 
 		/// <summary>
 		/// Remove roles from user's list of roles.
@@ -906,7 +906,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		void RevokeRoles(AdminPolicy policy, string user, IList<string> roles);
+		Task RevokeRoles(AdminPolicy policy, string user, IList<string> roles);
 
 		/// <summary>
 		/// Create user defined role.
@@ -915,7 +915,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails </exception>
-		void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Create user defined role with optional privileges and whitelist.
@@ -928,7 +928,7 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist);
+		Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist);
 
 		/// <summary>
 		/// Create user defined role with optional privileges, whitelist and read/write quotas.
@@ -944,7 +944,7 @@ namespace Aerospike.Client
 		/// <param name="readQuota">optional maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">optional maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void CreateRole
+		Task CreateRole
 		(
 			AdminPolicy policy,
 			string roleName,
@@ -960,7 +960,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="roleName">role name</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void DropRole(AdminPolicy policy, string roleName);
+		Task DropRole(AdminPolicy policy, string roleName);
 
 		/// <summary>
 		/// Grant privileges to an user defined role.
@@ -969,7 +969,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		Task GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Revoke privileges from an user defined role.
@@ -978,7 +978,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		Task RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Set IP address whitelist for a role.  If whitelist is null or empty, remove existing whitelist from role.
@@ -990,7 +990,7 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist);
+		Task SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist);
 
 		/// <summary>
 		/// Set maximum reads/writes per second limits for a role.  If a quota is zero, the limit is removed.
@@ -1001,20 +1001,20 @@ namespace Aerospike.Client
 		/// <param name="readQuota">maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		void SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota);
+		Task SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota);
 
 		/// <summary>
 		/// Retrieve roles for a given user.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name filter</param>
-		User QueryUser(AdminPolicy policy, string user);
+		Task<User> QueryUser(AdminPolicy policy, string user);
 
 		/// <summary>
 		/// Retrieve all users and their roles.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
-		List<User> QueryUsers(AdminPolicy policy);
+		Task<List<User>> QueryUsers(AdminPolicy policy);
 
 		/// <summary>
 		/// Retrieve role definition.
@@ -1022,13 +1022,13 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="roleName">role name filter</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Role QueryRole(AdminPolicy policy, string roleName);
+		Task<Role> QueryRole(AdminPolicy policy, string roleName);
 
 		/// <summary>
 		/// Retrieve all roles.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		List<Role> QueryRoles(AdminPolicy policy);
+		Task<List<Role>> QueryRoles(AdminPolicy policy);
 	}
 }

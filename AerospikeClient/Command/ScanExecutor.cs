@@ -22,7 +22,7 @@ namespace Aerospike.Client
 {
 	public sealed class ScanExecutor
 	{
-		public static void ScanPartitions(Cluster cluster, ScanPolicy policy, string ns, string setName, string[] binNames, ScanCallback callback, PartitionTracker tracker)
+		public static async Task ScanPartitions(Cluster cluster, ScanPolicy policy, string ns, string setName, string[] binNames, ScanCallback callback, PartitionTracker tracker)
 		{
 			while (true)
 			{
@@ -42,14 +42,14 @@ namespace Aerospike.Client
 							executor.AddCommand(command);
 						}
 
-						executor.Execute(policy.maxConcurrentNodes);
+						await executor.Execute(policy.maxConcurrentNodes);
 					}
 					else
 					{
 						foreach (NodePartitions nodePartitions in list)
 						{
 							ScanPartitionCommand command = new ScanPartitionCommand(cluster, policy, ns, setName, binNames, callback, taskId, tracker, nodePartitions);
-							command.Execute();
+							await command.Execute();
 						}
 					}
 				}

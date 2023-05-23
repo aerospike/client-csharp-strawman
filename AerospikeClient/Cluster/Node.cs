@@ -106,14 +106,14 @@ namespace Aerospike.Client
 			CloseConnections();
 		}
 
-		public virtual void CreateMinConnections()
+		public virtual async Task CreateMinConnections()
 		{
 			// Create sync connections.
 			foreach (Pool<Connection> pool in connectionPools)
 			{
 				if (pool.minSize > 0)
 				{
-					CreateConnections(pool, pool.minSize);
+					await CreateConnections(pool, pool.minSize);
 				}
 			}
 		}
@@ -121,7 +121,7 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Request current status from server node.
 		/// </summary>
-		public void Refresh(Peers peers)
+		public async Task Refresh(Peers peers)
 		{
 			if (!active)
 			{
@@ -146,7 +146,8 @@ namespace Aerospike.Client
 
 							if (token != null)
 							{
-								if (!AdminCommand.Authenticate(cluster, tendConnection, token))
+								bool authenticated = await AdminCommand.Authenticate(cluster, tendConnection, token);
+								if (!authenticated)
 								{
 									// Authentication failed. Session token probably expired.
 									// Login again to get new session token.
@@ -168,7 +169,7 @@ namespace Aerospike.Client
 				Dictionary<string, string> infoMap = Info.Request(tendConnection, commands);
 
 				VerifyNodeName(infoMap);
-				VerifyPeersGeneration(infoMap, peers);
+				await VerifyPeersGeneration(infoMap, peers);
 				VerifyPartitionGeneration(infoMap);
 
 				if (cluster.rackAware)
@@ -251,7 +252,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private void VerifyPeersGeneration(Dictionary<string, string> infoMap, Peers peers)
+		private async Task VerifyPeersGeneration(Dictionary<string, string> infoMap, Peers peers)
 		{
 			string genString = infoMap["peers-generation"];
 
@@ -272,12 +273,12 @@ namespace Aerospike.Client
 					{
 						Log.Info(cluster.context, "Quick node restart detected: node=" + this + " oldgen=" + peersGeneration + " newgen=" + gen);
 					}
-					Restart();
+					await Restart();
 				}
 			}
 		}
 
-		private void Restart()
+		private async Task Restart()
 		{
 			try
 			{
@@ -294,7 +295,7 @@ namespace Aerospike.Client
 				}
 
 				// Balance connections.
-				BalanceConnections();
+				await BalanceConnections();
 			}
 			catch (Exception e)
 			{
@@ -339,7 +340,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		protected internal void RefreshPeers(Peers peers)
+		protected internal async Task RefreshPeers(Peers peers)
 		{
 			// Do not refresh peers when node connection has already failed during this cluster tend iteration.
 			if (failures > 0 || !active)
@@ -401,7 +402,7 @@ namespace Aerospike.Client
 							}
 
 							// Create new node.
-							Node node = cluster.CreateNode(nv, true);
+							Node node = await cluster.CreateNode(nv, true);
 							peers.nodes[nv.name] = node;
 							nodeValidated = true;
 							break;
@@ -529,7 +530,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private void CreateConnections(Pool<Connection> pool, int count)
+		private async Task CreateConnections(Pool<Connection> pool, int count)
 		{
 			// Create sync connections.
 			while (count > 0)
@@ -538,7 +539,7 @@ namespace Aerospike.Client
 
 				try
 				{
-					conn = CreateConnection(pool);
+					conn = await CreateConnection(pool);
 				}
 				catch (Exception e)
 				{
@@ -560,7 +561,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private Connection CreateConnection(Pool<Connection> pool)
+		private async Task<Connection> CreateConnection(Pool<Connection> pool)
 		{
 			pool.IncrTotal();
 
@@ -582,7 +583,8 @@ namespace Aerospike.Client
 			{
 				try
 				{
-					if (!AdminCommand.Authenticate(cluster, conn, token))
+					bool authenticated = await AdminCommand.Authenticate(cluster, conn, token);
+					if (!authenticated)
 					{
 						Interlocked.Exchange(ref performLogin, 1);
 						throw new AerospikeException("Authentication failed");
@@ -603,7 +605,7 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="timeoutMillis">connection timeout value in milliseconds if a new connection is created</param>	
 		/// <exception cref="AerospikeException">if a connection could not be provided</exception>
-		public Connection GetConnection(int timeoutMillis)
+		public async Task<Connection> GetConnection(int timeoutMillis)
 		{
 			uint max = (uint)cluster.connPoolsPerNode;
 			uint initialIndex;
@@ -670,7 +672,7 @@ namespace Aerospike.Client
 						{
 							try
 							{
-								if (!AdminCommand.Authenticate(cluster, conn, token))
+								if (!await AdminCommand.Authenticate(cluster, conn, token))
 								{
 									SignalLogin();
 									throw new AerospikeException("Authentication failed");
@@ -772,7 +774,7 @@ namespace Aerospike.Client
 			conn.Close();
 		}
 
-		public virtual void BalanceConnections()
+		public virtual async Task BalanceConnections()
 		{
 			foreach (Pool<Connection> pool in connectionPools)
 			{
@@ -784,7 +786,7 @@ namespace Aerospike.Client
 				}
 				else if (excess < 0 && ErrorCountWithinLimit())
 				{
-					CreateConnections(pool, -excess);
+					await CreateConnections(pool, -excess);
 				}
 			}
 		}

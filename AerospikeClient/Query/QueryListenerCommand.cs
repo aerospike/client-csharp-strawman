@@ -44,11 +44,11 @@ namespace Aerospike.Client
 			this.nodePartitions = nodePartitions;
 		}
 
-		public override void Execute()
+		public override async Task Execute()
 		{
 			try
 			{
-				ExecuteCommand();
+				await ExecuteCommand();
 			}
 			catch (AerospikeException ae)
 			{

@@ -50,16 +50,16 @@ namespace Aerospike.Client
 			this.deadline = DateTime.MinValue;
 		}
 
-		public virtual void Execute()
+		public virtual async Task Execute()
 		{
 			if (totalTimeout > 0)
 			{
 				deadline = DateTime.UtcNow.AddMilliseconds(totalTimeout);
 			}
-			ExecuteCommand();
+			await ExecuteCommand();
 		}
 
-		public void ExecuteCommand()
+		public async Task ExecuteCommand()
 		{
 			Node node;
 			AerospikeException exception = null;
@@ -83,7 +83,7 @@ namespace Aerospike.Client
 				try
 				{
 					node.ValidateErrorCount();
-					Connection conn = node.GetConnection(socketTimeout);
+					Connection conn = await node.GetConnection(socketTimeout);
 
 					try
 					{
@@ -91,11 +91,11 @@ namespace Aerospike.Client
 						WriteBuffer();
 
 						// Send command.
-						conn.Write(dataBuffer, dataOffset);
+						await conn.Write(dataBuffer, dataOffset);
 						commandSentCounter++;
 
 						// Parse results.
-						ParseResult(conn);
+						await ParseResult(conn);
 
 						// Put connection back in pool.
 						node.PutConnection(conn);
@@ -305,7 +305,7 @@ namespace Aerospike.Client
 
 		protected internal abstract Node GetNode();
 		protected internal abstract void WriteBuffer();
-		protected internal abstract void ParseResult(Connection conn);
+		protected internal abstract Task ParseResult(Connection conn);
 		protected internal abstract bool PrepareRetry(bool timeout);
 	}
 }

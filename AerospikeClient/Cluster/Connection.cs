@@ -108,23 +108,15 @@ namespace Aerospike.Client
 			socket.ReceiveTimeout = timeoutMillis;
 		}
 
-		public virtual void Write(byte[] buffer, int length)
+		public virtual async Task Write(byte[] buffer, int length)
 		{
-			int pos = 0;
-
-			while (pos < length)
-			{
-				int count = socket.Send(buffer, pos, length - pos, SocketFlags.None);
-
-				if (count <= 0)
-				{
-					throw new SocketException((int)SocketError.ConnectionReset);
-				}
-				pos += count;
-			}
+			var args = new SocketAsyncEventArgs();
+			args.SetBuffer(buffer, 0, length);
+			var saw = new SocketAwaitable(args);
+			await socket.SendAsync(saw);
 		}
 
-		public virtual void ReadFully(byte[] buffer, int length)
+		public virtual async Task ReadFully(byte[] buffer, int length)
 		{
 			if (socket.ReceiveTimeout > 0)
 			{
@@ -137,18 +129,10 @@ namespace Aerospike.Client
 				}
 			}
 
-			int pos = 0;
-
-			while (pos < length)
-			{
-				int count = socket.Receive(buffer, pos, length - pos, SocketFlags.None);
-
-				if (count <= 0)
-				{
-					throw new SocketException((int)SocketError.ConnectionReset);
-				}
-				pos += count;
-			}
+			var args = new SocketAsyncEventArgs();
+			args.SetBuffer(buffer, 0, length);
+			var saw = new SocketAwaitable(args);
+			await socket.ReceiveAsync(saw);
 		}
 
 		public virtual Stream GetStream()

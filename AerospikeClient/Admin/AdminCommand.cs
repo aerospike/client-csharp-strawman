@@ -110,8 +110,8 @@ namespace Aerospike.Client
 					WriteField(CLEAR_PASSWORD, cluster.password);
 				}
 				WriteSize();
-				conn.Write(dataBuffer, dataOffset);
-				conn.ReadFully(dataBuffer, HEADER_SIZE);
+				conn.Write(dataBuffer, dataOffset).Wait();
+				conn.ReadFully(dataBuffer, HEADER_SIZE).Wait();
 
 				int result = dataBuffer[RESULT_CODE];
 
@@ -137,7 +137,7 @@ namespace Aerospike.Client
 					throw new AerospikeException(result, "Failed to retrieve session token");
 				}
 
-				conn.ReadFully(dataBuffer, receiveSize);
+				conn.ReadFully(dataBuffer, receiveSize).Wait();
 				dataOffset = 0;
 
 				byte[] token = null;
@@ -185,18 +185,18 @@ namespace Aerospike.Client
 			}
 		}
 
-		public static bool Authenticate(Cluster cluster, Connection conn, byte[] sessionToken)
+		public static async Task<bool> Authenticate(Cluster cluster, Connection conn, byte[] sessionToken)
 		{
 			AdminCommand command = new AdminCommand(ThreadLocalData.GetBuffer(), 0);
-			return command.AuthenticateSession(cluster, conn, sessionToken);
+			return await command.AuthenticateSession(cluster, conn, sessionToken);
 		}
 
-		public bool AuthenticateSession(Cluster cluster, Connection conn, byte[] sessionToken)
+		public async Task<bool> AuthenticateSession(Cluster cluster, Connection conn, byte[] sessionToken)
 		{
 			dataOffset = 8;
 			SetAuthenticate(cluster, sessionToken);
-			conn.Write(dataBuffer, dataOffset);
-			conn.ReadFully(dataBuffer, HEADER_SIZE);
+			await conn.Write(dataBuffer, dataOffset);
+			await conn.ReadFully(dataBuffer, HEADER_SIZE);
 
 			int result = dataBuffer[RESULT_CODE];
 			return result == 0 || result == ResultCode.SECURITY_NOT_ENABLED;
@@ -218,64 +218,64 @@ namespace Aerospike.Client
 			return dataOffset;
 		}
 
-		public void CreateUser(Cluster cluster, AdminPolicy policy, string user, string password, IList<string> roles)
+		public async Task CreateUser(Cluster cluster, AdminPolicy policy, string user, string password, IList<string> roles)
 		{
 			WriteHeader(CREATE_USER, 3);
 			WriteField(USER, user);
 			WriteField(PASSWORD, password);
 			WriteRoles(roles);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void DropUser(Cluster cluster, AdminPolicy policy, string user)
+		public async Task DropUser(Cluster cluster, AdminPolicy policy, string user)
 		{
 			WriteHeader(DROP_USER, 1);
 			WriteField(USER, user);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void SetPassword(Cluster cluster, AdminPolicy policy, byte[] user, string password)
+		public async Task SetPassword(Cluster cluster, AdminPolicy policy, byte[] user, string password)
 		{
 			WriteHeader(SET_PASSWORD, 2);
 			WriteField(USER, user);
 			WriteField(PASSWORD, password);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void ChangePassword(Cluster cluster, AdminPolicy policy, byte[] user, string password)
+		public async Task ChangePassword(Cluster cluster, AdminPolicy policy, byte[] user, string password)
 		{
 			WriteHeader(CHANGE_PASSWORD, 3);
 			WriteField(USER, user);
 			WriteField(OLD_PASSWORD, cluster.passwordHash);
 			WriteField(PASSWORD, password);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void GrantRoles(Cluster cluster, AdminPolicy policy, string user, IList<string> roles)
+		public async Task GrantRoles(Cluster cluster, AdminPolicy policy, string user, IList<string> roles)
 		{
 			WriteHeader(GRANT_ROLES, 2);
 			WriteField(USER, user);
 			WriteRoles(roles);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void RevokeRoles(Cluster cluster, AdminPolicy policy, string user, IList<string> roles)
+		public async Task RevokeRoles(Cluster cluster, AdminPolicy policy, string user, IList<string> roles)
 		{
 			WriteHeader(REVOKE_ROLES, 2);
 			WriteField(USER, user);
 			WriteRoles(roles);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void CreateRole(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public async Task CreateRole(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			WriteHeader(CREATE_ROLE, 2);
 			WriteField(ROLE, roleName);
 			WritePrivileges(privileges);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void CreateRole
+		public async Task CreateRole
 		(
 			Cluster cluster,
 			AdminPolicy policy,
@@ -330,33 +330,33 @@ namespace Aerospike.Client
 			{
 				WriteField(WRITE_QUOTA, writeQuota);
 			}
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 		
-		public void DropRole(Cluster cluster, AdminPolicy policy, string roleName)
+		public async Task DropRole(Cluster cluster, AdminPolicy policy, string roleName)
 		{
 			WriteHeader(DROP_ROLE, 1);
 			WriteField(ROLE, roleName);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void GrantPrivileges(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public async Task GrantPrivileges(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			WriteHeader(GRANT_PRIVILEGES, 2);
 			WriteField(ROLE, roleName);
 			WritePrivileges(privileges);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void RevokePrivileges(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public async Task RevokePrivileges(Cluster cluster, AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			WriteHeader(REVOKE_PRIVILEGES, 2);
 			WriteField(ROLE, roleName);
 			WritePrivileges(privileges);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void SetWhitelist(Cluster cluster, AdminPolicy policy, string roleName, IList<string> whitelist)
+		public async Task SetWhitelist(Cluster cluster, AdminPolicy policy, string roleName, IList<string> whitelist)
 		{
 			byte fieldCount = (whitelist != null && whitelist.Count > 0) ? (byte)2 : (byte)1;
 
@@ -368,16 +368,16 @@ namespace Aerospike.Client
 				WriteWhitelist(whitelist);
 			}
 
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
-		public void setQuotas(Cluster cluster, AdminPolicy policy, String roleName, int readQuota, int writeQuota)
+		public async Task setQuotas(Cluster cluster, AdminPolicy policy, String roleName, int readQuota, int writeQuota)
 		{
 			WriteHeader(SET_QUOTAS, 3);
 			WriteField(ROLE, roleName);
 			WriteField(READ_QUOTA, readQuota);
 			WriteField(WRITE_QUOTA, writeQuota);
-			ExecuteCommand(cluster, policy);
+			await ExecuteCommand(cluster, policy);
 		}
 
 		private void WriteRoles(IList<string> roles)
@@ -506,17 +506,17 @@ namespace Aerospike.Client
 			dataBuffer[dataOffset++] = id;
 		}
 
-		private void ExecuteCommand(Cluster cluster, AdminPolicy policy)
+		private async Task ExecuteCommand(Cluster cluster, AdminPolicy policy)
 		{
 			WriteSize();
 			Node node = cluster.GetRandomNode();
 			int timeout = (policy == null) ? 1000 : policy.timeout;
-			Connection conn = node.GetConnection(timeout);
+			Connection conn = await node.GetConnection(timeout);
 
 			try
 			{
-				conn.Write(dataBuffer, dataOffset);
-				conn.ReadFully(dataBuffer, HEADER_SIZE);
+				await conn.Write(dataBuffer, dataOffset);
+				await conn.ReadFully(dataBuffer, HEADER_SIZE);
 				conn.UpdateLastUsed();
 				node.PutConnection(conn);
 			}
@@ -535,18 +535,18 @@ namespace Aerospike.Client
 			}
 		}
 
-		private void ExecuteQuery(Cluster cluster, AdminPolicy policy)
+		private async Task ExecuteQuery(Cluster cluster, AdminPolicy policy)
 		{
 			WriteSize();
 			Node node = cluster.GetRandomNode();
 			int timeout = (policy == null) ? 1000 : policy.timeout;
 			int status = 0;
-			Connection conn = node.GetConnection(timeout);
+			Connection conn = await node.GetConnection(timeout);
 
 			try
 			{
-				conn.Write(dataBuffer, dataOffset);
-				status = ReadBlocks(conn);
+				await conn.Write(dataBuffer, dataOffset);
+				status = await ReadBlocks(conn);
 				node.PutConnection(conn);
 			}
 			catch (Exception e)
@@ -562,13 +562,13 @@ namespace Aerospike.Client
 			}
 		}
 
-		private int ReadBlocks(Connection conn)
+		private async Task<int> ReadBlocks(Connection conn)
 		{
 			int status = 0;
 
 			while (status == 0)
 			{
-				conn.ReadFully(dataBuffer, 8);
+				await conn.ReadFully(dataBuffer, 8);
 				long size = ByteUtil.BytesToLong(dataBuffer, 0);
 				int receiveSize = ((int)(size & 0xFFFFFFFFFFFFL));
 
@@ -578,7 +578,7 @@ namespace Aerospike.Client
 					{
 						dataBuffer = ThreadLocalData.ResizeBuffer(receiveSize);
 					}
-					conn.ReadFully(dataBuffer, receiveSize);
+					await conn.ReadFully(dataBuffer, receiveSize);
 					conn.UpdateLastUsed();
 					status = ParseBlock(receiveSize);
 				}
@@ -605,18 +605,18 @@ namespace Aerospike.Client
 				list = new List<User>(capacity);
 			}
 
-			public User QueryUser(Cluster cluster, AdminPolicy policy, string user)
+			public async Task<User> QueryUser(Cluster cluster, AdminPolicy policy, string user)
 			{
 				base.WriteHeader(QUERY_USERS, 1);
 				base.WriteField(USER, user);
-				base.ExecuteQuery(cluster, policy);
+				await base.ExecuteQuery(cluster, policy);
 				return (list.Count > 0) ? list[0] : null;
 			}
 
-			public List<User> QueryUsers(Cluster cluster, AdminPolicy policy)
+			public async Task<List<User>> QueryUsers(Cluster cluster, AdminPolicy policy)
 			{
 				base.WriteHeader(QUERY_USERS, 0);
-				base.ExecuteQuery(cluster, policy);
+				await base.ExecuteQuery(cluster, policy);
 				return list;
 			}
 
@@ -726,18 +726,18 @@ namespace Aerospike.Client
 				list = new List<Role>(capacity);
 			}
 
-			public Role QueryRole(Cluster cluster, AdminPolicy policy, string roleName)
+			public async Task<Role> QueryRole(Cluster cluster, AdminPolicy policy, string roleName)
 			{
 				base.WriteHeader(QUERY_ROLES, 1);
 				base.WriteField(ROLE, roleName);
-				base.ExecuteQuery(cluster, policy);
+				await base.ExecuteQuery(cluster, policy);
 				return (list.Count > 0) ? list[0] : null;
 			}
 
-			public List<Role> QueryRoles(Cluster cluster, AdminPolicy policy)
+			public async Task<List<Role>> QueryRoles(Cluster cluster, AdminPolicy policy)
 			{
 				base.WriteHeader(QUERY_ROLES, 0);
-				base.ExecuteQuery(cluster, policy);
+				await base.ExecuteQuery(cluster, policy);
 				return list;
 			}
 

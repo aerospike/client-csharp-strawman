@@ -22,7 +22,7 @@ namespace Aerospike.Client
 {
 	public sealed class RegisterCommand
 	{
-		public static RegisterTask Register(Cluster cluster, Policy policy, string content, string serverPath, Language language)
+		public static async Task<RegisterTask> Register(Cluster cluster, Policy policy, string content, string serverPath, Language language)
 		{
 			StringBuilder sb = new StringBuilder(serverPath.Length + content.Length + 100);
 			sb.Append("udf-put:filename=");
@@ -38,7 +38,7 @@ namespace Aerospike.Client
 			// Send UDF to one node. That node will distribute the UDF to other nodes.
 			string command = sb.ToString();
 			Node node = cluster.GetRandomNode();
-			Connection conn = node.GetConnection(policy.socketTimeout);
+			Connection conn = await node.GetConnection(policy.socketTimeout);
 
 			try
 			{

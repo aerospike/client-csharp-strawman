@@ -20,7 +20,7 @@ namespace Aerospike.Client
 {
 	public sealed class QueryListenerExecutor
 	{
-		public static void execute
+		public static async Task execute
 		(
 			Cluster cluster,
 			QueryPolicy policy,
@@ -47,14 +47,14 @@ namespace Aerospike.Client
 							executor.AddCommand(command);
 						}
 
-						executor.Execute(policy.maxConcurrentNodes);
+						await executor.Execute(policy.maxConcurrentNodes);
 					}
 					else
 					{
 						foreach (NodePartitions nodePartitions in list)
 						{
 							QueryListenerCommand command = new QueryListenerCommand(cluster, policy, statement, taskId, listener, tracker, nodePartitions);
-							command.Execute();
+							await command.Execute();
 						}
 					}
 				}
