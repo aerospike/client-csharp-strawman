@@ -37,7 +37,7 @@ namespace Aerospike.Client
 		/// reference a single node.  If round robin DNS configuration is used, the seed host
 		/// may have several addresses that reference different nodes in the cluster.
 		/// </summary>
-		public Node SeedNode(Cluster cluster, Host host, Peers peers)
+		public async Task<Node> SeedNode(Cluster cluster, Host host, Peers peers)
 		{
 			name = null;
 			aliases = null;
@@ -64,7 +64,7 @@ namespace Aerospike.Client
 						SetAliases(address, host.tlsName, host.port);
 					}
 
-					Node node = cluster.CreateNode(this, false);
+					Node node = await cluster.CreateNode(this, false);
 
 					if (ValidatePeers(peers, node))
 					{
@@ -98,12 +98,12 @@ namespace Aerospike.Client
 			throw exception;
 		}
 
-		private bool ValidatePeers(Peers peers, Node node)
+		private async Task<bool> ValidatePeers(Peers peers, Node node)
 		{
 			try
 			{
 				peers.refreshCount = 0;
-				node.RefreshPeers(peers);
+				await node.RefreshPeers(peers);
 			}
 			catch (Exception)
 			{
@@ -494,7 +494,7 @@ namespace Aerospike.Client
 							{
 								if (sessionToken != null)
 								{
-									if (!AdminCommand.Authenticate(cluster, clearConn, sessionToken))
+									if (!AdminCommand.Authenticate(cluster, clearConn, sessionToken).Wait())
 									{
 										throw new AerospikeException("Authentication failed");
 									}

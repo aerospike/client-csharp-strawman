@@ -66,10 +66,10 @@ namespace Aerospike.Client
 			SetRead(policy, key, binNames);
 		}
 
-		protected internal override void ParseResult(Connection conn)
+		protected internal override async Task ParseResult(Connection conn)
 		{
 			// Read header.		
-			conn.ReadFully(dataBuffer, 8);
+			await conn.ReadFully(dataBuffer, 8);
 
 			long sz = ByteUtil.BytesToLong(dataBuffer, 0);
 			int receiveSize = (int)(sz & 0xFFFFFFFFFFFFL);
@@ -80,7 +80,7 @@ namespace Aerospike.Client
 			}
 
 			SizeBuffer(receiveSize);
-			conn.ReadFully(dataBuffer, receiveSize);
+			await conn.ReadFully(dataBuffer, receiveSize);
 			conn.UpdateLastUsed();
 
 			ulong type = (ulong)((sz >> 48) & 0xff);

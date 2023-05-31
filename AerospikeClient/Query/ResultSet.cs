@@ -29,8 +29,7 @@ namespace Aerospike.Client
 	{
 		public static readonly object END = new object();
 
-		private readonly QueryAggregateExecutor executor;
-		private readonly BlockingCollection<object> queue;
+		private readonly ConcurrentQueue<object> queue;
 		private readonly CancellationToken cancelToken;
 		private object row;
 		private volatile bool valid = true;
@@ -38,10 +37,9 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Initialize result set with underlying producer/consumer queue.
 		/// </summary>
-		public ResultSet(QueryAggregateExecutor executor, int capacity, CancellationToken cancelToken)
+		public ResultSet(int capacity, CancellationToken cancelToken)
 		{
-			this.executor = executor;
-			this.queue = new BlockingCollection<object>(capacity);
+			this.queue = new ConcurrentQueue<object>(capacity);
 			this.cancelToken = cancelToken;
 		}
 
@@ -151,7 +149,7 @@ namespace Aerospike.Client
 			try
 			{
 				// This add will block if queue capacity is reached.
-				queue.Add(obj, cancelToken);
+				queue.Enqueue(obj, cancelToken);
 				return true;
 			}
 			catch (OperationCanceledException)

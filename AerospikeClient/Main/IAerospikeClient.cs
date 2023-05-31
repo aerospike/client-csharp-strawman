@@ -429,76 +429,6 @@ namespace Aerospike.Client
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
 		Task<BatchResults> Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops);
 
-		//-------------------------------------------------------
-		// Scan Operations
-		//-------------------------------------------------------
-
-		/// <summary>
-		/// Read all records in specified namespace and set.  If the policy's 
-		/// concurrentNodes is specified, each server node will be read in
-		/// parallel.  Otherwise, server nodes are read in series.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		Task ScanAll(ScanPolicy policy, string ns, string setName, ScanCallback callback, params string[] binNames);
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// The node is specified by name.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="nodeName">server node name</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		Task ScanNode(ScanPolicy policy, string nodeName, string ns, string setName, ScanCallback callback, params string[] binNames);
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="node">server node</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		Task ScanNode(ScanPolicy policy, Node node, string ns, string setName, ScanCallback callback, params string[] binNames);
-
-		/// <summary>
-		/// Read records in specified namespace, set and partition filter.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="partitionFilter">filter on a subset of data partitions</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		Task ScanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, string ns, string setName, ScanCallback callback, params string[] binNames);
-
 		//---------------------------------------------------------------
 		// User defined functions
 		//---------------------------------------------------------------
@@ -514,7 +444,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		Task<RegisterTask> Register(Policy policy, string clientPath, string serverPath, Language language);
+		Task Register(Policy policy, string clientPath, string serverPath, Language language);
 
 		/// <summary>
 		/// Register package located in a resource containing user defined functions with server.
@@ -528,7 +458,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		Task<RegisterTask> Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language);
+		Task Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language);
 
 		/// <summary>
 		/// Register UDF functions located in a code string with server. Example:
@@ -559,7 +489,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		Task<RegisterTask> RegisterUdfString(Policy policy, string code, string serverPath, Language language);
+		Task RegisterUdfString(Policy policy, string code, string serverPath, Language language);
 
 		/// <summary>
 		/// Remove user defined function from server nodes.
@@ -621,7 +551,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">function name</param>
 		/// <param name="functionArgs">to pass to function name, if any</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs);
+		Task Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs);
 
 		/// <summary>
 		/// Apply operations on records that match the background query statement filter.
@@ -634,7 +564,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, params Operation[] operations);
+		Task Execute(WritePolicy policy, Statement statement, params Operation[] operations);
 
 		//--------------------------------------------------------
 		// Query functions
@@ -798,7 +728,7 @@ namespace Aerospike.Client
 		/// <param name="binName">bin name that data is indexed on</param>
 		/// <param name="indexType">underlying data type of secondary index</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		Task<IndexTask> CreateIndex
+		Task CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -823,7 +753,7 @@ namespace Aerospike.Client
 		/// <param name="indexCollectionType">index collection type</param>
 		/// <param name="ctx">optional context to index on elements within a CDT</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		Task<IndexTask> CreateIndex
+		Task CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -846,7 +776,7 @@ namespace Aerospike.Client
 		/// <param name="setName">optional set name - equivalent to database table</param>
 		/// <param name="indexName">name of secondary index</param>
 		/// <exception cref="AerospikeException">if index drop fails</exception>
-		Task<IndexTask> DropIndex(Policy policy, string ns, string setName, string indexName);
+		Task DropIndex(Policy policy, string ns, string setName, string indexName);
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication

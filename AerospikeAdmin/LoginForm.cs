@@ -133,7 +133,7 @@ namespace Aerospike.Admin
 				}
 
 				// Query own user.
-				User user = client.QueryUser(null, userName);				
+				User user = client.QueryUser(null, userName).Wait();				
 
 				if (user != null)
 				{

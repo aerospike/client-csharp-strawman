@@ -1211,115 +1211,6 @@ namespace Aerospike.Client
 			}
 		}
 
-		//-------------------------------------------------------
-		// Scan Operations
-		//-------------------------------------------------------
-
-		/// <summary>
-		/// Read all records in specified namespace and set.  If the policy's 
-		/// concurrentNodes is specified, each server node will be read in
-		/// parallel.  Otherwise, server nodes are read in series.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public async Task ScanAll(ScanPolicy policy, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			PartitionTracker tracker = new PartitionTracker(policy, nodes);
-			await ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// The node is specified by name.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="nodeName">server node name</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public async Task ScanNode(ScanPolicy policy, string nodeName, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			Node node = cluster.GetNode(nodeName);
-			await ScanNode(policy, node, ns, setName, callback, binNames);
-		}
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="node">server node</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public async Task ScanNode(ScanPolicy policy, Node node, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			PartitionTracker tracker = new PartitionTracker(policy, node);
-			await ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
-		/// <summary>
-		/// Read records in specified namespace, set and partition filter.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="partitionFilter">filter on a subset of data partitions</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public async Task ScanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			PartitionTracker tracker = new PartitionTracker(policy, nodes, partitionFilter);
-			await ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
 		//---------------------------------------------------------------
 		// User defined functions
 		//---------------------------------------------------------------
@@ -1335,7 +1226,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task<RegisterTask> Register(Policy policy, string clientPath, string serverPath, Language language)
+		public async Task Register(Policy policy, string clientPath, string serverPath, Language language)
 		{
 			if (policy == null)
 			{
@@ -1357,7 +1248,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task<RegisterTask> Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language)
+		public async Task Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language)
 		{
 			if (policy == null)
 			{
@@ -1402,7 +1293,7 @@ namespace Aerospike.Client
 		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
 		/// <param name="language">language of user defined functions</param>
 		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task<RegisterTask> RegisterUdfString(Policy policy, string code, string serverPath, Language language)
+		public async Task RegisterUdfString(Policy policy, string code, string serverPath, Language language)
 		{
 			if (policy == null)
 			{
@@ -1573,7 +1464,7 @@ namespace Aerospike.Client
 		/// <param name="functionName">function name</param>
 		/// <param name="functionArgs">to pass to function name, if any</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs)
+		public async Task Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs)
 		{
 			if (policy == null)
 			{
@@ -1609,7 +1500,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task<ExecuteTask> Execute(WritePolicy policy, Statement statement, params Operation[] operations)
+		public async Task Execute(WritePolicy policy, Statement statement, params Operation[] operations)
 		{
 			if (policy == null)
 			{
@@ -1906,7 +1797,7 @@ namespace Aerospike.Client
 		/// <param name="binName">bin name that data is indexed on</param>
 		/// <param name="indexType">underlying data type of secondary index</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		public async Task<IndexTask> CreateIndex
+		public async Task CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -1934,7 +1825,7 @@ namespace Aerospike.Client
 		/// <param name="indexCollectionType">index collection type</param>
 		/// <param name="ctx">optional context to index on elements within a CDT</param>
 		/// <exception cref="AerospikeException">if index create fails</exception>
-		public async Task<IndexTask> CreateIndex
+		public async Task CreateIndex
 		(
 			Policy policy,
 			string ns,
@@ -1993,8 +1884,7 @@ namespace Aerospike.Client
 				return new IndexTask(cluster, policy, ns, indexName, true);
 			}
 
-			await ParseInfoError("Create index failed", response);
-			return null;
+			ParseInfoError("Create index failed", response);
 		}
 		
 		/// <summary>
@@ -2008,7 +1898,7 @@ namespace Aerospike.Client
 		/// <param name="setName">optional set name - equivalent to database table</param>
 		/// <param name="indexName">name of secondary index</param>
 		/// <exception cref="AerospikeException">if index drop fails</exception>
-		public async Task<IndexTask> DropIndex(Policy policy, string ns, string setName, string indexName)
+		public async Task DropIndex(Policy policy, string ns, string setName, string indexName)
 		{
 			if (policy == null)
 			{
@@ -2034,8 +1924,7 @@ namespace Aerospike.Client
 				return new IndexTask(cluster, policy, ns, indexName, false);
 			}
 
-			await ParseInfoError("Drop index failed", response);
-			return null;
+			ParseInfoError("Drop index failed", response);
 		}
 
 		//-----------------------------------------------------------------
@@ -2068,7 +1957,7 @@ namespace Aerospike.Client
 				return;
 			}
 
-			await ParseInfoError("xdr-set-filter failed", response);
+			ParseInfoError("xdr-set-filter failed", response);
 		}
 
 		//-------------------------------------------------------

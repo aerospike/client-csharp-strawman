@@ -22,7 +22,7 @@ namespace Aerospike.Client
 {
 	public sealed class RegisterCommand
 	{
-		public static async Task<RegisterTask> Register(Cluster cluster, Policy policy, string content, string serverPath, Language language)
+		public static async Task Register(Cluster cluster, Policy policy, string content, string serverPath, Language language)
 		{
 			StringBuilder sb = new StringBuilder(serverPath.Length + content.Length + 100);
 			sb.Append("udf-put:filename=");
