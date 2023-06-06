@@ -19,7 +19,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Benchmarks
 {
-	sealed class WriteTaskAsync
+	/*sealed class WriteTaskAsync
 	{
 		private readonly AsyncClient client;
 		private readonly Args args;
@@ -137,5 +137,5 @@ namespace Aerospike.Benchmarks
 			// Retry command with same key.
 			RunCommand(keyCount);
 		}
-	}
+	}*/
 }

@@ -18,7 +18,7 @@ using System;
 
 namespace Aerospike.Client
 {
-	public sealed class QueryValidate
+	/*public sealed class QueryValidate
 	{
 		public static ulong ValidateBegin(Node node, string ns)
 		{
@@ -51,5 +51,5 @@ namespace Aerospike.Client
 				throw new AerospikeException(ResultCode.QUERY_ABORTED, "Cluster is in migration: " + expectedKey + ' ' + clusterKey);
 			}
 		}
-	}
+	}*/
 }

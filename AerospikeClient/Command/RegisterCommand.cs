@@ -20,7 +20,7 @@ using System.Text;
 
 namespace Aerospike.Client
 {
-	public sealed class RegisterCommand
+	/*public sealed class RegisterCommand
 	{
 		public static async Task Register(Cluster cluster, Policy policy, string content, string serverPath, Language language)
 		{
@@ -88,5 +88,5 @@ namespace Aerospike.Client
 				throw;
 			}
 		}
-	}
+	}*/
 }

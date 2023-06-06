@@ -19,7 +19,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Benchmarks
 {
-	sealed class ReadWriteTaskAsync : ReadWriteTask
+	/*sealed class ReadWriteTaskAsync : ReadWriteTask
 	{
 		private readonly AsyncClient client;
 		private readonly RandomShift random;
@@ -352,5 +352,5 @@ namespace Aerospike.Benchmarks
 			metrics.ReadFailure(e);
 			RunCommand();
 		}
-	}
+	}*/
 }

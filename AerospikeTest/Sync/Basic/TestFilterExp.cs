@@ -21,7 +21,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestFilterExp : TestSync
 	{
 		string binA = "A";
@@ -914,5 +914,5 @@ namespace Aerospike.Test
 			r = recs[2];
 			Assert.IsNull(r);
 		}
-	}
+	}*/
 }

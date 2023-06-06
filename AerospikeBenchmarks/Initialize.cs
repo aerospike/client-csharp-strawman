@@ -55,7 +55,7 @@ namespace Aerospike.Benchmarks
 			RunTicker();
 		}
 
-		public void RunAsync(AsyncClient client)
+		/*public void RunAsync(AsyncClient client)
 		{
 			// Generate commandMax writes to seed the event loops.
 			// Then start a new command in each command callback.
@@ -89,7 +89,7 @@ namespace Aerospike.Benchmarks
 				task.Start();
 			}
 			RunTicker();
-		}
+		}*/
 
 		private void RunTicker()
 		{

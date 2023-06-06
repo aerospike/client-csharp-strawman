@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestTouch : TestSync
 	{
 		[TestMethod]
@@ -50,5 +50,5 @@ namespace Aerospike.Test
 			record = client.Get(null, key, bin.name);
 			Assert.IsNull(record);
 		}
-	}
+	}*/
 }

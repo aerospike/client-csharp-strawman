@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class AsyncQuery : AsyncExample
+	/*public class AsyncQuery : AsyncExample
 	{
 		private bool completed;
 
@@ -177,5 +177,5 @@ namespace Aerospike.Demo
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

@@ -382,7 +382,7 @@ namespace Aerospike.Client
 						{
 							// Attempt connection to host.
 							NodeValidator nv = new NodeValidator();
-							nv.ValidateNode(cluster, host);
+							await nv.ValidateNode(cluster, host);
 
 							if (!peer.nodeName.Equals(nv.name))
 							{

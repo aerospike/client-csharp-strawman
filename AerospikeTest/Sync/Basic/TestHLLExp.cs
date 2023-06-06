@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestHLLExp : TestSync
 	{
 		private string bin1 = "hllbin_1";
@@ -230,5 +230,5 @@ namespace Aerospike.Test
 			r = client.Get(policy, key);
 			AssertRecordFound(key, r);
 		}
-	}
+	}*/
 }

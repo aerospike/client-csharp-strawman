@@ -1,5 +1,5 @@
-/* 
- * Copyright 2012-2018 Aerospike, Inc.
+﻿/* 
+ * Copyright 2012-2023 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
  * license agreements.
@@ -14,26 +14,21 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-using System;
-using System.IO;
 using Aerospike.Client;
+using BenchmarkDotNet.Running;
 
-namespace Aerospike.Demo
+class Program
 {
-    /*public class LuaExample
+    static void Main(string[] args)
     {
-		private static readonly string LuaDirectory = DemoForm.RelativeDirectory + "udf" + Path.DirectorySeparatorChar;
-
-        static LuaExample()
+        try
         {
-            LuaConfig.PackagePath = LuaDirectory + "?.lua";
-        }
-
-        public static void Register(AerospikeClient client, Policy policy, string packageName)
+			var summary = BenchmarkRunner.Run<Benchmark>(); //research thread safe run
+		}
+        catch (Exception e)
         {
-            string path = LuaDirectory + packageName;
-            RegisterTask task = client.Register(policy, path, packageName, Language.LUA);
-            task.Wait();
+            Console.WriteLine("Error: " + e.Message);
+            Console.WriteLine(e.StackTrace);
         }
-    }*/
+    }
 }

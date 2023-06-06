@@ -70,13 +70,13 @@ namespace Aerospike.Client
 		// Random partition replica index. 
 		internal int replicaIndex;
 
-		// Minimum sync connections per node.
+		// Minimum connections per node.
 		internal readonly int minConnsPerNode;
 
-		// Maximum sync connections per node.
+		// Maximum connections per node.
 		internal readonly int maxConnsPerNode;
 
-		// Sync connection pools per node. 
+		// Connection pools per node. 
 		protected internal readonly int connPoolsPerNode;
 
 		// Max errors per node per errorRateWindow.
@@ -110,7 +110,6 @@ namespace Aerospike.Client
 		private int tendCount;
 
 		// Tend thread variables.
-		private Thread tendThread;
 		private CancellationTokenSource cancel;
 		private CancellationToken cancelToken;
 		internal volatile bool tendValid;
@@ -126,6 +125,13 @@ namespace Aerospike.Client
 
 		// Does cluster support query by partition.
 		internal bool hasPartitionQuery;
+
+		// Contiguous pool of byte buffers.
+		//TODO: do we need this?
+		//private readonly BufferPool bufferPool;
+
+		// Maximum number of concurrent asynchronous commands.
+		internal readonly int maxCommands;
 
 		public Cluster(ClientPolicy policy, Host[] hosts)
 		{
@@ -257,6 +263,9 @@ namespace Aerospike.Client
 			partitionMap = new Dictionary<string, Partitions>();
 			cancel = new CancellationTokenSource();
 			cancelToken = cancel.Token;
+			maxCommands = policy.maxCommands;
+
+			InitTendThread(policy.failIfNotConnected).Wait();
 		}
 
 		public virtual async Task InitTendThread(bool failIfNotConnected)
@@ -290,11 +299,8 @@ namespace Aerospike.Client
 			}
 
 			// Run cluster tend thread.
-			tendValid = true;
-			tendThread = new Thread(new ThreadStart(this.Run));
-			tendThread.Name = "tend";
-			tendThread.IsBackground = true;
-			tendThread.Start();
+			System.Timers.Timer tendTimer = new (interval: tendInterval);
+			tendTimer.Elapsed += async (sender, e) => await Run();
 		}
 
 		public void AddSeeds(Host[] hosts)
@@ -361,14 +367,14 @@ namespace Aerospike.Client
 			}
 		}
 
-		public async Task Run()
+		public Task Run()
 		{
-			while (tendValid)
+			if (tendValid)
 			{
 				// Tend cluster.
 				try
 				{
-					await Tend(false, false);
+					Tend(false, false).Wait();
 				}
 				catch (Exception e)
 				{
@@ -393,6 +399,8 @@ namespace Aerospike.Client
 					}
 				}
 			}
+
+			return Task.CompletedTask;
 		}
 
 		/// <summary>
@@ -510,7 +518,7 @@ namespace Aerospike.Client
 
 				try
 				{
-					Node node = nv.SeedNode(this, seed, peers);
+					Node node = await nv.SeedNode(this, seed, peers);
 
 					if (node != null)
 					{
@@ -875,7 +883,7 @@ namespace Aerospike.Client
 			return tlsPolicy != null && !tlsPolicy.forLoginOnly;
 		}
 
-		public ClusterStats GetStats()
+		/*public ClusterStats GetStats()
 		{
 			// Must copy array reference for copy on write semantics to work.
 			Node[] nodeArray = nodes;
@@ -887,7 +895,7 @@ namespace Aerospike.Client
 				nodeStats[count++] = new NodeStats(node);
 			}
 			return new ClusterStats(nodeStats, invalidNodeCount);
-		}
+		}*/
 		
 		public bool Connected
 		{

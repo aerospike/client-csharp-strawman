@@ -21,7 +21,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class AsyncPutGet : AsyncExample
+	/*public class AsyncPutGet : AsyncExample
 	{
 		private bool completed;
 
@@ -32,7 +32,7 @@ namespace Aerospike.Demo
 		/// <summary>
 		/// Asynchronously write and read a bin using alternate methods.
 		/// </summary>
-		public override void RunExample(AsyncClient client, Arguments args)
+		public override void RunExample(AerospikeClient client, Arguments args)
 		{
 			completed = false;
 			Key key = new Key(args.ns, args.set, "putgetkey");
@@ -176,5 +176,5 @@ namespace Aerospike.Demo
 
 			ValidateBin(key, bin, taskget.Result);
 		}
-	}
+	}*/
 }

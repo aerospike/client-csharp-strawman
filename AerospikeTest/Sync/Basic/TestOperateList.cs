@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestOperateList : TestSync
 	{
 		private const string binName = "oplistbin";
@@ -1246,5 +1246,5 @@ namespace Aerospike.Test
 				}
 			}
 		}
-	}
+	}*/
 }

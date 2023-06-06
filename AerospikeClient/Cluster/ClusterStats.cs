@@ -108,7 +108,7 @@ namespace Aerospike.Client
 		/// </summary>
 		public readonly ConnectionStats asyncStats;
 
-		/// <summary>
+		/*/// <summary>
 		/// Node statistics constructor.
 		/// </summary>
 		public NodeStats(Node node)
@@ -124,7 +124,7 @@ namespace Aerospike.Client
 			{
 				this.asyncStats = new ConnectionStats(0, 0, 0, 0);
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Convert statistics to string.

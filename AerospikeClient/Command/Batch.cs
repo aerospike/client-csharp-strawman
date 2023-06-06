@@ -24,7 +24,7 @@ namespace Aerospike.Client
 	// ReadList
 	//-------------------------------------------------------
 
-	public sealed class BatchReadListCommand : BatchCommand
+	/*public sealed class BatchReadListCommand : BatchCommand
 	{
 		private readonly List<BatchRead> records;
 
@@ -500,7 +500,7 @@ namespace Aerospike.Client
 	// Batch Base Command
 	//-------------------------------------------------------
 
-	public abstract class BatchCommand : MultiCommand
+	/*public abstract class BatchCommand : MultiCommand
 	{
 		internal readonly BatchNode batch;
 		internal readonly BatchPolicy batchPolicy;
@@ -524,11 +524,11 @@ namespace Aerospike.Client
 			this.status = status;
 		}
 
-		public void Run(object obj)
+		public async Task Run(object obj)
 		{
 			try
 			{
-				Execute();
+				await Execute();
 			}
 			catch (AerospikeException ae)
 			{
@@ -573,7 +573,7 @@ namespace Aerospike.Client
 			return false;
 		}
 
-		protected internal override bool RetryBatch
+		protected internal override async Task<bool> RetryBatch
 		(
 			Cluster cluster,
 			int socketTimeout,
@@ -610,7 +610,7 @@ namespace Aerospike.Client
 
 				try
 				{
-					command.ExecuteCommand();
+					await command.ExecuteCommand();
 				}
 				catch (AerospikeException ae)
 				{
@@ -649,5 +649,5 @@ namespace Aerospike.Client
 
 		protected internal abstract BatchCommand CreateCommand(BatchNode batchNode);
 		protected internal abstract List<BatchNode> GenerateBatchNodes();
-	}
+	}*/
 }

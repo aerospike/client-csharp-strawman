@@ -29,10 +29,10 @@ namespace Aerospike.Test
 		[TestMethod]
 		public void CallRead() {
 			Key key = new Key(args.ns, args.set, 5000);
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			Bin bin = new Bin(binA, new byte[] {0x01, 0x42, 0x03, 0x04, 0x05});
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			Get(key);
 			Count(key);
@@ -44,10 +44,10 @@ namespace Aerospike.Test
 		[TestMethod]
 		public void CallModify() {
 			Key key = new Key(args.ns, args.set, 5001);
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			Bin bin = new Bin(binA, new byte[] {0x01, 0x42, 0x03, 0x04, 0x05});
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			Resize(key);
 			Insert(key);
@@ -70,7 +70,7 @@ namespace Aerospike.Test
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA)),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -78,7 +78,7 @@ namespace Aerospike.Test
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA)),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 
 			policy.filterExp = Exp.Build(
@@ -86,7 +86,7 @@ namespace Aerospike.Test
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA)),
 					Exp.Val(new byte[] {0x03})));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -96,7 +96,7 @@ namespace Aerospike.Test
 					BitExp.Count(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA)),
 					BitExp.Count(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -104,7 +104,7 @@ namespace Aerospike.Test
 					BitExp.Count(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA)),
 					BitExp.Count(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -114,7 +114,7 @@ namespace Aerospike.Test
 					BitExp.Lscan(Exp.Val(32), Exp.Val(8), Exp.Val(true), Exp.BlobBin(binA)),
 					Exp.Val(5)));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -123,7 +123,7 @@ namespace Aerospike.Test
 						BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))),
 					Exp.Val(5)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -132,7 +132,7 @@ namespace Aerospike.Test
 						BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))),
 					Exp.Val(5)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 
 			policy.filterExp = Exp.Build(
@@ -140,7 +140,7 @@ namespace Aerospike.Test
 					BitExp.Lscan(Exp.Val(32), Exp.Val(8), Exp.Val(true), Exp.BlobBin(binA)),
 					Exp.Val(5)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -150,7 +150,7 @@ namespace Aerospike.Test
 					BitExp.Rscan(Exp.Val(32), Exp.Val(8), Exp.Val(true), Exp.BlobBin(binA)),
 					Exp.Val(7)));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -158,7 +158,7 @@ namespace Aerospike.Test
 					BitExp.Rscan(Exp.Val(32), Exp.Val(8), Exp.Val(true), Exp.BlobBin(binA)),
 					Exp.Val(7)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -168,7 +168,7 @@ namespace Aerospike.Test
 					BitExp.GetInt(Exp.Val(32), Exp.Val(8), true, Exp.BlobBin(binA)),
 					Exp.Val(0x05)));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -176,7 +176,7 @@ namespace Aerospike.Test
 					BitExp.GetInt(Exp.Val(32), Exp.Val(8), true, Exp.BlobBin(binA)),
 					Exp.Val(0x05)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -188,7 +188,7 @@ namespace Aerospike.Test
 					BitExp.Resize(BitPolicy.Default, size, 0, Exp.BlobBin(binA)),
 					BitExp.Resize(BitPolicy.Default, size, 0, Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -196,7 +196,7 @@ namespace Aerospike.Test
 					BitExp.Resize(BitPolicy.Default, size, 0, Exp.BlobBin(binA)),
 					BitExp.Resize(BitPolicy.Default, size, 0, Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -210,7 +210,7 @@ namespace Aerospike.Test
 						BitExp.Insert(BitPolicy.Default, Exp.Val(1), Exp.Val(bytes), Exp.BlobBin(binA))),
 					Exp.Val(expected)));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -219,7 +219,7 @@ namespace Aerospike.Test
 						BitExp.Insert(BitPolicy.Default, Exp.Val(1), Exp.Val(bytes), Exp.BlobBin(binA))),
 					Exp.Val(expected)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -232,7 +232,7 @@ namespace Aerospike.Test
 						BitExp.Remove(BitPolicy.Default, Exp.Val(0), Exp.Val(1), Exp.BlobBin(binA))),
 					Exp.Val(expected)));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -241,7 +241,7 @@ namespace Aerospike.Test
 						BitExp.Remove(BitPolicy.Default, Exp.Val(0), Exp.Val(1), Exp.BlobBin(binA))),
 					Exp.Val(expected)));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -254,7 +254,7 @@ namespace Aerospike.Test
 						BitExp.Set(BitPolicy.Default, Exp.Val(31), Exp.Val(1), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -263,7 +263,7 @@ namespace Aerospike.Test
 						BitExp.Set(BitPolicy.Default, Exp.Val(31), Exp.Val(1), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -276,7 +276,7 @@ namespace Aerospike.Test
 						BitExp.Or(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -285,7 +285,7 @@ namespace Aerospike.Test
 						BitExp.Or(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(32), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -298,7 +298,7 @@ namespace Aerospike.Test
 						BitExp.Xor(BitPolicy.Default, Exp.Val(0), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -307,7 +307,7 @@ namespace Aerospike.Test
 						BitExp.Xor(BitPolicy.Default, Exp.Val(0), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -320,7 +320,7 @@ namespace Aerospike.Test
 						BitExp.And(BitPolicy.Default, Exp.Val(16), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(0), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -329,7 +329,7 @@ namespace Aerospike.Test
 						BitExp.And(BitPolicy.Default, Exp.Val(16), Exp.Val(8), Exp.Val(bytes), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(0), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -340,7 +340,7 @@ namespace Aerospike.Test
 						BitExp.Not(BitPolicy.Default, Exp.Val(6), Exp.Val(1), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -349,7 +349,7 @@ namespace Aerospike.Test
 						BitExp.Not(BitPolicy.Default, Exp.Val(6), Exp.Val(1), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -360,7 +360,7 @@ namespace Aerospike.Test
 						BitExp.Lshift(BitPolicy.Default, Exp.Val(0), Exp.Val(8), Exp.Val(2), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(2), Exp.Val(6), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -369,7 +369,7 @@ namespace Aerospike.Test
 						BitExp.Lshift(BitPolicy.Default, Exp.Val(0), Exp.Val(8), Exp.Val(2), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(2), Exp.Val(6), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -380,7 +380,7 @@ namespace Aerospike.Test
 						BitExp.Rshift(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(2), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(24), Exp.Val(6), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -389,7 +389,7 @@ namespace Aerospike.Test
 						BitExp.Rshift(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(2), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(24), Exp.Val(6), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -400,7 +400,7 @@ namespace Aerospike.Test
 						BitExp.Add(BitPolicy.Default, Exp.Val(16), Exp.Val(8), Exp.Val(1), false, BitOverflowAction.FAIL, Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(24), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -409,7 +409,7 @@ namespace Aerospike.Test
 						BitExp.Add(BitPolicy.Default, Exp.Val(16), Exp.Val(8), Exp.Val(1), false, BitOverflowAction.FAIL, Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(24), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -420,7 +420,7 @@ namespace Aerospike.Test
 						BitExp.Subtract(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(1), false, BitOverflowAction.FAIL, Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -429,7 +429,7 @@ namespace Aerospike.Test
 						BitExp.Subtract(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(1), false, BitOverflowAction.FAIL, Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(16), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 
@@ -440,7 +440,7 @@ namespace Aerospike.Test
 						BitExp.SetInt(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(0x42), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(8), Exp.Val(8), Exp.BlobBin(binA))));
 
-			Record r = client.Get(policy, key);
+			Record r = client.Get(policy, key).GetAwaiter().GetResult();
 			Assert.AreEqual(null, r);
 
 			policy.filterExp = Exp.Build(
@@ -449,7 +449,7 @@ namespace Aerospike.Test
 						BitExp.SetInt(BitPolicy.Default, Exp.Val(24), Exp.Val(8), Exp.Val(0x42), Exp.BlobBin(binA))),
 					BitExp.Get(Exp.Val(8), Exp.Val(8), Exp.BlobBin(binA))));
 
-			r = client.Get(policy, key);
+			r = client.Get(policy, key).GetAwaiter().GetResult();
 			AssertRecordFound(key, r);
 		}
 	}

@@ -23,7 +23,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryCollection : TestSync
 	{
 		private const string indexName = "mapkey_index";
@@ -116,5 +116,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

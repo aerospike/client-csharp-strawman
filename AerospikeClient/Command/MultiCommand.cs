@@ -75,7 +75,7 @@ namespace Aerospike.Client
 			this.first = first;
 		}
 
-		public async Task ExecuteAndValidate()
+		/*public async Task ExecuteAndValidate()
 		{
 			if (clusterKey != 0)
 			{
@@ -90,7 +90,7 @@ namespace Aerospike.Client
 			{
 				await base.Execute();
 			}
-		}
+		}*/
 
 		protected internal override Node GetNode()
 		{

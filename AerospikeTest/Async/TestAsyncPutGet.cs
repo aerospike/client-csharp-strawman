@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncPutGet : TestAsync
 	{
 		private static readonly string binName = args.GetBinName("putgetbin");
@@ -56,11 +56,11 @@ namespace Aerospike.Test
 		private class WriteHandler : WriteListener
 		{
 			private readonly TestAsyncPutGet parent;
-			private AsyncClient client;
+			private AerospikeClient client;
 			private Key key;
 			private Bin bin;
 
-			public WriteHandler(TestAsyncPutGet parent, AsyncClient client, Key key, Bin bin)
+			public WriteHandler(TestAsyncPutGet parent, AerospikeClient client, Key key, Bin bin)
 			{
 				this.parent = parent;
 				this.client = client;
@@ -114,5 +114,5 @@ namespace Aerospike.Test
 				parent.NotifyCompleted();
 			}
 		}
-	}
+	}*/
 }

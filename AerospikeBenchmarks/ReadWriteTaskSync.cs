@@ -113,13 +113,13 @@ namespace Aerospike.Benchmarks
 			if (metrics.writeLatency != null)
 			{
 				Stopwatch watch = Stopwatch.StartNew();
-				client.Put(policy, key, bin);
+				client.Put(policy, key, bin).Wait();
 				long elapsed = watch.ElapsedMilliseconds;
 				metrics.WriteSuccess(elapsed);
 			}
 			else
 			{
-				client.Put(policy, key, bin);
+				client.Put(policy, key, bin).Wait();
 				metrics.WriteSuccess();
 			}
 		}
@@ -147,13 +147,13 @@ namespace Aerospike.Benchmarks
 			if (metrics.readLatency != null)
 			{
 				Stopwatch watch = Stopwatch.StartNew();
-				Record record = client.Get(policy, key, binName);
+				Record record = client.Get(policy, key, binName).GetAwaiter().GetResult();
 				long elapsed = watch.ElapsedMilliseconds;
 				metrics.ReadSuccess(elapsed);
 			}
 			else
 			{
-				Record record = client.Get(policy, key, binName);
+				Record record = client.Get(policy, key, binName).GetAwaiter().GetResult();
 				metrics.ReadSuccess();
 			}
 		}
@@ -184,7 +184,7 @@ namespace Aerospike.Benchmarks
 
 		private void BatchRead(BatchPolicy policy, Key[] keys, string binName)
 		{
-			if (metrics.readLatency != null)
+			/*if (metrics.readLatency != null)
 			{
 				Stopwatch watch = Stopwatch.StartNew();
 				Record[] records = client.Get(policy, keys, binName);
@@ -195,7 +195,7 @@ namespace Aerospike.Benchmarks
 			{
 				Record[] records = client.Get(policy, keys, binName);
 				metrics.ReadSuccess();
-			}
+			}*/
 		}
 	}
 }

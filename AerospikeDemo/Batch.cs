@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class Batch : SyncExample
+	/*public class Batch : SyncExample
 	{
 		public Batch(Console console) : base(console)
 		{
@@ -209,5 +209,5 @@ namespace Aerospike.Demo
 				console.Error("Records found mismatch. Expected {0}. Received {1}.", 8, found);
 			}
 		}
-	}
+	}*/
 }

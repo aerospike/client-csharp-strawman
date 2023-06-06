@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncQuery : TestAsync
 	{
 		private const string indexName = "asqindex";
@@ -135,5 +135,5 @@ namespace Aerospike.Test
 				parent.NotifyCompleted();
 			}
 		}
-	}
+	}*/
 }

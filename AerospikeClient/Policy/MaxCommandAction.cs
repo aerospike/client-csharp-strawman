@@ -14,26 +14,27 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-using System;
-using System.IO;
-using Aerospike.Client;
-
-namespace Aerospike.Demo
+namespace Aerospike.Client
 {
-    /*public class LuaExample
-    {
-		private static readonly string LuaDirectory = DemoForm.RelativeDirectory + "udf" + Path.DirectorySeparatorChar;
+	/// <summary>
+	/// How to handle cases when the asynchronous maximum number of concurrent database commands have been exceeded.
+	/// </summary>
+	public enum MaxCommandAction
+	{
+		/// <summary>
+		/// Reject database command.
+		/// </summary>
+		REJECT,
 
-        static LuaExample()
-        {
-            LuaConfig.PackagePath = LuaDirectory + "?.lua";
-        }
+		/// <summary>
+		/// Block until a previous command completes. 
+		/// </summary>
+		BLOCK,
 
-        public static void Register(AerospikeClient client, Policy policy, string packageName)
-        {
-            string path = LuaDirectory + packageName;
-            RegisterTask task = client.Register(policy, path, packageName, Language.LUA);
-            task.Wait();
-        }
-    }*/
+		/// <summary>
+		/// Delay until a previous command completes.
+		/// </summary>
+		/// <remarks>This is the asynchronous equivalent of <see cref="BLOCK"/>.</remarks>
+		DELAY,
+	}
 }

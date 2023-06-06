@@ -19,7 +19,7 @@ using System.Threading;
 
 namespace Aerospike.Client
 {
-	public sealed class BatchExecutor
+	/*public sealed class BatchExecutor
 	{
 		public static async Task Execute(BatchPolicy policy, BatchCommand[] commands, BatchStatus status)
 		{
@@ -161,5 +161,5 @@ namespace Aerospike.Client
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

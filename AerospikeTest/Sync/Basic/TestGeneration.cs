@@ -30,19 +30,19 @@ namespace Aerospike.Test
 			string binName = args.GetBinName("genbin");
 
 			// Delete record if it already exists.
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			// Set some values for the same record.
 			Bin bin = new Bin(binName, "genvalue1");
 
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			bin = new Bin(binName, "genvalue2");
 
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			// Retrieve record and its generation count.
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			AssertBinEqual(key, record, bin);
 
 			// Set record and fail if it's not the expected generation.
@@ -51,7 +51,7 @@ namespace Aerospike.Test
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.generationPolicy = GenerationPolicy.EXPECT_GEN_EQUAL;
 			writePolicy.generation = record.generation;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			// Set record with invalid generation and check results .
 			bin = new Bin(binName, "genvalue4");
@@ -59,7 +59,7 @@ namespace Aerospike.Test
 
 			try
 			{
-				client.Put(writePolicy, key, bin);
+				client.Put(writePolicy, key, bin).Wait();
 				Assert.Fail("Should have received generation error instead of success.");
 			}
 			catch (AerospikeException ae)
@@ -71,7 +71,7 @@ namespace Aerospike.Test
 			}
 
 			// Verify results.
-			record = client.Get(null, key, bin.name);
+			record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			AssertBinEqual(key, record, bin.name, "genvalue3");
 		}
 	}

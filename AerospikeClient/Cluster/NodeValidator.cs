@@ -56,7 +56,7 @@ namespace Aerospike.Client
 			{
 				try
 				{
-					ValidateAddress(cluster, address, host.tlsName, host.port, true);
+					await ValidateAddress(cluster, address, host.tlsName, host.port, true);
 
 					// Only set aliases when they were not set by load balancer detection logic.
 					if (this.aliases == null)
@@ -66,7 +66,7 @@ namespace Aerospike.Client
 
 					Node node = await cluster.CreateNode(this, false);
 
-					if (ValidatePeers(peers, node))
+					if (await ValidatePeers(peers, node))
 					{
 						return node;
 					}
@@ -141,7 +141,7 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Verify that a host alias references a valid node.
 		/// </summary>
-		public void ValidateNode(Cluster cluster, Host host)
+		public async Task ValidateNode(Cluster cluster, Host host)
 		{
 			IPAddress[] addresses = Connection.GetHostAddresses(host.name, cluster.connectionTimeout);
 			Exception exception = null;
@@ -150,7 +150,7 @@ namespace Aerospike.Client
 			{
 				try
 				{
-					ValidateAddress(cluster, address, host.tlsName, host.port, false);
+					await ValidateAddress(cluster, address, host.tlsName, host.port, false);
 					SetAliases(address, host.tlsName, host.port);
 					return;
 				}
@@ -174,7 +174,7 @@ namespace Aerospike.Client
 			throw exception;
 		}
 
-		private void ValidateAddress(Cluster cluster, IPAddress address, string tlsName, int port, bool detectLoadBalancer)
+		private async Task ValidateAddress(Cluster cluster, IPAddress address, string tlsName, int port, bool detectLoadBalancer)
 		{
 			IPEndPoint socketAddress = new IPEndPoint(address, port);
 			Connection conn = (cluster.tlsPolicy != null) ?
@@ -247,7 +247,7 @@ namespace Aerospike.Client
 
 				if (addressCommand != null)
 				{
-					SetAddress(cluster, map, addressCommand, tlsName);
+					await SetAddress(cluster, map, addressCommand, tlsName);
 				}
 			}
 			catch (Exception)
@@ -343,7 +343,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private void SetAddress(Cluster cluster, Dictionary<string, string> map, string addressCommand, string tlsName)
+		private async Task SetAddress(Cluster cluster, Dictionary<string, string> map, string addressCommand, string tlsName)
 		{
 			string result;
 
@@ -404,7 +404,8 @@ namespace Aerospike.Client
 							{
 								if (this.sessionToken != null)
 								{
-									if (!AdminCommand.Authenticate(cluster, conn, this.sessionToken))
+									bool authenticated = await AdminCommand.Authenticate(cluster, conn, this.sessionToken);
+									if (!authenticated)
 									{
 										throw new AerospikeException("Authentication failed");
 									}
@@ -494,7 +495,8 @@ namespace Aerospike.Client
 							{
 								if (sessionToken != null)
 								{
-									if (!AdminCommand.Authenticate(cluster, clearConn, sessionToken).Wait())
+									bool authenticated = AdminCommand.Authenticate(cluster, clearConn, sessionToken).GetAwaiter().GetResult();
+									if (!authenticated)
 									{
 										throw new AerospikeException("Authentication failed");
 									}

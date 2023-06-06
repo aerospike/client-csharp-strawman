@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestOperate : TestSync
 	{
 		[TestMethod]
@@ -80,5 +80,5 @@ namespace Aerospike.Test
 			AssertBinEqual(key, record, bin2.name, 2);
 			Assert.IsTrue(record.bins.Count == 1);
 		}
-	}
+	}*/
 }

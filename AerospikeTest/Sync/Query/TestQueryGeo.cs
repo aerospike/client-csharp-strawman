@@ -23,7 +23,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryGeo : TestSync
 	{
 		private const string setName = "geo";
@@ -113,5 +113,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

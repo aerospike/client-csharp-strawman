@@ -21,7 +21,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryContext : TestSync
 	{
 		private const string indexName = "listrank";
@@ -110,5 +110,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

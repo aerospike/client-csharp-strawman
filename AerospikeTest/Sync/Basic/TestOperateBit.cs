@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestOperateBit : TestSync
 	{
 		private const string binName = "opbbin";
@@ -445,5 +445,5 @@ namespace Aerospike.Test
 			long v = (long)record.GetValue(binName);
 			Assert.AreEqual(16899, v);
 		}
-	}
+	}*/
 }

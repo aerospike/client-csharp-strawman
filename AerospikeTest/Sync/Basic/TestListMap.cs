@@ -29,7 +29,7 @@ namespace Aerospike.Test
 		public void ListStrings()
 		{
 			Key key = new Key(args.ns, args.set, "listkey1");
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			List<string> list = new List<string>();
 			list.Add("string1");
@@ -37,9 +37,9 @@ namespace Aerospike.Test
 			list.Add("string3");
 
 			Bin bin = new Bin(args.GetBinName("listbin1"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			IList receivedList = (IList) record.GetValue(bin.name);
 
 			Assert.AreEqual(3, receivedList.Count);
@@ -52,7 +52,7 @@ namespace Aerospike.Test
 		public void ListComplex()
 		{
 			Key key = new Key(args.ns, args.set, "listkey2");
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			string geopoint = "{ \"type\": \"Point\", \"coordinates\": [0.00, 0.00] }";
 
@@ -64,9 +64,9 @@ namespace Aerospike.Test
 			list.Add(Value.GetAsGeoJSON(geopoint));
 
 			Bin bin = new Bin(args.GetBinName("listbin2"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			IList receivedList = (IList)record.GetValue(bin.name);
 
 			Assert.AreEqual(4, receivedList.Count);
@@ -81,7 +81,7 @@ namespace Aerospike.Test
 		public void MapStrings()
 		{
 			Key key = new Key(args.ns, args.set, "mapkey1");
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			Dictionary<string, string> map = new Dictionary<string, string>();
 			map["key1"] = "string1";
@@ -89,9 +89,9 @@ namespace Aerospike.Test
 			map["key3"] = "string3";
 
 			Bin bin = new Bin(args.GetBinName("mapbin1"), map);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			IDictionary receivedMap = (IDictionary) record.GetValue(bin.name);
 
 			Assert.AreEqual(3, receivedMap.Count);
@@ -104,7 +104,7 @@ namespace Aerospike.Test
 		public void MapComplex()
 		{
 			Key key = new Key(args.ns, args.set, "mapkey2");
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			byte[] blob = new byte[] {3, 52, 125};
 			IList<int> list = new List<int>();
@@ -129,9 +129,9 @@ namespace Aerospike.Test
 #endif
 
             Bin bin = new Bin(args.GetBinName("mapbin2"), map);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			IDictionary receivedMap = (IDictionary) record.GetValue(bin.name);
 
 #if BINARY_FORMATTER
@@ -163,7 +163,7 @@ namespace Aerospike.Test
 		public void ListMapCombined()
 		{
 			Key key = new Key(args.ns, args.set, "listmapkey");
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			byte[] blob = new byte[] {3, 52, 125};
 			List<object> inner = new List<object>();
@@ -183,9 +183,9 @@ namespace Aerospike.Test
 			list.Add(innerMap);
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			IList received = (IList) record.GetValue(bin.name);
 
 			Assert.AreEqual(4, received.Count);

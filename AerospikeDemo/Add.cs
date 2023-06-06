@@ -34,18 +34,18 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("addbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			// Perform some adds and check results.
 			Bin bin = new Bin(binName, 10);
 			console.Info("Initial add will create record.  Initial value is " + bin.value + '.');
-			client.Add(args.writePolicy, key, bin);
+			client.Add(args.writePolicy, key, bin).Wait();
 
 			bin = new Bin(binName, 5);
 			console.Info("Add " + bin.value + " to existing record.");
-			client.Add(args.writePolicy, key, bin);
+			client.Add(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).GetAwaiter().GetResult();
 
 			if (record == null)
 			{

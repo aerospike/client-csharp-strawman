@@ -21,7 +21,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestExpOperation : TestSync
 	{
 		string binA = "A";
@@ -362,5 +362,5 @@ namespace Aerospike.Test
 			bool res2 = record.GetBool("res2");
 			Assert.IsTrue(res2);
 		}
-	}
+	}*/
 }

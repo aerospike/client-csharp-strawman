@@ -375,13 +375,13 @@ namespace Aerospike.Client
 			}
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Return operating cluster statistics.
 		/// </summary>
 		public ClusterStats GetClusterStats()
 		{
 			return cluster.GetStats();
-		}
+		}*/
 
 		//-------------------------------------------------------
 		// Write Record Operations
@@ -496,7 +496,7 @@ namespace Aerospike.Client
 			return command.Existed();
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Delete records for specified keys. If a key is not found, the corresponding result
 		/// <see cref="BatchRecord.resultCode"/> will be <see cref="ResultCode.KEY_NOT_FOUND_ERROR"/>.
 		/// <para>
@@ -554,7 +554,7 @@ namespace Aerospike.Client
 				// Batch terminated on fatal error.
 				throw new AerospikeException.BatchRecordArray(records, e);
 			}
-		}
+		}*/
 		
 		/// <summary>
 		/// Remove records in specified namespace/set efficiently.  This method is many orders of magnitude 
@@ -660,7 +660,7 @@ namespace Aerospike.Client
 			return command.Exists();
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Check if multiple record keys exist in one batch call.
 		/// The returned boolean array is in positional order with the original key array order.
 		/// </summary>
@@ -711,7 +711,7 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchExists(existsArray, e);
 			}
-		}
+		}*/
 		
 		//-------------------------------------------------------
 		// Read Record Operations
@@ -779,7 +779,7 @@ namespace Aerospike.Client
 		// Batch Read Operations
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified batch keys in one batch call.
 		/// This method allows different namespaces/bins to be requested for each key in the batch.
 		/// The returned records are located in the same list.
@@ -813,9 +813,9 @@ namespace Aerospike.Client
 			}
 			await BatchExecutor.Execute(policy, commands, status);
 			return status.GetStatus();
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -866,9 +866,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple record headers and bins for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -920,9 +920,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified keys using read operations in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -974,9 +974,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple record header data for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -1027,13 +1027,13 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
 		//-------------------------------------------------------
 		// Join methods
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read specified bins in left record and then join with right records.  Each join bin name
 		/// (Join.leftKeysBinName) must exist in the left record.  The join bin must contain a list of 
 		/// keys. Those key are used to retrieve other records using a separate batch get.
@@ -1060,9 +1060,9 @@ namespace Aerospike.Client
 			Record record = await Get(policy, key, names);
 			await JoinRecords(policy, record, joins);
 			return record;
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read all bins in left record and then join with right records.  Each join bin name
 		/// (Join.binNameKeys) must exist in the left record.  The join bin must contain a list of 
 		/// keys. Those key are used to retrieve other records using a separate batch get.
@@ -1076,7 +1076,7 @@ namespace Aerospike.Client
 			Record record = await Get(policy, key);
 			await JoinRecords(policy, record, joins);
 			return record;
-		}
+		}*/
 
 		//-------------------------------------------------------
 		// Generic Database Operations
@@ -1108,7 +1108,7 @@ namespace Aerospike.Client
 		// Batch Read/Write Operations
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read/Write multiple records for specified batch keys in one batch call.
 		/// This method allows different namespaces/bins for each key in the batch.
 		/// The returned records are located in the same list.
@@ -1147,9 +1147,9 @@ namespace Aerospike.Client
 			}
 			await BatchExecutor.Execute(policy, commands, status);
 			return status.GetStatus();
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Perform read/write operations on multiple keys. If a key is not found, the corresponding result
 		/// <see cref="BatchRecord.resultCode"/> will be <see cref="ResultCode.KEY_NOT_FOUND_ERROR"/>.
 		/// <para>
@@ -1209,13 +1209,13 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException.BatchRecordArray(records, e);
 			}
-		}
+		}*/
 
 		//---------------------------------------------------------------
 		// User defined functions
 		//---------------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Register package located in a file containing user defined functions with server.
 		/// This asynchronous server call will return before command is complete.
 		/// The user can optionally wait for command completion by using the returned
@@ -1234,9 +1234,9 @@ namespace Aerospike.Client
 			}
 			string content = Util.ReadFileEncodeBase64(clientPath);
 			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Register package located in a resource containing user defined functions with server.
 		/// This asynchronous server call will return before command is complete.
 		/// The user can optionally wait for command completion by using the returned
@@ -1262,9 +1262,9 @@ namespace Aerospike.Client
 				content = Convert.ToBase64String(bytes);
 			}
 			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Register UDF functions located in a code string with server. Example:
 		/// <code>
 		/// String code = @"
@@ -1302,7 +1302,7 @@ namespace Aerospike.Client
 			byte[] bytes = ByteUtil.StringToUtf8(code);
 			string content = Convert.ToBase64String(bytes);
 			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
+		}*/
 
 		/// <summary>
 		/// Remove user defined function from server nodes.
@@ -1379,7 +1379,7 @@ namespace Aerospike.Client
 			throw new AerospikeException("Invalid UDF return value");
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute user defined function on server for each key and return results.
 		/// The package name is used to locate the udf file location:
 		/// <para>
@@ -1445,13 +1445,13 @@ namespace Aerospike.Client
 				// Batch terminated on fatal error.
 				throw new AerospikeException.BatchRecordArray(records, e);
 			}
-		}
+		}*/
 
 		//----------------------------------------------------------
 		// Query/Execute
 		//----------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Apply user defined function on records that match the background query statement filter.
 		/// Records are not returned to the client.
 		/// This asynchronous server call will return before the command is complete.  
@@ -1487,9 +1487,9 @@ namespace Aerospike.Client
 
 			await executor.Execute(nodes.Length);
 			return new ExecuteTask(cluster, policy, statement, taskId);
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Apply operations on records that match the background query statement filter.
 		/// Records are not returned to the client.
 		/// This asynchronous server call will return before the command is complete.
@@ -1520,13 +1520,13 @@ namespace Aerospike.Client
 			}
 			await executor.Execute(nodes.Length);
 			return new ExecuteTask(cluster, policy, statement, taskId);
-		}
+		}*/
 
 		//--------------------------------------------------------
 		// Query functions
 		//--------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query and call action for each record returned from server.
 		/// </summary>
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
@@ -1542,9 +1542,9 @@ namespace Aerospike.Client
 					action(rs.Key, rs.Record);
 				}
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
 		/// separate threads.  The calling thread concurrently pops records off the queue through the 
 		/// record iterator.
@@ -1573,9 +1573,9 @@ namespace Aerospike.Client
 				await executor.Execute();
 				return executor.RecordSet;
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
 		/// block until the query is complete. Listener callbacks are made within the scope of this call.
 		/// <para>
@@ -1609,9 +1609,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
 		/// block until the query is complete. Listener callbacks are made within the scope of this call.
 		/// <para>
@@ -1659,9 +1659,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
 		/// records on a queue in separate threads.  The calling thread concurrently pops records off
 		/// the queue through the record iterator.
@@ -1697,9 +1697,9 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "QueryPartitions() not supported");
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query, apply statement's aggregation function, and return result iterator. 
 		/// The aggregation function should be located in a Lua script file that can be found from the 
 		/// "LuaConfig.PackagePath" paths static variable.  The default package path is "udf/?.lua"
@@ -1728,9 +1728,9 @@ namespace Aerospike.Client
 		{
 			statement.SetAggregateFunction(packageName, functionName, functionArgs);
 			return await QueryAggregate(policy, statement);
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query, apply statement's aggregation function, call action for each aggregation
 		/// object returned from server. 
 		/// </summary>
@@ -1749,9 +1749,9 @@ namespace Aerospike.Client
 					action(rs.Object);
 				}
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Execute query, apply statement's aggregation function, and return result iterator. 
 		/// The aggregation function should be initialized via the statement's SetAggregateFunction()
 		/// and should be located in a Lua resource file located in an assembly.
@@ -1778,13 +1778,13 @@ namespace Aerospike.Client
 			QueryAggregateExecutor executor = new QueryAggregateExecutor(cluster, policy, statement, nodes);
 			await executor.Execute();
 			return executor.ResultSet;
-		}
+		}*/
 
 		//--------------------------------------------------------
 		// Secondary Index functions
 		//--------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Create scalar secondary index.
 		/// This asynchronous server call will return before command is complete.
 		/// The user can optionally wait for command completion by using the returned
@@ -1808,9 +1808,9 @@ namespace Aerospike.Client
 		)
 		{
 			return await CreateIndex(policy, ns, setName, indexName, binName, indexType, IndexCollectionType.DEFAULT);	
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Create complex secondary index on bins containing collections.
 		/// This asynchronous server call will return before command is complete.
 		/// The user can optionally wait for command completion by using the returned
@@ -1885,9 +1885,9 @@ namespace Aerospike.Client
 			}
 
 			ParseInfoError("Create index failed", response);
-		}
+		}*/
 		
-		/// <summary>
+		/*/// <summary>
 		/// Delete secondary index.
 		/// This asynchronous server call will return before command is complete.
 		/// The user can optionally wait for command completion by using the returned
@@ -1925,7 +1925,7 @@ namespace Aerospike.Client
 			}
 
 			ParseInfoError("Drop index failed", response);
-		}
+		}*/
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication
@@ -2263,7 +2263,7 @@ namespace Aerospike.Client
 			throw new AerospikeException(message);
 		}
 
-		private async Task JoinRecords(BatchPolicy policy, Record record, Join[] joins)
+		/*private async Task JoinRecords(BatchPolicy policy, Record record, Join[] joins)
 		{
 			if (record == null)
 			{
@@ -2297,6 +2297,6 @@ namespace Aerospike.Client
 					record.bins[join.leftKeysBinName] = records;
 				}
 			}
-		}
+		}*/
 	}
 }

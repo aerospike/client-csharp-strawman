@@ -30,15 +30,15 @@ namespace Aerospike.Test
 			string binName = args.GetBinName("appendbin");
 
 			// Delete record if it already exists.
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			Bin bin = new Bin(binName, "Hello");
-			client.Append(null, key, bin);
+			client.Append(null, key, bin).Wait();
 
 			bin = new Bin(binName, " World");
-			client.Append(null, key, bin);
+			client.Append(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			AssertBinEqual(key, record, bin.name, "Hello World");
 		}
 
@@ -49,15 +49,15 @@ namespace Aerospike.Test
 			string binName = args.GetBinName("prependbin");
 
 			// Delete record if it already exists.
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			Bin bin = new Bin(binName, "World");
-			client.Prepend(null, key, bin);
+			client.Prepend(null, key, bin).Wait();
 
 			bin = new Bin(binName, "Hello ");
-			client.Prepend(null, key, bin);
+			client.Prepend(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
 			AssertBinEqual(key, record, bin.name, "Hello World");
 		}
 	}

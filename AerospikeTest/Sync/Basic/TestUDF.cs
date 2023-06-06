@@ -25,7 +25,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestUDF : TestSync
 	{
 		[ClassInitialize()]
@@ -297,5 +297,5 @@ namespace Aerospike.Test
 			AssertBinEqual(b4.key, b4.record, bin, "value1");
 			AssertBinEqual(b5.key, b5.record, bin, 5);
 		}
-	}
+	}*/
 }

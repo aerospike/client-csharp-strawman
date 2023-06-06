@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace Aerospike.Client
 {
-	/// <summary>
+	/*/// <summary>
 	/// This class manages result retrieval from queries.
 	/// Multiple threads will retrieve results from the server nodes and put these results on the queue.
 	/// The single user thread consumes these results from the queue.
@@ -187,5 +187,5 @@ namespace Aerospike.Client
 				}
 			}
 		}
-	}
+	}*/
 }

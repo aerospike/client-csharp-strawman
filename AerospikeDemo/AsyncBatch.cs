@@ -21,13 +21,13 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class AsyncBatch : AsyncExample
+	/*public class AsyncBatch : AsyncExample
 	{
 		private const string KeyPrefix = "batchkey";
 		private const string ValuePrefix = "batchvalue";
 		private const int BatchSize = 8;
 
-		private AsyncClient client;
+		private AerospikeClient client;
 		private Arguments args;
 		private Key[] sendKeys;
 		private string binName;
@@ -42,7 +42,7 @@ namespace Aerospike.Demo
 		/// <summary>
 		/// Asynchronous batch examples.
 		/// </summary>
-		public override void RunExample(AsyncClient client, Arguments args)
+		public override void RunExample(AerospikeClient client, Arguments args)
 		{
 			this.client = client;
 			this.args = args;
@@ -440,5 +440,5 @@ namespace Aerospike.Demo
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

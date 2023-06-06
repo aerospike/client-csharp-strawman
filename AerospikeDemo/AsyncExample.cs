@@ -27,16 +27,16 @@ namespace Aerospike.Demo
 
 		public override void RunExample(Arguments args)
 		{
-			AsyncClientPolicy policy = new AsyncClientPolicy();
+			ClientPolicy policy = new ClientPolicy();
 			policy.user = args.user;
 			policy.password = args.password;
 			policy.clusterName = args.clusterName;
 			policy.tlsPolicy = args.tlsPolicy;
 			policy.authMode = args.authMode;
-			policy.asyncMaxCommands = args.commandMax;
+			policy.maxCommands = args.commandMax;
 			policy.failIfNotConnected = true;
 
-			AsyncClient client = new AsyncClient(policy, args.hosts);
+			AerospikeClient client = new AerospikeClient(policy, args.hosts);
 
 			try
 			{
@@ -49,6 +49,6 @@ namespace Aerospike.Demo
 			}
 		}
 
-		public abstract void RunExample(AsyncClient client, Arguments args);
+		public abstract void RunExample(AerospikeClient client, Arguments args);
 	}
 }

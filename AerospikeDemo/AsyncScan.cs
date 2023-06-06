@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class AsyncScan : AsyncExample
+	/*public class AsyncScan : AsyncExample
 	{
 		private int recordCount;
 		private bool completed;
@@ -104,5 +104,5 @@ namespace Aerospike.Demo
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

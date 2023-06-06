@@ -73,7 +73,7 @@ namespace Aerospike.Benchmarks
                     client.Close();
                 }
             }
-            else
+            /*else
             {
                 AsyncClientPolicy policy = new AsyncClientPolicy();
                 policy.user = args.user;
@@ -103,7 +103,7 @@ namespace Aerospike.Benchmarks
                 {
                     client.Close();
                 }
-            }
+            }*/
         }
 
         private static void LogCallback(Log.Level level, string message)

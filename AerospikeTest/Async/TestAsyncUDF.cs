@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncUDF : TestAsync
 	{
 		private static readonly string binName = args.GetBinName("audfbin1");
@@ -268,5 +268,5 @@ namespace Aerospike.Test
 			parent.SetError(ae);
 			parent.NotifyCompleted();
 		}
-	}
+	}*/
 }

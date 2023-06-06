@@ -103,7 +103,7 @@ namespace Aerospike.Admin
 			if (userNameFilter == null)
 			{
 				// Query all users
-				List<User> source = client.QueryUsers(null);
+				List<User> source = client.QueryUsers(null).GetAwaiter().GetResult();
 				list = new List<UserRow>(source.Count);
 
 				foreach (User user in source)
@@ -116,7 +116,7 @@ namespace Aerospike.Admin
 				// Query own user.
 				if (currentUser == null)
 				{
-					currentUser = client.QueryUser(null, userNameFilter);
+					currentUser = client.QueryUser(null, userNameFilter).GetAwaiter().GetResult();
 				}
 				list = new List<UserRow>(1);
 
@@ -191,7 +191,7 @@ namespace Aerospike.Admin
 
 					if (result == DialogResult.Yes)
 					{
-						client.DropUser(null, username);
+						client.DropUser(null, username).GetAwaiter().GetResult();
 						ReadUsers(null);
 					}
 				}

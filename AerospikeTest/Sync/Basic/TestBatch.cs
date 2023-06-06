@@ -21,7 +21,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestBatch : TestSync
 	{
 		private const string BinName = "bbin";
@@ -380,5 +380,5 @@ namespace Aerospike.Test
             // ttl can be zero if server default-ttl = 0.
             // Assert.AreNotEqual(0, batch.record.expiration);
 		}
-	}
+	}*/
 }

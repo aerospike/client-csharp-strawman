@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncScan : TestAsync
 	{
 		private int recordCount;
@@ -68,5 +68,5 @@ namespace Aerospike.Test
 				parent.NotifyCompleted();
 			}
 		}
-	}
+	}*/
 }

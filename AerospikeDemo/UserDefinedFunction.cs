@@ -240,7 +240,7 @@ namespace Aerospike.Demo
 
 			Key key = new Key(args.ns, args.set, "udfkey7");
 			Bin bin = new Bin("udfbin7", list);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			ServerSideExists(client, args.writePolicy, key, bin, 3702, true);
 			ServerSideExists(client, args.writePolicy, key, bin, 65, false);
