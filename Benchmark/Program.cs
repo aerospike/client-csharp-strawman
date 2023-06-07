@@ -23,7 +23,7 @@ class Program
     {
         try
         {
-			var summary = BenchmarkRunner.Run<Benchmark>(); //research thread safe run
+			var summary = BenchmarkRunner.Run<Benchmark>();
 		}
         catch (Exception e)
         {
