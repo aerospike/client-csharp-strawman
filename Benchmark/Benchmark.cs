@@ -20,18 +20,20 @@ using System.Text;
 using Aerospike.Client;
 using BenchmarkDotNet.Attributes;
 
-// make graphs
 // iterations 25, 50, 10,000, 100,000 - want to trigger GC
 [SimpleJob(launchCount: 1, warmupCount: 3, iterationCount: 25)]
 public class Benchmark
 {
 	private readonly AerospikeClient Client;
 
-	[Params(0, 100)]
+	[ParamsSource(nameof(pkRange))]
 	public long pk;
 
-	[Params(0, 100)]
+	[ParamsSource(nameof(lengthRange))]
 	public long length;
+
+	public IEnumerable<int> pkRange => Enumerable.Range(1, 25);
+	public IEnumerable<int> lengthRange => new[] { 1, 10, 100 };
 
 	private volatile int[] dataIntArray;
 
@@ -55,57 +57,20 @@ public class Benchmark
 	}
 
 	[Benchmark]
-	public async Task PutLong()
+	public async Task Put()
 	{
 		var key = new Key("test", "test", pk);
-		var val = new Value.LongValue(pk);
-		var bin = new Bin("binLong", val);
-		await Client.Put(null, key, bin);
-	}
+		var bins = new Bin[]
+		{
+			new Bin("binLong", new Value.LongValue(pk)),
+			new Bin("binString", new Value.StringValue(pk.ToString())),
+			new Bin("binDouble", new Value.DoubleValue((double)pk)),
+			new Bin("binList", new Value.ListValue(dataIntArray)),
+			new Bin("binMap", new Value.MapValue(dataDictionary)),
+			new Bin("binListMap", new Value.ListValue(dataListDictionary))
+		};
 
-	[Benchmark]
-	public async Task PutString()
-	{
-		var key = new Key("test", "test", pk);
-		var val = new Value.StringValue(pk.ToString());
-		var bin = new Bin("binString", val);
-		await Client.Put(null, key, bin);
-	}
-
-	[Benchmark]
-	public async Task PutDouble()
-	{
-		var key = new Key("test", "test", pk);
-		var val = new Value.DoubleValue((double)pk);
-		var bin = new Bin("binDouble", val);
-		await Client.Put(null, key, bin);
-	}
-
-	[Benchmark]
-	public async Task PutListInt()
-	{
-		var key = new Key("test", "test", pk);
-		var val = new Value.ListValue(dataIntArray);
-		var bin = new Bin("binListInt", val);
-		await Client.Put(null, key, bin);
-	}
-
-	[Benchmark]
-	public async Task PutMapInt()
-	{
-		var key = new Key("test", "test", pk);
-		var val = new Value.MapValue(dataDictionary);
-		var bin = new Bin("bin", val);
-		await Client.Put(null, key, bin);
-	}
-
-	[Benchmark]
-	public async Task PutListMapInt()
-	{
-		var key = new Key("test", "test", pk);
-		var val = new Value.ListValue(dataListDictionary);
-		var bin = new Bin("bin", val);
-		await Client.Put(null, key, bin);
+		await Client.Put(null, key, bins);
 	}
 
 	[Benchmark]
@@ -118,8 +83,7 @@ public class Benchmark
 	[GlobalSetup]
 	public void CreateData()
 	{
-		dataIntArray = new int[length];
-		Array.Fill(dataIntArray, 1);
+		dataIntArray = Enumerable.Range(0, (int)length).ToArray();
 		dataDictionary = new Dictionary<object, object>(dataIntArray.Cast<object>().Select(v => new KeyValuePair<object, object>(v, v)));
 		dataListDictionary = new Dictionary<object, object>[length];
 		Array.Fill(dataListDictionary, dataDictionary);
