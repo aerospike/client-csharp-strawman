@@ -15,6 +15,7 @@
  * the License.
  */
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text;
 using Aerospike.Client;
@@ -29,11 +30,7 @@ public class Benchmark
 	[ParamsSource(nameof(pkRange))]
 	public long pk;
 
-	[ParamsSource(nameof(lengthRange))]
-	public long length;
-
 	public IEnumerable<int> pkRange => Enumerable.Range(1, 25);
-	public IEnumerable<int> lengthRange => new[] { 1, 10, 100 };
 
 	private volatile int[] dataIntArray;
 
@@ -41,19 +38,32 @@ public class Benchmark
 
 	private volatile Dictionary<object, object>[] dataListDictionary;
 
+	public Random random;
+
 	public Benchmark()
 	{
+		var now = DateTime.Now;
+		
 		var policy = new ClientPolicy
 		{
-			maxCommands = 300,
-			minConnsPerNode = 1,
-			maxConnsPerNode = 50
+			maxCommands = 1000,
+			minConnsPerNode = 100,
+			maxConnsPerNode = 100
 		};
 		Host[] hosts = new Host[] { new Host("localhost", 3000) };
 		Client = new AerospikeClient(policy, hosts);
 
-		Client.Truncate(null, "test", "test", DateTime.Now).Wait();
-		Thread.Sleep(500);
+		//random = new Random(42);
+
+		/*try
+		{
+			Client.Truncate(null, "test", "test", now).Wait();
+			System.Console.WriteLine("truncate");
+			Thread.Sleep(500);
+		}
+		catch
+		{
+		}*/
 	}
 
 	[Benchmark]
@@ -83,6 +93,8 @@ public class Benchmark
 	[GlobalSetup]
 	public void CreateData()
 	{
+		//long length = random.Next(1, 100);
+		long length = 10;
 		dataIntArray = Enumerable.Range(0, (int)length).ToArray();
 		dataDictionary = new Dictionary<object, object>(dataIntArray.Cast<object>().Select(v => new KeyValuePair<object, object>(v, v)));
 		dataListDictionary = new Dictionary<object, object>[length];
