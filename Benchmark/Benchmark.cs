@@ -22,7 +22,7 @@ using Aerospike.Client;
 using BenchmarkDotNet.Attributes;
 
 // iterations 25, 50, 10,000, 100,000 - want to trigger GC
-[SimpleJob(launchCount: 1, warmupCount: 3, iterationCount: 25)]
+[SimpleJob(launchCount: 50, warmupCount: 3, iterationCount: 1000)]
 public class Benchmark
 {
 	private readonly AerospikeClient Client;

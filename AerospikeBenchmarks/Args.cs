@@ -176,12 +176,12 @@ namespace Aerospike.Benchmarks
 		/// <summary>
 		/// Some database calls need to know how the server is configured.
 		/// </summary>
-		internal void SetServerSpecific(AerospikeClient client)
+		internal async Task SetServerSpecific(AerospikeClient client)
 		{
-			/*Node node = client.Nodes[0];
+			Node node = client.Nodes[0];
 			string featuresFilter = "features";
 			string namespaceFilter = "namespace/" + ns;
-			Dictionary<string, string> tokens = Info.Request(null, node, featuresFilter, namespaceFilter);
+			Dictionary<string, string> tokens = await Info.Request(null, node, featuresFilter, namespaceFilter);
 
 			string namespaceTokens = tokens[namespaceFilter];
 
@@ -191,7 +191,7 @@ namespace Aerospike.Benchmarks
 			}
 
 			singleBin = parseBoolean(namespaceTokens, "single-bin");
-			binName = singleBin ? "" : "bin";  // Single bin servers don't need a bin name.*/
+			binName = singleBin ? "" : "bin";  // Single bin servers don't need a bin name.
 		}
 
 		private static bool parseBoolean(String namespaceTokens, String name)

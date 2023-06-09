@@ -14,24 +14,244 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+using Aerospike.Client;
+using System.Diagnostics;
+
 namespace Aerospike.Benchmarks
 {
-	abstract class ReadWriteTask
+	sealed class ReadWriteTask
 	{
 		internal readonly Args args;
 		internal readonly Metrics metrics;
 		internal bool valid;
+		private readonly AerospikeClient client;
+		private readonly RandomShift random;
+		private readonly Stopwatch watch;
+		private long begin;
+		private readonly bool useLatency;
 
-		public ReadWriteTask(Args args, Metrics metrics)
+		public ReadWriteTask(AerospikeClient client, Args args, Metrics metrics)
 		{
 			this.args = args;
 			this.metrics = metrics;
 			this.valid = true;
+			this.client = client;
+			this.random = new RandomShift();
+			this.useLatency = metrics.writeLatency != null;
+			watch = Stopwatch.StartNew();
 		}
 
-		public void Stop()
+		public async Task RunCommand()
 		{
-			valid = false;
+			// Roll a percentage die.
+			int die = random.Next(0, 100);
+
+			if (die < args.readPct)
+			{
+				if (args.batchSize <= 1)
+				{
+					int key = random.Next(0, args.records);
+					await Read(key);
+				}
+				/*else
+				{
+					await BatchRead();
+				}*/
+			}
+			else
+			{
+				// Perform Single record write even if in batch mode.
+				int key = random.Next(0, args.records);
+				await Write(key);
+			}
 		}
+
+		private async Task Write(int userKey)
+		{
+			Key key = new Key(args.ns, args.set, userKey);
+			Bin bin = new Bin(args.binName, args.GetValue(random));
+
+			try
+			{
+				if (useLatency)
+				{
+					begin = watch.ElapsedMilliseconds;
+				}
+				await client.Put(args.writePolicy, key, bin)
+					.ContinueWith(task =>
+					{
+						if (task.IsCompletedSuccessfully)
+						{
+							if (useLatency)
+							{
+								WriteSuccessLatency().Wait();
+							}
+							else
+							{
+								WriteSuccess().Wait();
+							}
+						}
+						else if (task.IsFaulted)
+						{
+							WriteFailure(task.Exception).Wait();
+						}
+
+						return true;
+					}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
+			}
+			catch (AerospikeException ae)
+			{
+				await WriteFailure(ae);
+			}
+			catch (Exception e)
+			{
+				await WriteFailure(e);
+			}
+		}
+
+		private async Task WriteSuccessLatency()
+		{
+			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
+			metrics.writeLatency.Add(elapsed);
+			//await WriteSuccess();
+		}
+
+		private async Task WriteSuccess()
+		{
+			metrics.WriteSuccess();
+			//await RunCommand();
+		}
+
+		private async Task WriteFailure(AerospikeException ae)
+		{
+			metrics.WriteFailure(ae);
+			//await RunCommand();
+		}
+
+		private async Task WriteFailure(Exception e)
+		{
+			metrics.WriteFailure(e);
+			//await RunCommand();
+		}
+
+		private async Task Read(int userKey)
+		{
+			Key key = new Key(args.ns, args.set, userKey);
+
+			try
+			{
+				if (useLatency)
+				{
+					begin = watch.ElapsedMilliseconds;
+				}
+				await client.Get(args.policy, key, args.binName)
+					.ContinueWith(task =>
+					{
+						if (task.IsCompletedSuccessfully)
+						{
+							if (useLatency)
+							{
+								ReadSuccessLatency().Wait();
+							}
+							else
+							{
+								ReadSuccess().Wait();
+							}
+						}
+						else if (task.IsFaulted)
+						{
+							ReadFailure(task.Exception).Wait();
+						}
+
+						return true;
+					}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
+			}
+			catch (AerospikeException ae)
+			{
+				await ReadFailure(ae);
+			}
+			catch (Exception e)
+			{
+				await ReadFailure(e);
+			}
+		}
+
+		private async Task ReadSuccessLatency()
+		{
+			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
+			metrics.readLatency.Add(elapsed);
+			await ReadSuccess();
+		}
+
+		private async Task ReadSuccess()
+		{
+			metrics.ReadSuccess();
+			//await RunCommand();
+		}
+
+		private async Task ReadFailure(AerospikeException ae)
+		{
+			metrics.ReadFailure(ae);
+			//await RunCommand();
+		}
+
+		private async Task ReadFailure(Exception e)
+		{
+			metrics.ReadFailure(e);
+			//await RunCommand();
+		}
+
+		/*private async Task BatchRead()
+		{
+			Key[] keys = new Key[args.batchSize];
+
+			for (int i = 0; i < keys.Length; i++)
+			{
+				long keyIdx = random.Next(0, args.records);
+				keys[i] = new Key(args.ns, args.set, keyIdx);
+			}
+
+			try
+			{
+				if (useLatency)
+				{
+					begin = watch.ElapsedMilliseconds;
+				}
+				await client.Get(args.batchPolicy, keys, args.binName);
+			}
+			catch (AerospikeException ae)
+			{
+				await BatchFailure(ae);
+			}
+			catch (Exception e)
+			{
+				await BatchFailure(e);
+			}
+		}
+
+		private async Task BatchSuccessLatency()
+		{
+			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
+			metrics.readLatency.Add(elapsed);
+			await ReadSuccess();
+		}
+
+		private async Task BatchSuccess()
+		{
+			metrics.ReadSuccess();
+			await RunCommand();
+		}
+
+		private async Task BatchFailure(AerospikeException ae)
+		{
+			metrics.ReadFailure(ae);
+			await RunCommand();
+		}
+
+		private async Task BatchFailure(Exception e)
+		{
+			metrics.ReadFailure(e);
+			await RunCommand();
+		}*/
 	}
 }

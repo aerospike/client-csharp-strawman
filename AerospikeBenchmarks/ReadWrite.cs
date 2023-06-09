@@ -30,26 +30,7 @@ namespace Aerospike.Benchmarks
 			this.metrics = metrics;
 		}
 
-		public void RunSync(AerospikeClient client)
-		{
-			ReadWriteTaskSync[] tasks = new ReadWriteTaskSync[args.threadMax];
-
-			for (long i = 0; i < args.threadMax; i++)
-			{
-				tasks[i] = new ReadWriteTaskSync(client, args, metrics);
-			}
-
-			metrics.Start();
-
-			foreach (ReadWriteTaskSync task in tasks)
-			{
-				task.Start();
-			}
-
-			RunTicker(tasks);
-		}
-
-		/*public void RunAsync(AsyncClient client)
+		public void Run(AerospikeClient client)
 		{
 			// Generate commandMax writes to seed the event loops.
 			// Then start a new command in each command callback.
@@ -62,23 +43,30 @@ namespace Aerospike.Benchmarks
 				maxConcurrentCommands = args.recordsInit;
 			}
 
-			ReadWriteTaskAsync[] tasks = new ReadWriteTaskAsync[maxConcurrentCommands];
+			ReadWriteTask[] tasks = new ReadWriteTask[maxConcurrentCommands];
 
-			for (int i = 0; i < maxConcurrentCommands; i++)
+			for (long i = 0; i < maxConcurrentCommands; i++)
 			{
-				tasks[i] = new ReadWriteTaskAsync(client, args, metrics);
+				tasks[i] = new ReadWriteTask(client, args, metrics);
 			}
 
 			metrics.Start();
 
-			foreach (ReadWriteTaskAsync task in tasks)
-			{
-				task.Start();
-			}
-			RunTicker(tasks);
-		}*/
+			//Thread.Sleep(1000);
 
-		private void RunTicker(ReadWriteTask[] tasks)
+			Parallel.ForEach(tasks, task =>
+			{
+				task.RunCommand().Wait();
+			});
+			/*foreach (ReadWriteTask task in tasks)
+			{
+				task.RunCommand().Wait();
+			}*/
+
+			RunTicker();//latencyBuilder, latencyHeader);
+		}
+
+		private void RunTicker()//StringBuilder latencyBuilder, string latencyHeader)
 		{
 			StringBuilder latencyBuilder = null;
 			string latencyHeader = null;
@@ -93,7 +81,7 @@ namespace Aerospike.Benchmarks
 			Thread.Sleep(900);
 
 			long transactionTotal = 0;
-
+			
 			while (true)
 			{
 				long time = metrics.Time;
@@ -132,10 +120,6 @@ namespace Aerospike.Benchmarks
 
 					if (transactionTotal >= args.transactionMax)
 					{
-						foreach (ReadWriteTask task in tasks)
-						{
-							task.Stop();
-						}
 
 						if (metrics.writeLatency != null)
 						{
