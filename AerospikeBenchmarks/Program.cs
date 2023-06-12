@@ -42,68 +42,37 @@ namespace Aerospike.Benchmarks
             Log.Level level = args.debug ? Log.Level.DEBUG : Log.Level.INFO;
             Log.SetLevel(level);
 
-            Metrics metrics = new Metrics(args);
+            var metrics = new Metrics(args);
 
-            if (args.sync)
+            var policy = new ClientPolicy();
+            policy.user = args.user;
+            policy.password = args.password;
+            policy.tlsPolicy = args.tlsPolicy;
+            policy.authMode = args.authMode;
+			policy.maxCommands = args.commandMax;
+            policy.minConnsPerNode = 100;
+            policy.maxConnsPerNode = 100;
+			var client = new AerospikeClient(policy, args.hosts);
+
+            try
             {
-                ClientPolicy policy = new ClientPolicy();
-                policy.user = args.user;
-                policy.password = args.password;
-                policy.tlsPolicy = args.tlsPolicy;
-                policy.authMode = args.authMode;
-                AerospikeClient client = new AerospikeClient(policy, args.hosts);
+                args.SetServerSpecific(client).Wait();
 
-                try
+                if (args.initialize)
                 {
-                    args.SetServerSpecific(client);
-
-                    if (args.initialize)
-                    {
-                        Initialize prog = new Initialize(args, metrics);
-                        prog.RunSync(client);
-                    }
-                    else
-                    {
-                        ReadWrite prog = new ReadWrite(args, metrics);
-                        prog.RunSync(client);
-                    }
+                    var prog = new Initialize(args, metrics);
+                    prog.Run(client);
                 }
-                finally
+                else
                 {
-                    client.Close();
+                    var prog = new ReadWrite(args, metrics);
+                    prog.Run(client);
                 }
             }
-            /*else
+            finally
             {
-                AsyncClientPolicy policy = new AsyncClientPolicy();
-                policy.user = args.user;
-                policy.password = args.password;
-                policy.tlsPolicy = args.tlsPolicy;
-                policy.authMode = args.authMode;
-                policy.asyncMaxCommands = args.commandMax;
-
-                AsyncClient client = new AsyncClient(policy, args.hosts);
-
-                try
-                {
-                    args.SetServerSpecific(client);
-
-                    if (args.initialize)
-                    {
-                        Initialize prog = new Initialize(args, metrics);
-                        prog.RunAsync(client);
-                    }
-                    else
-                    {
-                        ReadWrite prog = new ReadWrite(args, metrics);
-                        prog.RunAsync(client);
-                    }
-                }
-                finally
-                {
-                    client.Close();
-                }
-            }*/
+                client.Close();
+            }
         }
 
         private static void LogCallback(Log.Level level, string message)

@@ -19,47 +19,39 @@ using Aerospike.Client;
 
 namespace Aerospike.Benchmarks
 {
-	/*sealed class WriteTaskAsync
+	sealed class WriteTask
 	{
-		private readonly AsyncClient client;
+		private readonly AerospikeClient client;
 		private readonly Args args;
 		private readonly Metrics metrics;
-		private readonly RandomShift random;
-		private readonly WriteListener listener;
-		private readonly Stopwatch watch;
 		private readonly long keyStart;
 		private readonly long keyMax;
+		private readonly RandomShift random;
+		private readonly Stopwatch watch;
 		private long keyCount;
 		private long begin;
 		private readonly bool useLatency;
 
-		public WriteTaskAsync(AsyncClient client, Args args, Metrics metrics, long keyStart, long keyMax)
+		public WriteTask(AerospikeClient client, Args args, Metrics metrics, long keyStart, long keyMax)
 		{
 			this.client = client;
 			this.args = args;
 			this.metrics = metrics;
+			this.keyStart = keyStart;
+			this.keyMax = keyMax;
 			this.random = new RandomShift();
 			this.keyStart = keyStart;
 			this.keyMax = keyMax;
 			this.useLatency = metrics.writeLatency != null;
-
-			if (useLatency)
-			{
-				listener = new LatencyWriteHandler(this);
-			}
-			else
-			{
-				listener = new WriteHandler(this);
-			}
 			watch = Stopwatch.StartNew();
 		}
 
-		public void Start()
+		public async Task Start()
 		{
-			RunCommand(keyCount);
+			await RunCommand(keyCount);
 		}
 
-		public void RunCommand(long count)
+		public async Task RunCommand(long count)
 		{
 			long currentKey = keyStart + count;
 			Key key = new Key(args.ns, args.set, currentKey);
@@ -69,73 +61,59 @@ namespace Aerospike.Benchmarks
 			{
 				begin = watch.ElapsedMilliseconds;
 			}
-			client.Put(args.writePolicy, listener, key, bin);
+			await client.Put(args.writePolicy, key, bin)
+				.ContinueWith(task =>
+				{
+					if (task.IsCompletedSuccessfully)
+					{
+						if (useLatency)
+						{
+							WriteSuccessLatency().Wait();
+						}
+						else
+						{
+							WriteSuccess().Wait();
+						}
+					}
+					else if (task.IsFaulted)
+					{
+						WriteFailure(task.Exception).Wait();
+					}
+
+					return true;
+				}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
 		}
 
-		private class LatencyWriteHandler : WriteListener
-		{
-			private readonly WriteTaskAsync parent;
-
-			public LatencyWriteHandler(WriteTaskAsync parent)
-			{
-				this.parent = parent;
-			}
-
-			public void OnSuccess(Key key)
-			{
-				parent.WriteSuccessLatency();
-			}
-
-			public void OnFailure(AerospikeException ae)
-			{
-				parent.WriteFailure(ae);
-			}
-		}
-
-		private class WriteHandler : WriteListener
-		{
-			private readonly WriteTaskAsync parent;
-
-			public WriteHandler(WriteTaskAsync parent)
-			{
-				this.parent = parent;
-			}
-
-			public void OnSuccess(Key k)
-			{
-				parent.WriteSuccess();
-			}
-
-			public void OnFailure(AerospikeException ae)
-			{
-				parent.WriteFailure(ae);
-			}
-		}
-
-		private void WriteSuccessLatency()
+		private async Task WriteSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
 			metrics.writeLatency.Add(elapsed);
-			WriteSuccess();
+			await WriteSuccess();
 		}
 
-		private void WriteSuccess()
+		private async Task WriteSuccess()
 		{
 			metrics.WriteSuccess();
 			long count = Interlocked.Increment(ref keyCount);
 
-			if (count < keyMax)
+			/*if (count < keyMax)
 			{
 				// Try next command.
-				RunCommand(count);
-			}
+				await RunCommand(count);
+			}*/
 		}
 
-		private void WriteFailure(AerospikeException ae)
+		private async Task WriteFailure(AerospikeException ae)
 		{
 			metrics.WriteFailure(ae);
 			// Retry command with same key.
-			RunCommand(keyCount);
+			await RunCommand(keyCount);
 		}
-	}*/
+
+		private async Task WriteFailure(Exception e)
+		{
+			metrics.WriteFailure(e);
+			await RunCommand(keyCount);
+		}
+	}
 }

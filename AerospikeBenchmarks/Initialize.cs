@@ -30,32 +30,7 @@ namespace Aerospike.Benchmarks
 			this.metrics = metrics;
 		}
 
-		public void RunSync(AerospikeClient client)
-		{
-			long taskCount = args.threadMax < args.recordsInit ? args.threadMax : args.recordsInit;
-			long keysPerTask = args.recordsInit / taskCount;
-			long rem = args.recordsInit - (keysPerTask * taskCount);
-			long keyStart = 0;
-
-			WriteTaskSync[] tasks = new WriteTaskSync[taskCount];
-
-			for (long i = 0; i < taskCount; i++)
-			{
-				long keyCount = (i < rem) ? keysPerTask + 1 : keysPerTask;
-				tasks[i] = new WriteTaskSync(client, args, metrics, keyStart, keyCount);
-				keyStart += keyCount;
-			}
-
-			metrics.Start();
-
-			foreach (WriteTaskSync task in tasks)
-			{
-				task.Start();
-			}
-			RunTicker();
-		}
-
-		/*public void RunAsync(AsyncClient client)
+		public void Run(AerospikeClient client)
 		{
 			// Generate commandMax writes to seed the event loops.
 			// Then start a new command in each command callback.
@@ -72,24 +47,28 @@ namespace Aerospike.Benchmarks
 			long keysRem = args.recordsInit - (keysPerCommand * maxConcurrentCommands);
 			long keyStart = 0;
 
-			WriteTaskAsync[] tasks = new WriteTaskAsync[maxConcurrentCommands];
+			WriteTask[] tasks = new WriteTask[maxConcurrentCommands];
 
 			for (int i = 0; i < maxConcurrentCommands; i++)
 			{
 				// Allocate separate tasks for each seed command and reuse them in callbacks.
 				long keyCount = (i < keysRem) ? keysPerCommand + 1 : keysPerCommand;
-				tasks[i] = new WriteTaskAsync(client, args, metrics, keyStart, keyCount);
+				tasks[i] = new WriteTask(client, args, metrics, keyStart, keyCount);
 				keyStart += keyCount;
 			}
 
 			metrics.Start();
 
-			foreach (WriteTaskAsync task in tasks)
+			Parallel.ForEach(tasks, task =>
 			{
-				task.Start();
-			}
+				task.Start().Wait();
+			});
+			/*foreach (WriteTask task in tasks)
+			{
+				task.Start().Wait();
+			}*/
 			RunTicker();
-		}*/
+		}
 
 		private void RunTicker()
 		{
@@ -103,7 +82,7 @@ namespace Aerospike.Benchmarks
 			}
 
 			// Give tasks a chance to create stats for first period.
-			Thread.Sleep(900);
+			//Thread.Sleep(900);
 
 			long total = 0;
 
@@ -131,7 +110,7 @@ namespace Aerospike.Benchmarks
 					}
 					Console.WriteLine(metrics.writeLatency.PrintResults(latencyBuilder, "write"));
 				}
-				Thread.Sleep(1000);
+				//Thread.Sleep(1000);
 			}
 
 			if (metrics.writeLatency != null)

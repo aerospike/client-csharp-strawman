@@ -17,18 +17,10 @@
 using Aerospike.Client;
 using BenchmarkDotNet.Running;
 
-class Program
+public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        try
-        {
-			var summary = BenchmarkRunner.Run<Benchmark>();
-		}
-        catch (Exception e)
-        {
-            Console.WriteLine("Error: " + e.Message);
-            Console.WriteLine(e.StackTrace);
-        }
+		var summary = BenchmarkRunner.Run<Benchmark>();
     }
 }
