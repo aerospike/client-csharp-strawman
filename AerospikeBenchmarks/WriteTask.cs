@@ -28,7 +28,6 @@ namespace Aerospike.Benchmarks
 		private readonly long keyMax;
 		private readonly RandomShift random;
 		private readonly Stopwatch watch;
-		private long keyCount;
 		private long begin;
 		private readonly bool useLatency;
 
@@ -40,16 +39,14 @@ namespace Aerospike.Benchmarks
 			this.keyStart = keyStart;
 			this.keyMax = keyMax;
 			this.random = new RandomShift();
-			this.keyStart = keyStart;
-			this.keyMax = keyMax;
 			this.useLatency = metrics.writeLatency != null;
 			watch = Stopwatch.StartNew();
 		}
 
-		public async Task Start()
+		/*public void Start()
 		{
-			await RunCommand(keyCount);
-		}
+			RunCommand(keyCount);
+		}*/
 
 		public async Task RunCommand(long count)
 		{
@@ -68,52 +65,42 @@ namespace Aerospike.Benchmarks
 					{
 						if (useLatency)
 						{
-							WriteSuccessLatency().Wait();
+							WriteSuccessLatency();
 						}
 						else
 						{
-							WriteSuccess().Wait();
+							WriteSuccess();
 						}
 					}
 					else if (task.IsFaulted)
 					{
-						WriteFailure(task.Exception).Wait();
+						WriteFailure(task.Exception);
 					}
 
 					return true;
 				}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
 		}
 
-		private async Task WriteSuccessLatency()
+		private void WriteSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
 			metrics.writeLatency.Add(elapsed);
-			await WriteSuccess();
+			WriteSuccess();
 		}
 
-		private async Task WriteSuccess()
+		private void WriteSuccess()
 		{
 			metrics.WriteSuccess();
-			long count = Interlocked.Increment(ref keyCount);
-
-			/*if (count < keyMax)
-			{
-				// Try next command.
-				await RunCommand(count);
-			}*/
 		}
 
-		private async Task WriteFailure(AerospikeException ae)
+		private void WriteFailure(AerospikeException ae)
 		{
 			metrics.WriteFailure(ae);
-			// Retry command with same key.
-			await RunCommand(keyCount);
 		}
 
-		private async Task WriteFailure(Exception e)
+		private void WriteFailure(Exception e)
 		{
 			metrics.WriteFailure(e);
-			await RunCommand(keyCount);
 		}
 	}
 }

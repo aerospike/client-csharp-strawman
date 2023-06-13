@@ -43,13 +43,16 @@ namespace Aerospike.Benchmarks
 				maxConcurrentCommands = args.recordsInit;
 			}
 
+			//var numTasks = new int[args.records];
+			//numTasks = Enumerable.Range(0, args.records).ToArray();
+
 			long keysPerCommand = args.recordsInit / maxConcurrentCommands;
 			long keysRem = args.recordsInit - (keysPerCommand * maxConcurrentCommands);
 			long keyStart = 0;
 
-			WriteTask[] tasks = new WriteTask[maxConcurrentCommands];
+			WriteTask[] tasks = new WriteTask[args.records];
 
-			for (int i = 0; i < maxConcurrentCommands; i++)
+			for (int i = 0; i < args.records; i++)
 			{
 				// Allocate separate tasks for each seed command and reuse them in callbacks.
 				long keyCount = (i < keysRem) ? keysPerCommand + 1 : keysPerCommand;
@@ -59,14 +62,18 @@ namespace Aerospike.Benchmarks
 
 			metrics.Start();
 
-			Parallel.ForEach(tasks, task =>
+			var options = new ParallelOptions
 			{
-				task.Start().Wait();
+				MaxDegreeOfParallelism = maxConcurrentCommands
+			};
+
+			//var task = new WriteTask(client, args, metrics, 0, args.records);
+
+			Parallel.ForEachAsync(tasks, options, async (task, cancellationToken) =>
+			{
+				await task.RunCommand(0);
 			});
-			/*foreach (WriteTask task in tasks)
-			{
-				task.Start().Wait();
-			}*/
+
 			RunTicker();
 		}
 
@@ -82,7 +89,7 @@ namespace Aerospike.Benchmarks
 			}
 
 			// Give tasks a chance to create stats for first period.
-			//Thread.Sleep(900);
+			Thread.Sleep(900);
 
 			long total = 0;
 
@@ -110,7 +117,7 @@ namespace Aerospike.Benchmarks
 					}
 					Console.WriteLine(metrics.writeLatency.PrintResults(latencyBuilder, "write"));
 				}
-				//Thread.Sleep(1000);
+				Thread.Sleep(1000);
 			}
 
 			if (metrics.writeLatency != null)

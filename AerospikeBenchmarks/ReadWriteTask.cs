@@ -84,16 +84,16 @@ namespace Aerospike.Benchmarks
 						{
 							if (useLatency)
 							{
-								WriteSuccessLatency().Wait();
+								WriteSuccessLatency();
 							}
 							else
 							{
-								WriteSuccess().Wait();
+								WriteSuccess();
 							}
 						}
 						else if (task.IsFaulted)
 						{
-							WriteFailure(task.Exception).Wait();
+							WriteFailure(task.Exception);
 						}
 
 						return true;
@@ -101,37 +101,34 @@ namespace Aerospike.Benchmarks
 			}
 			catch (AerospikeException ae)
 			{
-				await WriteFailure(ae);
+				WriteFailure(ae);
 			}
 			catch (Exception e)
 			{
-				await WriteFailure(e);
+				WriteFailure(e);
 			}
 		}
 
-		private async Task WriteSuccessLatency()
+		private void WriteSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
 			metrics.writeLatency.Add(elapsed);
-			//await WriteSuccess();
+			WriteSuccess();
 		}
 
-		private async Task WriteSuccess()
+		private void WriteSuccess()
 		{
 			metrics.WriteSuccess();
-			//await RunCommand();
 		}
 
-		private async Task WriteFailure(AerospikeException ae)
+		private void WriteFailure(AerospikeException ae)
 		{
 			metrics.WriteFailure(ae);
-			//await RunCommand();
 		}
 
-		private async Task WriteFailure(Exception e)
+		private void WriteFailure(Exception e)
 		{
 			metrics.WriteFailure(e);
-			//await RunCommand();
 		}
 
 		private async Task Read(int userKey)
@@ -151,16 +148,16 @@ namespace Aerospike.Benchmarks
 						{
 							if (useLatency)
 							{
-								ReadSuccessLatency().Wait();
+								ReadSuccessLatency();
 							}
 							else
 							{
-								ReadSuccess().Wait();
+								ReadSuccess();
 							}
 						}
 						else if (task.IsFaulted)
 						{
-							ReadFailure(task.Exception).Wait();
+							ReadFailure(task.Exception);
 						}
 
 						return true;
@@ -168,37 +165,34 @@ namespace Aerospike.Benchmarks
 			}
 			catch (AerospikeException ae)
 			{
-				await ReadFailure(ae);
+				ReadFailure(ae);
 			}
 			catch (Exception e)
 			{
-				await ReadFailure(e);
+				ReadFailure(e);
 			}
 		}
 
-		private async Task ReadSuccessLatency()
+		private void ReadSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
 			metrics.readLatency.Add(elapsed);
-			await ReadSuccess();
+			ReadSuccess();
 		}
 
-		private async Task ReadSuccess()
+		private void ReadSuccess()
 		{
 			metrics.ReadSuccess();
-			//await RunCommand();
 		}
 
-		private async Task ReadFailure(AerospikeException ae)
+		private void ReadFailure(AerospikeException ae)
 		{
 			metrics.ReadFailure(ae);
-			//await RunCommand();
 		}
 
-		private async Task ReadFailure(Exception e)
+		private void ReadFailure(Exception e)
 		{
 			metrics.ReadFailure(e);
-			//await RunCommand();
 		}
 
 		/*private async Task BatchRead()
