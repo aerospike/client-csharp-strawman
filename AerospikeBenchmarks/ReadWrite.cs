@@ -43,30 +43,27 @@ namespace Aerospike.Benchmarks
 				maxConcurrentCommands = args.recordsInit;
 			}
 
-			ReadWriteTask[] tasks = new ReadWriteTask[maxConcurrentCommands];
-
-			for (long i = 0; i < maxConcurrentCommands; i++)
-			{
-				tasks[i] = new ReadWriteTask(client, args, metrics);
-			}
+			var numTasks = new bool[args.records];
+			Array.Fill(numTasks, true);
 
 			metrics.Start();
 
-			//Thread.Sleep(1000);
-
-			Parallel.ForEach(tasks, task =>
+			var options = new ParallelOptions
 			{
-				task.RunCommand().Wait();
+				MaxDegreeOfParallelism = maxConcurrentCommands
+			};
+
+			var task = new ReadWriteTask(client, args, metrics);
+
+			Parallel.ForEachAsync(numTasks, options, async (num, cancellationToken) =>
+			{
+				await task.RunCommand();
 			});
-			/*foreach (ReadWriteTask task in tasks)
-			{
-				task.RunCommand().Wait();
-			}*/
 
-			RunTicker();//latencyBuilder, latencyHeader);
+			RunTicker();
 		}
 
-		private void RunTicker()//StringBuilder latencyBuilder, string latencyHeader)
+		private void RunTicker()
 		{
 			StringBuilder latencyBuilder = null;
 			string latencyHeader = null;
