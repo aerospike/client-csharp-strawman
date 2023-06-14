@@ -20,11 +20,11 @@ namespace Aerospike.Benchmarks
 {
     class Program
     {
-        static void Main(string[] args)
+        async static Task Main(string[] args)
         {
             try
             {
-                RunBenchmarks();
+                await RunBenchmarks();
             }
             catch (Exception e)
             {
@@ -32,7 +32,7 @@ namespace Aerospike.Benchmarks
                 Console.WriteLine(e.StackTrace);
             }
         }
-        private static void RunBenchmarks()
+        private async static Task RunBenchmarks()
         {
             Log.SetCallback(LogCallback);
 
@@ -41,8 +41,6 @@ namespace Aerospike.Benchmarks
 
             Log.Level level = args.debug ? Log.Level.DEBUG : Log.Level.INFO;
             Log.SetLevel(level);
-
-            var metrics = new Metrics(args);
 
             var policy = new ClientPolicy();
             policy.user = args.user;
@@ -56,17 +54,30 @@ namespace Aerospike.Benchmarks
 
             try
             {
+                var metricsWrite = new Metrics(Metrics.MetricTypes.Write, args);
+                ILatencyManager latencyMgr = args.latency
+                                                ? (args.latencyAltFormat
+                                                    ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
+                                                    : new LatencyManager(args.latencyColumns, args.latencyShift))
+                                                : null;
+                Metrics metricsRead = null;
+                
+                if (!args.initialize)
+                {
+                    metricsRead = new Metrics(Metrics.MetricTypes.Read, args);
+                }
+
                 args.SetServerSpecific(client).Wait();
 
-                if (args.initialize)
+                if (metricsRead is null)
                 {
-                    var prog = new Initialize(args, metrics);
-                    prog.Run(client);
+                    var prog = new Initialize(args, metricsWrite, latencyMgr);
+                    await prog.Run(client);
                 }
                 else
                 {
-                    var prog = new ReadWrite(args, metrics);
-                    prog.Run(client);
+                    //var prog = new ReadWrite(args, metricsWrite, metricsRead, latencyMgr);
+                    //await prog.Run(client);
                 }
             }
             finally

@@ -16,18 +16,23 @@
  */
 using System.Text;
 using Aerospike.Client;
+using AerospikeBenchmarks;
 
 namespace Aerospike.Benchmarks
 {
 	sealed class ReadWrite
 	{
 		private readonly Args args;
-		private readonly Metrics metrics;
+        private readonly Metrics writeMetrics;
+		private readonly Metrics readMetrics;
+        private readonly ILatencyManager latencyManager;
 
-		public ReadWrite(Args args, Metrics metrics)
+        public ReadWrite(Args args, Metrics writeMetrics, Metrics readMetrics, ILatencyManager latencyMgr)
 		{
 			this.args = args;
-			this.metrics = metrics;
+			this.writeMetrics = writeMetrics;
+			this.readMetrics = readMetrics;
+			this.latencyManager = latencyMgr;
 		}
 
 		public void Run(AerospikeClient client)
@@ -46,96 +51,19 @@ namespace Aerospike.Benchmarks
 			var numTasks = new bool[args.records];
 			Array.Fill(numTasks, true);
 
-			metrics.Start();
-
 			var options = new ParallelOptions
 			{
 				MaxDegreeOfParallelism = maxConcurrentCommands
 			};
 
-			var task = new ReadWriteTask(client, args, metrics);
+			var task = new ReadWriteTask(client, args, writeMetrics);
 
-			Parallel.ForEachAsync(numTasks, options, async (num, cancellationToken) =>
+            //Ticker.Run(args, metrics, latencyManager);
+
+            Parallel.ForEachAsync(numTasks, options, async (num, cancellationToken) =>
 			{
 				await task.RunCommand();
-			});
-
-			RunTicker();
-		}
-
-		private void RunTicker()
-		{
-			StringBuilder latencyBuilder = null;
-			string latencyHeader = null;
-
-			if (metrics.writeLatency != null)
-			{
-				latencyBuilder = new StringBuilder(200);
-				latencyHeader = metrics.writeLatency.PrintHeader();
-			}
-
-			// Give tasks a chance to create stats for first period.
-			Thread.Sleep(900);
-
-			long transactionTotal = 0;
-			
-			while (true)
-			{
-				long time = metrics.Time;
-
-				int writeCurrent = Interlocked.Exchange(ref metrics.writeCount, 0);
-				int writeTimeoutCurrent = Interlocked.Exchange(ref metrics.writeTimeoutCount, 0);
-				int writeErrorCurrent = Interlocked.Exchange(ref metrics.writeErrorCount, 0);
-				int readCurrent = Interlocked.Exchange(ref metrics.readCount, 0);
-				int readTimeoutCurrent = Interlocked.Exchange(ref metrics.readTimeoutCount, 0);
-				int readErrorCurrent = Interlocked.Exchange(ref metrics.readErrorCount, 0);
-
-				long elapsed = metrics.NextPeriod(time);
-				long writeTps = (long)writeCurrent * 1000L / elapsed;
-				long readTps = (long)readCurrent * 1000L / elapsed;
-				string dt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-				Console.WriteLine(dt + " write(tps={0} timeouts={1} errors={2}) read(tps={3} timeouts={4} errors={5}) total(tps={6} timeouts={7} errors={8})",
-					writeTps, writeTimeoutCurrent, writeErrorCurrent,
-					readTps, readTimeoutCurrent, readErrorCurrent,
-					writeTps + readTps, writeTimeoutCurrent + readTimeoutCurrent, writeErrorCurrent + readErrorCurrent);
-
-				if (metrics.writeLatency != null)
-				{
-					if (latencyHeader != null)
-					{
-						Console.WriteLine(latencyHeader);
-					}
-					Console.WriteLine(metrics.writeLatency.PrintResults(latencyBuilder, "write"));
-					Console.WriteLine(metrics.readLatency.PrintResults(latencyBuilder, "read"));
-				}
-
-				if (args.transactionMax > 0)
-				{
-					transactionTotal += writeCurrent + writeTimeoutCurrent + writeErrorCurrent +
-						readCurrent + readTimeoutCurrent + readErrorCurrent;
-
-					if (transactionTotal >= args.transactionMax)
-					{
-
-						if (metrics.writeLatency != null)
-						{
-							Console.WriteLine("Latency Summary");
-
-							if (latencyHeader != null)
-							{
-								Console.WriteLine(latencyHeader);
-							}
-							Console.WriteLine(metrics.writeLatency.PrintSummary(latencyBuilder, "write"));
-							Console.WriteLine(metrics.readLatency.PrintSummary(latencyBuilder, "read"));
-						}
-
-						Console.WriteLine("Transaction limit reached: " + args.transactionMax + ". Exiting.");
-						break;
-					}
-				}
-				Thread.Sleep(1000);
-			}
-		}
+			});			
+		}		
 	}
 }

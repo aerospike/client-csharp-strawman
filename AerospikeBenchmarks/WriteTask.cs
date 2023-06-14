@@ -15,48 +15,46 @@
  * the License.
  */
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Aerospike.Client;
 
 namespace Aerospike.Benchmarks
 {
 	sealed class WriteTask
-	{
+	{		
 		private readonly AerospikeClient client;
 		private readonly Args args;
 		private readonly Metrics metrics;
 		private readonly long keyStart;
-		private readonly long keyMax;
 		private readonly RandomShift random;
-		private readonly Stopwatch watch;
-		private long begin;
+		private readonly ILatencyManager LatencyMgr;
 		private readonly bool useLatency;
 
-		public WriteTask(AerospikeClient client, Args args, Metrics metrics, long keyStart, long keyMax)
+		public WriteTask(AerospikeClient client, 
+							Args args, 
+							Metrics metrics, 
+							long keyStart,
+                            ILatencyManager latencyManager)
 		{
 			this.client = client;
 			this.args = args;
 			this.metrics = metrics;
 			this.keyStart = keyStart;
-			this.keyMax = keyMax;
 			this.random = new RandomShift();
-			this.useLatency = metrics.writeLatency != null;
-			watch = Stopwatch.StartNew();
+			this.LatencyMgr = latencyManager;
+			this.useLatency = latencyManager != null;
 		}
-
-		/*public void Start()
-		{
-			RunCommand(keyCount);
-		}*/
 
 		public async Task RunCommand(long count)
 		{
 			long currentKey = keyStart + count;
 			Key key = new Key(args.ns, args.set, currentKey);
 			Bin bin = new Bin(args.binName, args.GetValue(random));
-
+			var watch = new Stopwatch();
+			
 			if (useLatency)
 			{
-				begin = watch.ElapsedMilliseconds;
+				watch.Start();
 			}
 			await client.Put(args.writePolicy, key, bin)
 				.ContinueWith(task =>
@@ -65,42 +63,25 @@ namespace Aerospike.Benchmarks
 					{
 						if (useLatency)
 						{
-							WriteSuccessLatency();
+							watch.Stop();
+							var elapsed = watch.Elapsed;
+							this.metrics.Success(elapsed);
+							this.LatencyMgr?.Add((long)elapsed.TotalMilliseconds);
 						}
 						else
 						{
-							WriteSuccess();
+							this.metrics.Success();
 						}
 					}
 					else if (task.IsFaulted)
 					{
-						WriteFailure(task.Exception);
+						this.metrics.Failure(task.Exception);
 					}
 
 					return true;
-				}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
-		}
-
-		private void WriteSuccessLatency()
-		{
-			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
-			metrics.writeLatency.Add(elapsed);
-			WriteSuccess();
-		}
-
-		private void WriteSuccess()
-		{
-			metrics.WriteSuccess();
-		}
-
-		private void WriteFailure(AerospikeException ae)
-		{
-			metrics.WriteFailure(ae);
-		}
-
-		private void WriteFailure(Exception e)
-		{
-			metrics.WriteFailure(e);
-		}
+				}, 
+				TaskContinuationOptions.AttachedToParent 
+					| TaskContinuationOptions.ExecuteSynchronously);            
+        }
 	}
 }
