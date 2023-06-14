@@ -37,7 +37,7 @@ namespace Aerospike.Benchmarks
 			this.valid = true;
 			this.client = client;
 			this.random = new RandomShift();
-			this.useLatency = metrics.writeLatency != null;
+			//this.useLatency = metrics.writeLatency != null;
 			watch = Stopwatch.StartNew();
 		}
 
@@ -70,65 +70,55 @@ namespace Aerospike.Benchmarks
 		{
 			Key key = new Key(args.ns, args.set, userKey);
 			Bin bin = new Bin(args.binName, args.GetValue(random));
+            var watch = new Stopwatch();
 
-			try
+            if (useLatency)
 			{
-				if (useLatency)
+				watch.Start();
+			}
+			await client.Put(args.writePolicy, key, bin)
+				.ContinueWith(task =>
 				{
-					begin = watch.ElapsedMilliseconds;
-				}
-				await client.Put(args.writePolicy, key, bin)
-					.ContinueWith(task =>
+					if (task.IsCompletedSuccessfully)
 					{
-						if (task.IsCompletedSuccessfully)
+						if (useLatency)
 						{
-							if (useLatency)
-							{
-								WriteSuccessLatency();
-							}
-							else
-							{
-								WriteSuccess();
-							}
+							WriteSuccessLatency();
 						}
-						else if (task.IsFaulted)
+						else
 						{
-							WriteFailure(task.Exception);
+							WriteSuccess();
 						}
+					}
+					else if (task.IsFaulted)
+					{
+						WriteFailure(task.Exception);
+					}
 
-						return true;
-					}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
-			}
-			catch (AerospikeException ae)
-			{
-				WriteFailure(ae);
-			}
-			catch (Exception e)
-			{
-				WriteFailure(e);
-			}
+					return true;
+				}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
 		}
-
+		
 		private void WriteSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
-			metrics.writeLatency.Add(elapsed);
+			//metrics.writeLatency.Add(elapsed);
 			WriteSuccess();
 		}
 
 		private void WriteSuccess()
 		{
-			metrics.WriteSuccess();
+			//metrics.WriteSuccess();
 		}
 
 		private void WriteFailure(AerospikeException ae)
 		{
-			metrics.WriteFailure(ae);
+			//metrics.WriteFailure(ae);
 		}
 
 		private void WriteFailure(Exception e)
 		{
-			metrics.WriteFailure(e);
+			//metrics.WriteFailure(e);
 		}
 
 		private async Task Read(int userKey)
@@ -176,42 +166,42 @@ namespace Aerospike.Benchmarks
 		private void ReadSuccessLatency()
 		{
 			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
-			metrics.readLatency.Add(elapsed);
+			//metrics.readLatency.Add(elapsed);
 			ReadSuccess();
 		}
 
 		private void ReadSuccess()
 		{
-			metrics.ReadSuccess();
+			//metrics.ReadSuccess();
 		}
 
 		private void ReadFailure(AerospikeException ae)
 		{
-			metrics.ReadFailure(ae);
+			//metrics.ReadFailure(ae);
 		}
 
 		private void ReadFailure(Exception e)
 		{
-			metrics.ReadFailure(e);
+			//metrics.ReadFailure(e);
 		}
 
 		/*private async Task BatchRead()
 		{
-			Key[] keys = new Key[args.batchSize];
+			Key[] keys = new Key[Args.batchSize];
 
 			for (int i = 0; i < keys.Length; i++)
 			{
-				long keyIdx = random.Next(0, args.records);
-				keys[i] = new Key(args.ns, args.set, keyIdx);
+				long keyIdx = random.Next(0, Args.records);
+				keys[i] = new Key(Args.ns, Args.set, keyIdx);
 			}
 
 			try
 			{
 				if (useLatency)
 				{
-					begin = watch.ElapsedMilliseconds;
+					begin = AppRunningTime.ElapsedMilliseconds;
 				}
-				await client.Get(args.batchPolicy, keys, args.binName);
+				await client.Get(Args.batchPolicy, keys, Args.binName);
 			}
 			catch (AerospikeException ae)
 			{
@@ -225,7 +215,7 @@ namespace Aerospike.Benchmarks
 
 		private async Task BatchSuccessLatency()
 		{
-			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
+			long elapsed = AppRunningTime.ElapsedMilliseconds - Volatile.Read(ref begin);
 			metrics.readLatency.Add(elapsed);
 			await ReadSuccess();
 		}
