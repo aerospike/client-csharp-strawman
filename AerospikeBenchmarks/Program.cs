@@ -50,8 +50,10 @@ namespace Aerospike.Benchmarks
             policy.tlsPolicy = args.tlsPolicy;
             policy.authMode = args.authMode;
 			policy.maxCommands = args.commandMax;
-            policy.minConnsPerNode = 100;
-            policy.maxConnsPerNode = 100;
+            policy.minConnsPerNode = args.commandMax;
+			policy.maxConnsPerNode = args.commandMax;
+            policy.maxErrorRate = 10;
+            policy.errorRateWindow = 5;
 			var client = new AerospikeClient(policy, args.hosts);
 
             try

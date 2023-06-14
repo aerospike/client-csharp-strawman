@@ -43,8 +43,15 @@ namespace Aerospike.Benchmarks
 				maxConcurrentCommands = args.recordsInit;
 			}
 
-			var numTasks = new bool[args.records];
-			Array.Fill(numTasks, true);
+			//var numTasks = new bool[args.records];
+			//Array.Fill(numTasks, true);
+
+			ReadWriteTask[] tasks = new ReadWriteTask[args.records];
+
+			for (int i = 0; i < args.records; i++)
+			{
+				tasks[i] = new ReadWriteTask(client, args, metrics);
+			}
 
 			metrics.Start();
 
@@ -55,7 +62,7 @@ namespace Aerospike.Benchmarks
 
 			var task = new ReadWriteTask(client, args, metrics);
 
-			Parallel.ForEachAsync(numTasks, options, async (num, cancellationToken) =>
+			Parallel.ForEachAsync(tasks, options, async (task, cancellationToken) =>
 			{
 				await task.RunCommand();
 			});

@@ -13,7 +13,7 @@
   "TlsRevoke": "",
   "TlsClientCertFile": "",
   "TlsLoginOnly": false,
-  "Initialize": true,
+  "Initialize": false,
   "AsyncMaxCommands": 100,
   "Sync": false,
   "SyncThreads": 8,
