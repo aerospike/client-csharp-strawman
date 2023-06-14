@@ -70,8 +70,8 @@ namespace Aerospike.Benchmarks
                await task.RunCommand(Interlocked.Increment(ref counter));				
 			});
 
-			//ticker.WaitForAllToPrint();
-			ticker.Stop();
+			ticker.WaitForAllToPrint();
+			//ticker.Stop();
         }
 
 		    

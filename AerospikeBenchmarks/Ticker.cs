@@ -42,9 +42,19 @@ namespace AerospikeBenchmarks
 
         public void WaitForAllToPrint()
         {
-            while (this.Metrics.TotalCount < Args.records)
-                Thread.Sleep(500);
-            this.Stop();
+            if (!StopTimer)
+            {
+                Timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                if (!StopTimer
+                        && Interlocked.Read(ref TimerEntry) == 0 //Not running
+                        && this.Metrics.CurrentCounters.Count > 0) //We have something to report
+                {
+                    TimerCallBack((Metrics, LatencyManager, LatencyHeader, LatencyBuilder));
+                }
+
+                this.Stop();
+            }
         }
 
         public void Stop()
