@@ -110,7 +110,7 @@ namespace AerospikeBenchmarks
                 {
                     string dt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                    Console.WriteLine($"{dt} write(count={periodBlock.Count:###,###,##0} tps={periodBlock.TPS():###,###,##0} timeouts={periodBlock.TimeoutCount} errors={periodBlock.ErrorCount})");
+                    Console.WriteLine($"{dt} write(count={item.metrics.TotalCount:###,###,##0} tps={periodBlock.TPS():###,###,##0} timeouts={periodBlock.TimeoutCount} errors={periodBlock.ErrorCount} cnt={periodBlock.Count})");
 
                     if (item.metrics.Type == Metrics.MetricTypes.Write)
                     {
