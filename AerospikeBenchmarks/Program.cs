@@ -50,7 +50,8 @@ namespace Aerospike.Benchmarks
 			policy.maxCommands = args.commandMax;
             policy.minConnsPerNode = 100;
             policy.maxConnsPerNode = 100;
-			var client = new AerospikeClient(policy, args.hosts);
+			
+            var client = new AerospikeClient(policy, args.hosts);
 
             try
             {
@@ -83,6 +84,12 @@ namespace Aerospike.Benchmarks
             finally
             {
                 client.Close();
+            }
+
+            if (PrefStats.EnableTimings)
+            {
+                PrefStats.ToCSV(args.LatencyFileCSV);
+                PrefStats.ToJson(args.LatencyFileJson);
             }
         }
 

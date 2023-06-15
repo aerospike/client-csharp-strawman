@@ -37,7 +37,7 @@ namespace Aerospike.Benchmarks
 			this.valid = true;
 			this.client = client;
 			this.random = new RandomShift();
-			//this.useLatency = metrics.writeLatency != null;
+			//this.useLatency = metrics.
 			watch = Stopwatch.StartNew();
 		}
 

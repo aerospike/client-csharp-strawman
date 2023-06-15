@@ -48,25 +48,27 @@ namespace Aerospike.Benchmarks
 		public async Task RunCommand(long count)
 		{
 			long currentKey = keyStart + count;
-			Key key = new Key(args.ns, args.set, currentKey);
-			Bin bin = new Bin(args.binName, args.GetValue(random));
-			var watch = new Stopwatch();
+			Key key = new(args.ns, args.set, currentKey);
+			Bin bin = new(args.binName, args.GetValue(random));
+			Stopwatch watch = useLatency
+								? Stopwatch.StartNew()
+								: null;
 			
-			if (useLatency)
-			{
-				watch.Start();
-			}
 			await client.Put(args.writePolicy, key, bin)
 				.ContinueWith(task =>
 				{
 					if (task.IsCompletedSuccessfully)
 					{
-						if (useLatency)
+						if (watch is not null)
 						{
-							watch.Stop();
+							PrefStats.StopRecording(watch,
+													metrics.Type.ToString(),
+													nameof(RunCommand),
+													key);
+                           
 							var elapsed = watch.Elapsed;
 							this.metrics.Success(elapsed);
-							this.LatencyMgr?.Add((long)elapsed.TotalMilliseconds);
+							this.LatencyMgr?.Add((long)elapsed.TotalMilliseconds);							
 						}
 						else
 						{

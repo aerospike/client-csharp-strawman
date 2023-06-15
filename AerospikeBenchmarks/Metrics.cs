@@ -40,7 +40,7 @@ namespace Aerospike.Benchmarks
             
             public decimal TPS() => TimingTicks == 0
 									? 0
-									: (decimal)this.Count * 100m / ((decimal)this.TimingTicks / (decimal)TimeSpan.TicksPerSecond);
+									: (decimal)this.Count / ((decimal)this.TimingTicks / (decimal)TimeSpan.TicksPerSecond);
 			           
         }
 
