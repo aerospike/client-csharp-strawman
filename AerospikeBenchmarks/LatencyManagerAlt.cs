@@ -53,9 +53,9 @@ namespace Aerospike.Benchmarks
 			}
 		}
 
-		public void Add(long elapsed)
+		public void Add(long elapsedms)
 		{
-			int index = GetIndex(elapsed);
+			int index = GetIndex(elapsedms);
 			buckets[index].Increment();
 		}
 
