@@ -38,9 +38,9 @@ namespace Aerospike.Benchmarks
             public long ErrorCount;
 			public long TimingTicks;
             
-            public decimal TPS() => TimingTicks == 0
-									? 0
-									: (decimal)this.Count * 100m / ((decimal)this.TimingTicks / (decimal)TimeSpan.TicksPerSecond);
+            public double TPS() => TimingTicks == 0
+									? 0d
+									: this.Count / TimeSpan.FromTicks(this.TimingTicks).TotalSeconds;
 			           
         }
 

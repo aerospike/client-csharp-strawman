@@ -18,7 +18,7 @@ using System.Text;
 using Aerospike.Client;
 using AerospikeBenchmarks;
 
-namespace Aerospike.Benchmarks
+namespace Aerospike.Benchmarks 
 {
 	sealed class ReadWrite
 	{
