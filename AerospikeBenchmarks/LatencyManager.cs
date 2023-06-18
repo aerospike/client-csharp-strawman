@@ -61,7 +61,7 @@ namespace Aerospike.Benchmarks
 
 		public string PrintHeader()
 		{
-			StringBuilder sb = new StringBuilder(200);
+			StringBuilder sb = new(200);
 			int limit = 1;
 			sb.Append("      <=1ms >1ms");
 
@@ -165,7 +165,7 @@ namespace Aerospike.Benchmarks
 			return sb.ToString();
 		}
 
-		private void PrintColumn(StringBuilder sb, int limit, double sum, int value)
+		private static void PrintColumn(StringBuilder sb, int limit, double sum, int value)
 		{
 			int percent = 0;
 

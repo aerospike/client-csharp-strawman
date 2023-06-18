@@ -15,6 +15,7 @@
  * the License.
  */
 using Aerospike.Client;
+using AerospikeBenchmarks;
 
 namespace Aerospike.Benchmarks
 {
@@ -36,54 +37,79 @@ namespace Aerospike.Benchmarks
         {
             Log.SetCallback(LogCallback);
 
-            Args args = new Args();
+            Args args = new();
             args.Print();
 
             Log.Level level = args.debug ? Log.Level.DEBUG : Log.Level.INFO;
             Log.SetLevel(level);
 
-            var policy = new ClientPolicy();
-            policy.user = args.user;
-            policy.password = args.password;
-            policy.tlsPolicy = args.tlsPolicy;
-            policy.authMode = args.authMode;
-			policy.maxCommands = args.commandMax;
-            policy.minConnsPerNode = 100;
-            policy.maxConnsPerNode = 100;
-			
+            var policy = new ClientPolicy()
+            {
+                user = args.user,
+                password = args.password,
+                tlsPolicy = args.tlsPolicy,
+                authMode = args.authMode,
+                maxCommands = args.commandMax,
+                minConnsPerNode = 100,
+                maxConnsPerNode = 100,
+            };
+
             var client = new AerospikeClient(policy, args.hosts);
+            Ticker ticker = null;
 
             try
             {
+                long keyStart = 0;
                 var metricsWrite = new Metrics(Metrics.MetricTypes.Write, args);
-                ILatencyManager latencyMgr = args.latency
-                                                ? (args.latencyAltFormat
-                                                    ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
-                                                    : new LatencyManager(args.latencyColumns, args.latencyShift))
-                                                : null;
+                ILatencyManager latencyMgrWrite = args.latency
+                                                    ? (args.latencyAltFormat
+                                                        ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
+                                                        : new LatencyManager(args.latencyColumns, args.latencyShift))
+                                                    : null;
                 Metrics metricsRead = null;
-                
+                ILatencyManager latencyMgrRead = null;
+
                 if (!args.initialize)
                 {
                     metricsRead = new Metrics(Metrics.MetricTypes.Read, args);
+                    latencyMgrRead = args.latency
+                                        ? (args.latencyAltFormat
+                                            ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
+                                            : new LatencyManager(args.latencyColumns, args.latencyShift))
+                                        : null;
                 }
 
                 args.SetServerSpecific(client).Wait();
 
+                ticker = new Ticker(args, metricsRead, metricsWrite, latencyMgrRead, latencyMgrWrite);
+                ticker.Run();
+
+                var writeTask = new WriteTask(client,
+                                                args,
+                                                metricsWrite,
+                                                keyStart,
+                                                latencyMgrWrite);
+
                 if (metricsRead is null)
                 {
-                    var prog = new Initialize(args, metricsWrite, latencyMgr);
-                    await prog.Run(client);
+                    await writeTask.Run();
                 }
                 else
                 {
-                    //var prog = new ReadWrite(args, metricsWrite, metricsRead, latencyMgr);
-                    //await prog.Run(client);
+                    var readWriteTask = new ReadWriteTask(client,
+                                                            args,
+                                                            metricsRead,
+                                                            latencyMgrRead,
+                                                            keyStart,
+                                                            writeTask);
+                    await readWriteTask.Run();
                 }
             }
             finally
             {
                 client.Close();
+                ticker?.WaitForAllToPrint();
+                //ticker?.Stop();
             }
 
             if (PrefStats.EnableTimings)

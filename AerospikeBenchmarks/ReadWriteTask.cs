@@ -15,227 +15,133 @@
  * the License.
  */
 using Aerospike.Client;
+using System.Threading.Tasks;
 using System.Diagnostics;
 
 namespace Aerospike.Benchmarks
 {
 	sealed class ReadWriteTask
 	{
-		internal readonly Args args;
-		internal readonly Metrics metrics;
-		internal bool valid;
-		private readonly AerospikeClient client;
-		private readonly RandomShift random;
-		private readonly Stopwatch watch;
-		private long begin;
-		private readonly bool useLatency;
+        private readonly AerospikeClient client;
+        private readonly Args args;
+        private readonly Metrics metrics;
+        private readonly long keyStart;
+        private readonly RandomShift random;
+        private readonly ILatencyManager LatencyMgr;
+        private readonly bool useLatency;
+		private readonly WriteTask writeTask;
+        
+        public ReadWriteTask(AerospikeClient client,
+								Args args,
+								Metrics readMetrics,
+								ILatencyManager readLatencyManager,
+                                long keyStart,
+                                WriteTask writeTask)
+        {
+            this.client = client;
+            this.args = args;
+			this.metrics = readMetrics;
+			this.LatencyMgr = readLatencyManager;
+			this.keyStart = keyStart;
+            this.random = new RandomShift();
+			this.useLatency = this.LatencyMgr is not null;
+			this.writeTask = writeTask;
+        }
+        
+        public async Task Run()
+        {
+            // Generate commandMax writes to seed the event loops.
+            // Then start a new command in each command callback.
+            // This effectively throttles new command generation, by only allowing
+            // commandMax at any point in time.
+            int maxConcurrentCommands = args.commandMax;
 
-		public ReadWriteTask(AerospikeClient client, Args args, Metrics metrics)
+            if (maxConcurrentCommands > args.recordsInit)
+            {
+                maxConcurrentCommands = args.recordsInit;
+            }
+
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxConcurrentCommands
+            };
+
+            await this.RunCommand(args.recordsInit, options);
+        }
+
+        public async Task RunCommand(int maxNbrRecs, 
+                                        ParallelOptions parallelOptions)
 		{
-			this.args = args;
-			this.metrics = metrics;
-			this.valid = true;
-			this.client = client;
-			this.random = new RandomShift();
-			//this.useLatency = metrics.
-			watch = Stopwatch.StartNew();
+            var iterator = new bool[maxNbrRecs];
+
+            //Start metrics processing!
+            this.metrics.Start();
+
+            await Parallel.ForEachAsync(iterator,
+                                            parallelOptions,
+                    async (ignore, cancellationToken) =>
+            {
+                // Roll a percentage die.
+                int die = random.Next(0, 100);
+
+                if (die < args.readPct)
+                {
+                    if (args.batchSize <= 1)
+                    {
+                        int key = random.Next(0, args.records);
+                        await Read(key);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException("Batches are not implemented");
+                    }
+                }
+                else
+                {
+                    // Perform Single record write even if in batch mode.
+                    await writeTask.Write(random.Next(0, args.records));
+                }
+            });
 		}
 
-		public async Task RunCommand()
+		private async Task Read(long userKey)
 		{
-			// Roll a percentage die.
-			int die = random.Next(0, 100);
+			Key key = new(args.ns, args.set, userKey);
+            var capturedTime = this.useLatency
+                                 ? this.metrics.Elapsed
+                                 : TimeSpan.Zero;
 
-			if (die < args.readPct)
-			{
-				if (args.batchSize <= 1)
-				{
-					int key = random.Next(0, args.records);
-					await Read(key);
-				}
-				/*else
-				{
-					await BatchRead();
-				}*/
-			}
-			else
-			{
-				// Perform Single record write even if in batch mode.
-				int key = random.Next(0, args.records);
-				await Write(key);
-			}
-		}
-
-		private async Task Write(int userKey)
-		{
-			Key key = new Key(args.ns, args.set, userKey);
-			Bin bin = new Bin(args.binName, args.GetValue(random));
-            var watch = new Stopwatch();
-
-            if (useLatency)
-			{
-				watch.Start();
-			}
-			await client.Put(args.writePolicy, key, bin)
+            await client.Get(args.policy, key, args.binName)
 				.ContinueWith(task =>
 				{
-					if (task.IsCompletedSuccessfully)
-					{
-						if (useLatency)
-						{
-							WriteSuccessLatency();
-						}
-						else
-						{
-							WriteSuccess();
-						}
-					}
-					else if (task.IsFaulted)
-					{
-						WriteFailure(task.Exception);
-					}
+                    if (task.IsCompletedSuccessfully)
+                    {
+                        if (this.useLatency)
+                        {
+                            var latency = this.metrics.Elapsed - capturedTime;
+                            PrefStats.RecordEvent(latency,
+                                                    metrics.Type.ToString(),
+                                                    nameof(Read),
+                                                    key);
 
-					return true;
-				}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
-		}
-		
-		private void WriteSuccessLatency()
-		{
-			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
-			//metrics.writeLatency.Add(elapsed);
-			WriteSuccess();
-		}
+                            this.metrics.Success(latency);
+                            this.LatencyMgr?.Add((long)latency.TotalMilliseconds);
+                        }
+                        else
+                        {
+                            this.metrics.Success();
+                        }
+                    }
+                    else if (task.IsFaulted)
+                    {
+                        this.metrics.Failure(task.Exception);
+                    }
 
-		private void WriteSuccess()
-		{
-			//metrics.WriteSuccess();
+                    return true;
+                }, TaskContinuationOptions.AttachedToParent
+                        | TaskContinuationOptions.ExecuteSynchronously);
+			
 		}
 
-		private void WriteFailure(AerospikeException ae)
-		{
-			//metrics.WriteFailure(ae);
-		}
-
-		private void WriteFailure(Exception e)
-		{
-			//metrics.WriteFailure(e);
-		}
-
-		private async Task Read(int userKey)
-		{
-			Key key = new Key(args.ns, args.set, userKey);
-
-			try
-			{
-				if (useLatency)
-				{
-					begin = watch.ElapsedMilliseconds;
-				}
-				await client.Get(args.policy, key, args.binName)
-					.ContinueWith(task =>
-					{
-						if (task.IsCompletedSuccessfully)
-						{
-							if (useLatency)
-							{
-								ReadSuccessLatency();
-							}
-							else
-							{
-								ReadSuccess();
-							}
-						}
-						else if (task.IsFaulted)
-						{
-							ReadFailure(task.Exception);
-						}
-
-						return true;
-					}, TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.ExecuteSynchronously);
-			}
-			catch (AerospikeException ae)
-			{
-				ReadFailure(ae);
-			}
-			catch (Exception e)
-			{
-				ReadFailure(e);
-			}
-		}
-
-		private void ReadSuccessLatency()
-		{
-			long elapsed = watch.ElapsedMilliseconds - Volatile.Read(ref begin);
-			//metrics.readLatency.Add(elapsed);
-			ReadSuccess();
-		}
-
-		private void ReadSuccess()
-		{
-			//metrics.ReadSuccess();
-		}
-
-		private void ReadFailure(AerospikeException ae)
-		{
-			//metrics.ReadFailure(ae);
-		}
-
-		private void ReadFailure(Exception e)
-		{
-			//metrics.ReadFailure(e);
-		}
-
-		/*private async Task BatchRead()
-		{
-			Key[] keys = new Key[Args.batchSize];
-
-			for (int i = 0; i < keys.Length; i++)
-			{
-				long keyIdx = random.Next(0, Args.records);
-				keys[i] = new Key(Args.ns, Args.set, keyIdx);
-			}
-
-			try
-			{
-				if (useLatency)
-				{
-					begin = AppRunningTime.ElapsedMilliseconds;
-				}
-				await client.Get(Args.batchPolicy, keys, Args.binName);
-			}
-			catch (AerospikeException ae)
-			{
-				await BatchFailure(ae);
-			}
-			catch (Exception e)
-			{
-				await BatchFailure(e);
-			}
-		}
-
-		private async Task BatchSuccessLatency()
-		{
-			long elapsed = AppRunningTime.ElapsedMilliseconds - Volatile.Read(ref begin);
-			metrics.readLatency.Add(elapsed);
-			await ReadSuccess();
-		}
-
-		private async Task BatchSuccess()
-		{
-			metrics.ReadSuccess();
-			await RunCommand();
-		}
-
-		private async Task BatchFailure(AerospikeException ae)
-		{
-			metrics.ReadFailure(ae);
-			await RunCommand();
-		}
-
-		private async Task BatchFailure(Exception e)
-		{
-			metrics.ReadFailure(e);
-			await RunCommand();
-		}*/
 	}
 }
