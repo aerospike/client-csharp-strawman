@@ -42,14 +42,14 @@ namespace Aerospike.Benchmarks
 		internal int threadMax;
 		internal int transactionMax;
 		internal int records;
-		internal int recordsInit;
+		internal int recordsWrite;
 		internal int readPct;
 		internal int binSize;
 		internal int latencyColumns;
 		internal int latencyShift;
 		internal int batchSize;
 		internal int throughput;
-		internal bool initialize;
+		internal bool writeonly;
 		internal bool sync;
 		internal bool latency;
 		internal bool latencyAltFormat;
@@ -75,7 +75,7 @@ namespace Aerospike.Benchmarks
 			clusterName = section.GetSection("ClusterName").Value;
 			ns = section.GetSection("Namespace").Value;
 			set = section.GetSection("Set").Value;
-			initialize = bool.Parse(section.GetSection("Initialize").Value);
+			writeonly = bool.Parse(section.GetSection("WriteOnly").Value);
 
 			bool tlsEnable = bool.Parse(section.GetSection("TlsEnable").Value);
 
@@ -102,8 +102,8 @@ namespace Aerospike.Benchmarks
 			transactionMax = int.Parse(section.GetSection("TransactionMax").Value);
 
 			records = int.Parse(section.GetSection("Records").Value);
-			int recordsInitPct = int.Parse(section.GetSection("InitPct").Value);
-			recordsInit = records / 100 * recordsInitPct;
+			int recordsWritePct = int.Parse(section.GetSection("WritePct").Value);
+			recordsWrite = records / 100 * recordsWritePct;
 			readPct = int.Parse(section.GetSection("ReadPct").Value);
 
 			if (!(readPct >= 0 && readPct <= 100))
@@ -277,9 +277,9 @@ namespace Aerospike.Benchmarks
 
 		public void Print()
 		{
-			if (initialize)
+			if (writeonly)
 			{
-				Console.WriteLine("Initialize " + recordsInit + " records");
+				Console.WriteLine("Write " + recordsWrite + " records");
 			}
 			else
 			{

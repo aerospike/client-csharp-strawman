@@ -69,7 +69,7 @@ namespace Aerospike.Benchmarks
                 Metrics metricsRead = null;
                 ILatencyManager latencyMgrRead = null;
 
-                if (!args.initialize)
+                if (!args.writeonly)
                 {
                     metricsRead = new Metrics(Metrics.MetricTypes.Read, args);
                     latencyMgrRead = args.latency
@@ -81,7 +81,11 @@ namespace Aerospike.Benchmarks
 
                 args.SetServerSpecific(client).Wait();
 
-                ticker = new Ticker(args, metricsRead, metricsWrite, latencyMgrRead, latencyMgrWrite);
+                ticker = new Ticker(args,
+                                    metricsRead,
+                                    metricsWrite,
+                                    latencyMgrRead,
+                                    latencyMgrWrite);
                 ticker.Run();
 
                 var writeTask = new WriteTask(client,

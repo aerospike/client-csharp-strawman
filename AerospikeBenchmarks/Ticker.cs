@@ -18,9 +18,9 @@ namespace AerospikeBenchmarks
         {
             this.Args = args;
             this.WriteMetrics = writeMetrics;
-            this.ReadMetrics = readMetrics;
-            this.ReadLatencyManager = readLatencyManager;
             this.WriteLatencyManager = writeLatencyManager;
+            this.ReadMetrics = readMetrics;
+            this.ReadLatencyManager = readLatencyManager;            
         }
 
         public Args Args { get; }
@@ -28,17 +28,24 @@ namespace AerospikeBenchmarks
         public Metrics ReadMetrics { get; }
         public ILatencyManager WriteLatencyManager { get; }
         public ILatencyManager ReadLatencyManager { get; }
-        public StringBuilder LatencyBuilder { get; private set; }
+        public StringBuilder WriteLatencyBuilder { get; private set; }
+        public StringBuilder ReadLatencyBuilder { get; private set; }
         public string LatencyHeader { get; private set; }
 
         public void Run()
         {
            
-            if (WriteMetrics.Type == Metrics.MetricTypes.Write)
+            if (WriteMetrics is not null)
             {
-                LatencyBuilder = new StringBuilder(200);
-                LatencyHeader = WriteLatencyManager.PrintHeader();
+                WriteLatencyBuilder = new StringBuilder(200);                
             }
+            if (ReadMetrics is not null)
+            {
+                ReadLatencyBuilder = new StringBuilder(200);
+            }
+
+            if (LatencyHeader is null)
+                LatencyHeader = WriteLatencyManager.PrintHeader();
 
             Timer = new Timer(TimerCallBack,
                                 this,
@@ -70,16 +77,21 @@ namespace AerospikeBenchmarks
         {
             StopTimer = true;
 
-            if (WriteMetrics.Type == Metrics.MetricTypes.Write)
-            {
-                Console.WriteLine("Latency Summary");
+            Console.WriteLine("Latency Summary");
 
-                if (LatencyHeader != null)
-                {
-                    Console.WriteLine(LatencyHeader);
-                }
-                Console.WriteLine(WriteLatencyManager.PrintSummary(LatencyBuilder, "write"));
+            if (LatencyHeader != null)
+            {
+                Console.WriteLine(LatencyHeader);
             }
+            if (WriteLatencyManager is not null)
+            {
+                Console.WriteLine(WriteLatencyManager.PrintSummary(WriteLatencyBuilder, "Write"));
+            }
+            if (ReadLatencyManager is not null)
+            {
+                Console.WriteLine(ReadLatencyManager.PrintSummary(ReadLatencyBuilder, "Read"));
+            }
+
         }
 
         public static Timer Timer { get; private set; }
@@ -166,11 +178,11 @@ namespace AerospikeBenchmarks
 
                     if (ticker.WriteLatencyManager is not null)
                     {                        
-                        Console.WriteLine(ticker.WriteLatencyManager.PrintResults(ticker.LatencyBuilder, ticker.WriteMetrics.Type.ToString()));
+                        Console.WriteLine(ticker.WriteLatencyManager.PrintResults(ticker.WriteLatencyBuilder, ticker.WriteMetrics.Type.ToString()));
                     }
                     if (ticker.ReadLatencyManager is not null)
                     {
-                        Console.WriteLine(ticker.ReadLatencyManager.PrintResults(ticker.LatencyBuilder, ticker.ReadMetrics.Type.ToString()));
+                        Console.WriteLine(ticker.ReadLatencyManager.PrintResults(ticker.ReadLatencyBuilder, ticker.ReadMetrics.Type.ToString()));
                     }
                 }
             }

@@ -25,7 +25,7 @@ namespace Aerospike.Benchmarks
 	{		
 		private readonly AerospikeClient client;
 		private readonly Args args;
-		private readonly Metrics metrics;
+		public readonly Metrics metrics;
 		private readonly long keyStart;
 		private readonly RandomShift random;
 		private readonly ILatencyManager LatencyMgr;
@@ -49,15 +49,12 @@ namespace Aerospike.Benchmarks
 
         public async Task Run()
         {
-            // Generate commandMax writes to seed the event loops.
-            // Then start a new command in each command callback.
-            // This effectively throttles new command generation, by only allowing
-            // commandMax at any point in time.
+            
             int maxConcurrentCommands = args.commandMax;
 
-            if (maxConcurrentCommands > args.recordsInit)
+            if (maxConcurrentCommands > args.recordsWrite)
             {
-                maxConcurrentCommands = args.recordsInit;
+                maxConcurrentCommands = args.recordsWrite;
             }
 
             var options = new ParallelOptions
@@ -65,7 +62,7 @@ namespace Aerospike.Benchmarks
                 MaxDegreeOfParallelism = maxConcurrentCommands
             };
 
-            await this.RunCommand(args.recordsInit, options);
+            await this.RunCommand(args.recordsWrite, options);
 
         }
 
