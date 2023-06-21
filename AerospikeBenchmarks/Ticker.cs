@@ -1,6 +1,7 @@
 ﻿using Aerospike.Benchmarks;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,30 +10,45 @@ namespace AerospikeBenchmarks
 {
     internal sealed class Ticker
     {
-        public Ticker(Args args, Metrics metrics, ILatencyManager latencyManager)
+        public Ticker(Args args, 
+                        Metrics readMetrics,
+                        Metrics writeMetrics,
+                        ILatencyManager readLatencyManager,
+                        ILatencyManager writeLatencyManager)
         {
             this.Args = args;
-            this.Metrics = metrics;
-            this.LatencyManager = latencyManager;
+            this.WriteMetrics = writeMetrics;
+            this.WriteLatencyManager = writeLatencyManager;
+            this.ReadMetrics = readMetrics;
+            this.ReadLatencyManager = readLatencyManager;            
         }
 
         public Args Args { get; }
-        public Metrics Metrics { get; }
-        public ILatencyManager LatencyManager { get; }
-        public StringBuilder LatencyBuilder { get; private set; }
+        public Metrics WriteMetrics { get; }
+        public Metrics ReadMetrics { get; }
+        public ILatencyManager WriteLatencyManager { get; }
+        public ILatencyManager ReadLatencyManager { get; }
+        public StringBuilder WriteLatencyBuilder { get; private set; }
+        public StringBuilder ReadLatencyBuilder { get; private set; }
         public string LatencyHeader { get; private set; }
 
         public void Run()
         {
            
-            if (Metrics.Type == Metrics.MetricTypes.Write)
+            if (WriteMetrics is not null)
             {
-                LatencyBuilder = new StringBuilder(200);
-                LatencyHeader = LatencyManager.PrintHeader();
+                WriteLatencyBuilder = new StringBuilder(200);                
+            }
+            if (ReadMetrics is not null)
+            {
+                ReadLatencyBuilder = new StringBuilder(200);
             }
 
+            if (LatencyHeader is null)
+                LatencyHeader = WriteLatencyManager.PrintHeader();
+
             Timer = new Timer(TimerCallBack,
-                                (Metrics, LatencyManager, LatencyHeader, LatencyBuilder),
+                                this,
                                 Timeout.Infinite,
                                 Timeout.Infinite);
 
@@ -48,9 +64,9 @@ namespace AerospikeBenchmarks
 
                 if (!StopTimer
                         && Interlocked.Read(ref TimerEntry) == 0 //Not running
-                        && this.Metrics.CurrentCounters.Count > 0) //We have something to report
+                        && this.WriteMetrics.CurrentBlockCounters.Count > 0) //We have something to report
                 {
-                    TimerCallBack((Metrics, LatencyManager, LatencyHeader, LatencyBuilder));
+                    TimerCallBack(this);
                 }
 
                 this.Stop();
@@ -61,16 +77,21 @@ namespace AerospikeBenchmarks
         {
             StopTimer = true;
 
-            if (Metrics.Type == Metrics.MetricTypes.Write)
-            {
-                Console.WriteLine("Latency Summary");
+            Console.WriteLine("Latency Summary");
 
-                if (LatencyHeader != null)
-                {
-                    Console.WriteLine(LatencyHeader);
-                }
-                Console.WriteLine(LatencyManager.PrintSummary(LatencyBuilder, "write"));
+            if (LatencyHeader != null)
+            {
+                Console.WriteLine(LatencyHeader);
             }
+            if (WriteLatencyManager is not null)
+            {
+                Console.WriteLine(WriteLatencyManager.PrintSummary(WriteLatencyBuilder, "Write"));
+            }
+            if (ReadLatencyManager is not null)
+            {
+                Console.WriteLine(ReadLatencyManager.PrintSummary(ReadLatencyBuilder, "Read"));
+            }
+
         }
 
         public static Timer Timer { get; private set; }
@@ -79,12 +100,11 @@ namespace AerospikeBenchmarks
         static bool StopTimer = false;
         public static int TimerInterval = 1000;
 
+        public readonly static Stopwatch AppRunningTimer = Stopwatch.StartNew();
+
         private static void TimerCallBack(object state)
         {
-            var item = ((Metrics metrics,
-                             ILatencyManager latencyManager,
-                             string latencyHdr,
-                             StringBuilder latencyBuilder))state;
+            var ticker = (Ticker) state;
 
             if (StopTimer)
             {
@@ -103,22 +123,66 @@ namespace AerospikeBenchmarks
 
             try
             {
-                long time = item.metrics.AppRunningTime;
-                var periodBlock = item.metrics.NewBlockCounter();
+                bool blockDisplayed = false;
 
-                if (periodBlock.Count > 0)
+                (Metrics.BlockCounters, long, double) DisplayBlockInfo(Metrics metrics, 
+                                                                        bool displayClock)
                 {
-                    string dt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    (Metrics.BlockCounters windowBlock, long totalCount, double totalLatency) = metrics.NewBlockCounter();
+                    var tps = totalCount / AppRunningTimer.Elapsed.TotalSeconds;
 
-                    Console.WriteLine($"{dt} write(count={periodBlock.Count:###,###,##0} tps={periodBlock.TPS():###,###,##0} timeouts={periodBlock.TimeoutCount} errors={periodBlock.ErrorCount})");
-
-                    if (item.metrics.Type == Metrics.MetricTypes.Write)
+                    if (windowBlock.Count > 0)
                     {
-                        if (item.latencyHdr != null)
+                        if (displayClock)
                         {
-                            Console.WriteLine(item.latencyHdr);
+                            Console.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         }
-                        Console.WriteLine(item.latencyManager.PrintResults(item.latencyBuilder, item.metrics.Type.ToString()));
+
+                        Console.Write($" {metrics.Type}(count={totalCount:###,###,##0} tps={tps:###,###,##0} timeouts={windowBlock.TimeoutCount:#,###,##0} errors={windowBlock.ErrorCount:#,###,##0} cnt={windowBlock.Count:#,###,##0})");
+                        blockDisplayed = true;                        
+                    }
+                    return (windowBlock, totalCount, tps);
+                }
+
+
+                (Metrics.BlockCounters block, long totalCount, double tps) writeWindow = new();
+                (Metrics.BlockCounters block, long totalCount, double tps) readWindow = new();
+                
+                if (ticker.WriteMetrics is not null)
+                {
+                    writeWindow = DisplayBlockInfo(ticker.WriteMetrics, !blockDisplayed);
+                }
+                if (ticker.ReadMetrics is not null)
+                {
+                    readWindow = DisplayBlockInfo(ticker.ReadMetrics, !blockDisplayed);
+                }
+
+                if(blockDisplayed) 
+                {
+                    if(ticker.WriteMetrics is not null && ticker.ReadMetrics is not null)
+                    {
+                        Console.Write(" Total(count={0:#,###,##0} tps={1:#,###,##0} timeouts={2:#,###,##0} errors={3:#,###,##0} cnt={4:#,###,##0})",
+                                        writeWindow.totalCount + readWindow.totalCount,
+                                        writeWindow.totalCount + readWindow.totalCount,
+                                        writeWindow.block.TimeoutCount + readWindow.block.TimeoutCount,
+                                        writeWindow.block.ErrorCount + readWindow.block.ErrorCount,
+                                        writeWindow.block.Count + readWindow.block.Count); 
+                    }
+
+                    Console.WriteLine();
+
+                    if (ticker.LatencyHeader is not null)
+                    {
+                        Console.WriteLine(ticker.LatencyHeader);
+                    }
+
+                    if (ticker.WriteLatencyManager is not null)
+                    {                        
+                        Console.WriteLine(ticker.WriteLatencyManager.PrintResults(ticker.WriteLatencyBuilder, ticker.WriteMetrics.Type.ToString()));
+                    }
+                    if (ticker.ReadLatencyManager is not null)
+                    {
+                        Console.WriteLine(ticker.ReadLatencyManager.PrintResults(ticker.ReadLatencyBuilder, ticker.ReadMetrics.Type.ToString()));
                     }
                 }
             }
