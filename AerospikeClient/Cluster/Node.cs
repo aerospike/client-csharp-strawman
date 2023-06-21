@@ -48,7 +48,7 @@ namespace Aerospike.Client
 		private byte[] sessionToken;
 		private DateTime? sessionExpiration;
 		private volatile Dictionary<string,int> racks;
-		private readonly Pool<Connection>[] connectionPools;
+		private readonly Pool<Connection> connectionPools;
 		protected uint connectionIter;
 		protected internal int connsOpened = 1;
 		protected internal int connsClosed;
@@ -84,20 +84,7 @@ namespace Aerospike.Client
 			this.rebalanceChanged = cluster.rackAware;
 			this.racks = cluster.rackAware ? new Dictionary<string, int>() : null;
 
-			connectionPools = new Pool<Connection>[cluster.connPoolsPerNode];
-			int min = cluster.minConnsPerNode / cluster.connPoolsPerNode;
-			int remMin = cluster.minConnsPerNode - (min * cluster.connPoolsPerNode);
-			int max = cluster.maxConnsPerNode / cluster.connPoolsPerNode;
-			int remMax = cluster.maxConnsPerNode - (max * cluster.connPoolsPerNode);
-
-			for (int i = 0; i < connectionPools.Length; i++)
-			{
-				int minSize = i < remMin ? min + 1 : min;
-				int maxSize = i < remMax ? max + 1 : max;
-
-				Pool<Connection> pool = new Pool<Connection>(minSize, maxSize);
-				connectionPools[i] = pool;
-			}
+			connectionPools = new Pool<Connection>(cluster.minConnsPerNode, cluster.maxConnsPerNode);				
 		}
 
 		~Node()
@@ -109,13 +96,10 @@ namespace Aerospike.Client
 		public virtual async Task CreateMinConnections()
 		{
 			// Create sync connections.
-			foreach (Pool<Connection> pool in connectionPools)
+			if (connectionPools.minSize > 0)
 			{
-				if (pool.minSize > 0)
-				{
-					await CreateConnections(pool, pool.minSize);
-				}
-			}
+				await CreateConnections(connectionPools, connectionPools.minSize);
+			}			
 		}
 
 		/// <summary>
@@ -539,7 +523,7 @@ namespace Aerospike.Client
 
 				try
 				{
-					conn = await CreateConnection(pool);
+					conn = await CreateConnection(connectionPools);
 				}
 				catch (Exception e)
 				{
@@ -607,119 +591,26 @@ namespace Aerospike.Client
 		/// <exception cref="AerospikeException">if a connection could not be provided</exception>
 		public async Task<Connection> GetConnection(int timeoutMillis)
 		{
-			uint max = (uint)cluster.connPoolsPerNode;
-			uint initialIndex;
-			bool backward;
+            Connection conn = null;
 
-			if (max == 1)
-			{
-				initialIndex = 0;
-				backward = false;
-			}
-			else
-			{
-				uint iter = connectionIter++; // not atomic by design
-				initialIndex = iter % max;
-				backward = true;
-			}
+            while (connectionPools.TryDequeue(out conn))
+            {
+                if (!cluster.IsConnCurrentTran(conn.LastUsed))
+                {
+                    CloseConnection(conn);
+                    continue;
+                }
 
-			Pool<Connection> pool = connectionPools[initialIndex];
-			uint queueIndex = initialIndex;
-			Connection conn;
-
-			while (true)
-			{
-				if (pool.TryDequeue(out conn))
-				{
-					// Found socket.
-					// Verify that socket is active and receive buffer is empty.
-					if (cluster.IsConnCurrentTran(conn.LastUsed))
-					{
-						try
-						{
-							conn.SetTimeout(timeoutMillis);
-							return conn;
-						}
-						catch (Exception e)
-						{
-							// Set timeout failed. Something is probably wrong with timeout
-							// value itself, so don't empty queue retrying.  Just get out.
-							CloseConnectionOnError(conn);
-							throw new AerospikeException.Connection(e);
-						}
-					}
-					CloseConnection(conn);
-				}
-				else if (pool.IncrTotal() <= pool.Capacity)
-				{
-					// Socket not found and queue has available slot.
-					// Create new connection.
-					try
-					{
-						conn = CreateConnection(timeoutMillis, pool);
-					}
-					catch (Exception)
-					{
-						pool.DecrTotal();
-						throw;
-					}
-
-					if (cluster.authEnabled)
-					{
-						byte[] token = SessionToken;
-
-						if (token != null)
-						{
-							try
-							{
-								if (!await AdminCommand.Authenticate(cluster, conn, token))
-								{
-									SignalLogin();
-									throw new AerospikeException("Authentication failed");
-								}
-							}
-							catch (Exception)
-							{
-								// Socket not authenticated.  Do not put back into pool.
-								CloseConnectionOnError(conn);
-								throw;
-							}
-						}
-					}
-					return conn;
-				}
-				else
-				{
-					// Socket not found and queue is full.  Try another queue.
-					pool.DecrTotal();
-
-					if (backward)
-					{
-						if (queueIndex > 0)
-						{
-							queueIndex--;
-						}
-						else
-						{
-							queueIndex = initialIndex;
-
-							if (++queueIndex >= max)
-							{
-								break;
-							}
-							backward = false;
-						}
-					}
-					else if (++queueIndex >= max)
-					{
-						break;
-					}
-					pool = connectionPools[queueIndex];
-				}
-			}
-			throw new AerospikeException.Connection(ResultCode.NO_MORE_CONNECTIONS,
-				"Node " + this + " max connections " + cluster.maxConnsPerNode + " would be exceeded.");
-		}
+                if (!conn.socket.Connected)
+                {
+					IncrErrorCount();					
+					conn.Close();
+                    continue;
+                }
+                return conn;
+            }
+            return null;
+        }
 
 		private Connection CreateConnection(int timeout, Pool<Connection> pool)
 		{
@@ -776,19 +667,16 @@ namespace Aerospike.Client
 
 		public virtual async Task BalanceConnections()
 		{
-			foreach (Pool<Connection> pool in connectionPools)
-			{
-				int excess = pool.Excess();
+			int excess = connectionPools.Excess();
 
-				if (excess > 0)
-				{
-					CloseIdleConnections(pool, excess);
-				}
-				else if (excess < 0 && ErrorCountWithinLimit())
-				{
-					await CreateConnections(pool, -excess);
-				}
+			if (excess > 0)
+			{
+				CloseIdleConnections(connectionPools, excess);
 			}
+			else if (excess < 0 && ErrorCountWithinLimit())
+			{
+				await CreateConnections(connectionPools, -excess);
+			}			
 		}
 
 		private void CloseIdleConnections(Pool<Connection> pool, int count)
@@ -817,24 +705,16 @@ namespace Aerospike.Client
 
 		public ConnectionStats GetConnectionStats()
 		{
-			int inPool = 0;
-			int inUse = 0;
+            int inPool = connectionPools.Count;
+            int inUse = connectionPools.Total - inPool;
 
-			foreach (Pool<Connection> pool in connectionPools)
-			{
-				int tmp = pool.Count;
-				inPool += tmp;
-				tmp = pool.Total - tmp;
-
-				// Timing issues may cause values to go negative. Adjust.
-				if (tmp < 0)
-				{
-					tmp = 0;
-				}
-				inUse += tmp;
-			}
-			return new ConnectionStats(inPool, inUse, connsOpened, connsClosed);
-		}
+            // Timing issues may cause values to go negative. Adjust.
+            if (inUse < 0)
+            {
+                inUse = 0;
+            }
+            return new ConnectionStats(inPool, inUse, connsOpened, connsClosed);
+        }
 
 		public void IncrErrorCount()
 		{
@@ -981,13 +861,9 @@ namespace Aerospike.Client
 			conn.Close();
 
 			// Empty connection pools.
-			foreach (Pool<Connection> pool in connectionPools)
+			while (connectionPools.TryDequeue(out conn))
 			{
-				//Log.Debug("Close node " + this + " connection pool count " + pool.total);
-				while (pool.TryDequeue(out conn))
-				{
-					conn.Close();
-				}
+				conn.Close();
 			}
 		}
 		

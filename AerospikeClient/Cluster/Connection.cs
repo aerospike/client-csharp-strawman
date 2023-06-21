@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace Aerospike.Client
@@ -125,7 +126,7 @@ namespace Aerospike.Client
 
 		public virtual async Task ReadFully(byte[] buffer, int length)
 		{
-			if (socket.ReceiveTimeout > 0)
+            if (socket.ReceiveTimeout > 0)
 			{
 				// Check if data is available for reading.
 				// Poll is used because the timeout value is respected under 500ms.
@@ -136,10 +137,12 @@ namespace Aerospike.Client
 				}
 			}
 
-			//var args = new SocketAsyncEventArgs();
-			args.SetBuffer(buffer, 0, length);
-			//var saw = new SocketAwaitable(args);
-			await socket.ReceiveAsync(saw);
+            
+            //var args = new SocketAsyncEventArgs();
+            args.SetBuffer(buffer, 0, length);
+            //var saw = new SocketAwaitable(args);
+            await socket.ReceiveAsync(saw);
+        
 		}
 
 		public virtual Stream GetStream()
