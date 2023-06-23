@@ -48,19 +48,19 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IDictionary inputMap = new Dictionary<Value, Value>();
 			inputMap[Value.Get(1)] = Value.Get(55);
 			inputMap[Value.Get(2)] = Value.Get(33);
 
 			// Write values to empty map.
-			Record record = client.Operate(args.writePolicy, key, MapOperation.PutItems(MapPolicy.Default, binName, inputMap));
+			Record record = client.Operate(args.writePolicy, key, MapOperation.PutItems(MapPolicy.Default, binName, inputMap)).Result;
 
 			console.Info("Record: " + record);
 
 			// Pop value from map and also return new size of map.
-			record = client.Operate(args.writePolicy, key, MapOperation.RemoveByKey(binName, Value.Get(1), MapReturnType.VALUE), MapOperation.Size(binName));
+			record = client.Operate(args.writePolicy, key, MapOperation.RemoveByKey(binName, Value.Get(1), MapReturnType.VALUE), MapOperation.Size(binName)).Result;
 
 			console.Info("Record: " + record);
 
@@ -81,7 +81,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IDictionary inputMap = new Dictionary<Value, Value>();
 			inputMap[Value.Get("Charlie")] = Value.Get(55);
@@ -92,7 +92,7 @@ namespace Aerospike.Demo
 			// Write values to empty map.
 			Record record = client.Operate(args.writePolicy, key,
 				MapOperation.PutItems(MapPolicy.Default, binName, inputMap)
-				);
+				).Result;
 
 			console.Info("Record: " + record);
 
@@ -100,14 +100,14 @@ namespace Aerospike.Demo
 			record = client.Operate(args.writePolicy, key,
 				MapOperation.Increment(MapPolicy.Default, binName, Value.Get("John"), Value.Get(5)),
 				MapOperation.Increment(MapPolicy.Default, binName, Value.Get("Jim"), Value.Get(-4))
-				);
+				).Result;
 
 			console.Info("Record: " + record);
 
 			// Get top two scores.
 			record = client.Operate(args.writePolicy, key, 
 				MapOperation.GetByRankRange(binName, -2, 2, MapReturnType.KEY_VALUE)
-				);
+				).Result;
 
 			// There should be one result for each map operation on the same map bin.
 			// In this case, there are two map operations (pop and size), so there 
@@ -129,7 +129,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			List<Value> l1 = new List<Value>();
 			l1.Add(MillisSinceEpoch(new DateTime(2018, 1, 1)));
@@ -161,7 +161,7 @@ namespace Aerospike.Demo
 			// Write values to empty map.
 			Record record = client.Operate(args.writePolicy, key,
 				MapOperation.PutItems(MapPolicy.Default, binName, inputMap)
-				);
+				).Result;
 
 			console.Info("Record: " + record);
 
@@ -172,7 +172,7 @@ namespace Aerospike.Demo
 			// Delete values < end.
 			record = client.Operate(args.writePolicy, key,
 				MapOperation.RemoveByValueRange(binName, null, Value.Get(end), MapReturnType.COUNT)
-			);
+			).Result;
 
 			console.Info("Record: " + record);
 		}
@@ -193,7 +193,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IDictionary<Value, Value> m1 = new Dictionary<Value, Value>();
 			m1[Value.Get("key11")] = Value.Get(9);
@@ -208,16 +208,16 @@ namespace Aerospike.Demo
 			inputMap[Value.Get("key2")] = Value.Get(m2);
 
 			// Create maps.
-			client.Put(args.writePolicy, key, new Bin(binName, inputMap));
+			client.Put(args.writePolicy, key, new Bin(binName, inputMap)).Wait();
 
 			// Set map value to 11 for map key "key21" inside of map key "key2"
 			// and retrieve all maps.
 			Record record = client.Operate(args.writePolicy, key,
 				MapOperation.Put(MapPolicy.Default, binName, Value.Get("key21"), Value.Get(11), CTX.MapKey(Value.Get("key2"))),
 				Operation.Get(binName)
-				);
+				).Result;
 
-			record = client.Get(args.policy, key);
+			record = client.Get(args.policy, key).Result;
 			console.Info("Record: " + record);
 		}
 
@@ -227,7 +227,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IDictionary<Value, Value> m1 = new Dictionary<Value, Value>();
 			m1[Value.Get("key21")] = Value.Get(7);
@@ -242,7 +242,7 @@ namespace Aerospike.Demo
 			inputMap[Value.Get("key2")] = Value.Get(m2);
 
 			// Create maps.
-			client.Put(args.writePolicy, key, new Bin(binName, inputMap));
+			client.Put(args.writePolicy, key, new Bin(binName, inputMap)).Wait();
 
 			// Create key ordered map at "key2" only if map does not exist.
 			// Set map value to 4 for map key "key21" inside of map key "key2".
@@ -251,9 +251,9 @@ namespace Aerospike.Demo
 				MapOperation.Create(binName, MapOrder.KEY_VALUE_ORDERED, ctx), 
 				MapOperation.Put(MapPolicy.Default, binName, Value.Get("b"), Value.Get(4), ctx),
 				Operation.Get(binName)
-				);
+				).Result;
 
-			record = client.Get(args.policy, key);
+			record = client.Get(args.policy, key).Result;
 			console.Info("Record: " + record);
 		}
 
@@ -263,7 +263,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("mapbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IList<Value> l1 = new List<Value>();
 			l1.Add(Value.Get(7));
@@ -274,7 +274,7 @@ namespace Aerospike.Demo
 			inputMap[Value.Get("key1")] = Value.Get(l1);
 
 			// Create maps.
-			client.Put(args.writePolicy, key, new Bin(binName, inputMap));
+			client.Put(args.writePolicy, key, new Bin(binName, inputMap)).Wait();
 
 			// Create ordered list at map's "key2" only if list does not exist.
 			// Append 2,1 to ordered list.
@@ -284,9 +284,9 @@ namespace Aerospike.Demo
 				ListOperation.Append(binName, Value.Get(2), ctx),
 				ListOperation.Append(binName, Value.Get(1), ctx),
 				Operation.Get(binName)
-				);
+				).Result;
 
-			record = client.Get(args.policy, key);
+			record = client.Get(args.policy, key).Result;
 			console.Info("Record: " + record);
 		}
 	}

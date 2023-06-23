@@ -34,17 +34,17 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("prependbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			Bin bin = new Bin(binName, "World");
 			console.Info("Initial prepend will create record.  Initial value is " + bin.value + '.');
-			client.Prepend(args.writePolicy, key, bin);
+			client.Prepend(args.writePolicy, key, bin).Wait();
 
 			bin = new Bin(binName, "Hello ");
 			console.Info("Prepend \"" + bin.value + "\" to existing record.");
-			client.Prepend(args.writePolicy, key, bin);
+			client.Prepend(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{

@@ -731,7 +731,7 @@ namespace Aerospike.Test
 
 				AssertSuccess("init record", key, Operation.Delete(), HLLOperation.Init(HLLPolicy.Default, binName, index_bits, minhash_bits));
 
-				Record record = client.Get(null, key).GetAwaiter().GetResult();
+				Record record = client.Get(null, key).Result
 				Value.HLLValue hll = record.GetHLLValue(binName);
 
 				client.Delete(null, key).Wait();

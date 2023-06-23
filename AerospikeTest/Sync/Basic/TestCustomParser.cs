@@ -60,7 +60,7 @@ namespace Aerospike.Test
 		private Record Get(Key key, ParseBin parseBin)
 		{
 			var policy = new Policy() { recordParser = new BinParser(parseBin) };
-			return client.Get(policy, key).GetAwaiter().GetResult();
+			return client.Get(policy, key).Result;
 		}
 
 		[TestMethod]

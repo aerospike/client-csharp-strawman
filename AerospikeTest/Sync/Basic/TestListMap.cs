@@ -39,7 +39,7 @@ namespace Aerospike.Test
 			Bin bin = new Bin(args.GetBinName("listbin1"), list);
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			IList receivedList = (IList) record.GetValue(bin.name);
 
 			Assert.AreEqual(3, receivedList.Count);
@@ -66,7 +66,7 @@ namespace Aerospike.Test
 			Bin bin = new Bin(args.GetBinName("listbin2"), list);
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			IList receivedList = (IList)record.GetValue(bin.name);
 
 			Assert.AreEqual(4, receivedList.Count);
@@ -91,7 +91,7 @@ namespace Aerospike.Test
 			Bin bin = new Bin(args.GetBinName("mapbin1"), map);
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			IDictionary receivedMap = (IDictionary) record.GetValue(bin.name);
 
 			Assert.AreEqual(3, receivedMap.Count);
@@ -131,7 +131,7 @@ namespace Aerospike.Test
             Bin bin = new Bin(args.GetBinName("mapbin2"), map);
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			IDictionary receivedMap = (IDictionary) record.GetValue(bin.name);
 
 #if BINARY_FORMATTER
@@ -185,7 +185,7 @@ namespace Aerospike.Test
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			IList received = (IList) record.GetValue(bin.name);
 
 			Assert.AreEqual(4, received.Count);

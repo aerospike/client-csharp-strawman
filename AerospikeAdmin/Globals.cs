@@ -29,7 +29,7 @@ namespace Aerospike.Admin
 			if (admin)
 			{
 				// Query all roles
-				Roles = client.QueryRoles(null).GetAwaiter().GetResult();
+				Roles = client.QueryRoles(null).Result;
 			}
 			else
 			{
@@ -37,7 +37,7 @@ namespace Aerospike.Admin
 
 				foreach (string roleName in user.roles)
 				{
-					Role role = client.QueryRole(null, roleName).GetAwaiter().GetResult();
+					Role role = client.QueryRole(null, roleName).Result;
 					list.Add(role);
 				}
 				Roles = list;

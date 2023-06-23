@@ -78,7 +78,7 @@ namespace Aerospike.Client
 			queryTimer = new(interval: sleepInterval);
 			queryTimer.Elapsed += async (sender, e) =>
 			{
-				await QueryStatus()
+				/*await QueryStatus()
 				.ContinueWith(task =>
 				{
 					if (task.IsCompletedSuccessfully)
@@ -113,16 +113,15 @@ namespace Aerospike.Client
 						}
 					}
 					return false;
-				});
+				});*/
 			};
 		}
 
 		/// <summary>
 		/// Query all nodes for task completion status.
 		/// </summary>
-		public async Task<int> QueryStatus()
+		public int QueryStatus()
 		{
-			int retVal = COMPLETE;
 			// All nodes must respond with complete to be considered done.
 			Node[] nodes = cluster.ValidateNodes();
 			
@@ -151,59 +150,45 @@ namespace Aerospike.Client
 					command = cmd3;
 				}
 
-				/*await Info.Request(policy, node, command)
-					.ContinueWith(task =>
-					{
-						if (task.IsCompletedSuccessfully)
-						{
-							string response = task.Result;
-							if (response.StartsWith("ERROR:2"))
-							{
-								// Query not found.
-								if (node.HasPartitionQuery)
-								{
-									// Server >= 6.0:  Query has completed.
-									// Continue checking other nodes.
-									return true;
-								}
+				var response = Info.Request(policy, node, command);
 
-								// Server < 6.0: Query could be complete or has not started yet.
-								// Return NOT_FOUND and let the calling methods handle it.
-								retVal = NOT_FOUND;
-								return true;
-							}
-
-							if (response.StartsWith("ERROR:"))
-							{
-								throw new AerospikeException(command + " failed: " + response);
-							}
-
-							string find = "status=";
-							int index = response.IndexOf(find);
-
-							if (index < 0)
-							{
-								throw new AerospikeException(command + " failed: " + response);
-							}
-
-							int begin = index + find.Length;
-							int end = response.IndexOf(':', begin);
-							string status = response.Substring(begin, end - begin);
-
-							// Newer servers use "done" while older servers use "DONE"
-							if (!status.StartsWith("done", System.StringComparison.OrdinalIgnoreCase))
-							{
-								retVal = IN_PROGRESS;
-							}
-							return true;
-						}
-						// task faulted or cancelled
-						return false;
-					});
-				if (retVal == NOT_FOUND || retVal == IN_PROGRESS) 
+				if (response.StartsWith("ERROR:2"))
 				{
-					return retVal;
-				}*/
+					// Query not found.
+					if (node.HasPartitionQuery)
+					{
+						// Server >= 6.0:  Query has completed.
+						// Continue checking other nodes.
+						continue;
+					}
+
+					// Server < 6.0: Query could be complete or has not started yet.
+					// Return NOT_FOUND and let the calling methods handle it.
+					return NOT_FOUND;
+				}
+
+				if (response.StartsWith("ERROR:"))
+				{
+					throw new AerospikeException(command + " failed: " + response);
+				}
+
+				string find = "status=";
+				int index = response.IndexOf(find);
+
+				if (index < 0)
+				{
+					throw new AerospikeException(command + " failed: " + response);
+				}
+
+				int begin = index + find.Length;
+				int end = response.IndexOf(':', begin);
+				string status = response.Substring(begin, end - begin);
+
+				// Newer servers use "done" while older servers use "DONE"
+				if (!status.StartsWith("done", System.StringComparison.OrdinalIgnoreCase))
+				{
+					return IN_PROGRESS;
+				}
 			}
 
 			return COMPLETE;

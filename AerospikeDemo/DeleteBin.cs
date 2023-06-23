@@ -43,14 +43,14 @@ namespace Aerospike.Demo
 			string binName2 = args.GetBinName("bin2");
 			Bin bin1 = new Bin(binName1, "value1");
 			Bin bin2 = new Bin(binName2, "value2");
-			client.Put(args.writePolicy, key, bin1, bin2);
+			client.Put(args.writePolicy, key, bin1, bin2).Wait();
 
 			console.Info("Delete one bin in the record.");
 			bin1 = Bin.AsNull(binName1); // Set bin value to null to drop bin.
-			client.Put(args.writePolicy, key, bin1);
+			client.Put(args.writePolicy, key, bin1).Wait();
 
 			console.Info("Read record.");
-			Record record = client.Get(args.policy, key, bin1.name, bin2.name, "bin3");
+			Record record = client.Get(args.policy, key, bin1.name, bin2.name, "bin3").Result;
 
 			if (record == null)
 			{

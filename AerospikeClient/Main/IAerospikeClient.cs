@@ -562,14 +562,14 @@ namespace Aerospike.Client
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
 		/// <param name="roles">variable arguments array of role names.  Predefined roles are listed in Role.cs</param>		
-		Task CreateUser(AdminPolicy policy, string user, string password, IList<string> roles);
+		void CreateUser(AdminPolicy policy, string user, string password, IList<string> roles);
 
 		/// <summary>
 		/// Remove user from cluster.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
-		Task DropUser(AdminPolicy policy, string user);
+		void DropUser(AdminPolicy policy, string user);
 
 		/// <summary>
 		/// Change user's password.
@@ -577,7 +577,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
-		Task ChangePassword(AdminPolicy policy, string user, string password);
+		void ChangePassword(AdminPolicy policy, string user, string password);
 
 		/// <summary>
 		/// Add roles to user's list of roles.
@@ -585,7 +585,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		Task GrantRoles(AdminPolicy policy, string user, IList<string> roles);
+		void GrantRoles(AdminPolicy policy, string user, IList<string> roles);
 
 		/// <summary>
 		/// Remove roles from user's list of roles.
@@ -593,7 +593,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		Task RevokeRoles(AdminPolicy policy, string user, IList<string> roles);
+		void RevokeRoles(AdminPolicy policy, string user, IList<string> roles);
 
 		/// <summary>
 		/// Create user defined role.
@@ -602,7 +602,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails </exception>
-		Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Create user defined role with optional privileges and whitelist.
@@ -615,7 +615,7 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist);
+		void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist);
 
 		/// <summary>
 		/// Create user defined role with optional privileges, whitelist and read/write quotas.
@@ -631,7 +631,7 @@ namespace Aerospike.Client
 		/// <param name="readQuota">optional maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">optional maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task CreateRole
+		void CreateRole
 		(
 			AdminPolicy policy,
 			string roleName,
@@ -647,7 +647,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="roleName">role name</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task DropRole(AdminPolicy policy, string roleName);
+		void DropRole(AdminPolicy policy, string roleName);
 
 		/// <summary>
 		/// Grant privileges to an user defined role.
@@ -656,7 +656,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		void GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Revoke privileges from an user defined role.
@@ -665,7 +665,7 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
+		void RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges);
 
 		/// <summary>
 		/// Set IP address whitelist for a role.  If whitelist is null or empty, remove existing whitelist from role.
@@ -677,7 +677,7 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist);
+		void SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist);
 
 		/// <summary>
 		/// Set maximum reads/writes per second limits for a role.  If a quota is zero, the limit is removed.
@@ -688,7 +688,7 @@ namespace Aerospike.Client
 		/// <param name="readQuota">maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota);
+		void SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota);
 
 		/// <summary>
 		/// Retrieve roles for a given user.

@@ -40,12 +40,12 @@ namespace Aerospike.Demo
 			// Specify that record expires 2 seconds after it's written.
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.expiration = 2;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			// Read the record before it expires, showing it's there.
 			console.Info("Get: namespace={0} set={1} key={2}", key.ns, key.setName, key.userKey);
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{
@@ -69,7 +69,7 @@ namespace Aerospike.Demo
 			// Read the record after it expires, showing it's gone.
 			console.Info("Sleeping for 3 seconds ...");
 			Thread.Sleep(3 * 1000);
-			record = client.Get(args.policy, key, bin.name);
+			record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{

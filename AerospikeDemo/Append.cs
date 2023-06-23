@@ -44,7 +44,7 @@ namespace Aerospike.Demo
 			console.Info("Append \"" + bin.value + "\" to existing record.");
 			client.Append(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{

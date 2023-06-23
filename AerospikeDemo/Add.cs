@@ -45,7 +45,7 @@ namespace Aerospike.Demo
 			console.Info("Add " + bin.value + " to existing record.");
 			client.Add(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{
@@ -71,7 +71,7 @@ namespace Aerospike.Demo
 			// Demonstrate add and get combined.
 			bin = new Bin(binName, 30);
 			console.Info("Add " + bin.value + " to existing record.");
-			record = client.Operate(args.writePolicy, key, Operation.Add(bin), Operation.Get(bin.name));
+			record = client.Operate(args.writePolicy, key, Operation.Add(bin), Operation.Get(bin.name)).Result;
 
 			expected = 45;
 			received = record.GetInt(bin.name);

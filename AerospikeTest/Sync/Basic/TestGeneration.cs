@@ -42,7 +42,7 @@ namespace Aerospike.Test
 			client.Put(null, key, bin).Wait();
 
 			// Retrieve record and its generation count.
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin);
 
 			// Set record and fail if it's not the expected generation.
@@ -71,7 +71,7 @@ namespace Aerospike.Test
 			}
 
 			// Verify results.
-			record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin.name, "genvalue3");
 		}
 	}

@@ -46,17 +46,17 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("bitbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			byte[] bytes = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05};
 
-			client.Put(args.writePolicy, key, new Bin(binName, bytes));
+			client.Put(args.writePolicy, key, new Bin(binName, bytes)).Wait();
 
 			// Set last 3 bits of bitmap to true.
 			Record record = client.Operate(args.writePolicy, key,
 				BitOperation.Set(BitPolicy.Default, binName, -3, 3, new byte[] {0xE0}),
 				Operation.Get(binName)
-				);
+				).Result;
 
 			IList list = record.GetList(binName);
 

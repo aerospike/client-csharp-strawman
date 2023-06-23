@@ -198,7 +198,7 @@ namespace Aerospike.Client
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
 			cluster = new Cluster(policy, hosts);
-			cluster.InitTendThread(policy.failIfNotConnected).Wait();
+			cluster.InitTendThread(policy.failIfNotConnected);
 		}
 
 		/// <summary>
@@ -1468,11 +1468,11 @@ namespace Aerospike.Client
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
 		/// <param name="roles">variable arguments array of role names.  Predefined roles are listed in Role.cs</param>		
-		public async Task CreateUser(AdminPolicy policy, string user, string password, IList<string> roles)
+		public void CreateUser(AdminPolicy policy, string user, string password, IList<string> roles)
 		{
 			string hash = AdminCommand.HashPassword(password);
 			AdminCommand command = new AdminCommand();
-			await command.CreateUser(cluster, policy, user, hash, roles);
+			command.CreateUser(cluster, policy, user, hash, roles);
 		}
 
 		/// <summary>
@@ -1480,10 +1480,10 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
-		public async Task DropUser(AdminPolicy policy, string user)
+		public void DropUser(AdminPolicy policy, string user)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.DropUser(cluster, policy, user);
+			command.DropUser(cluster, policy, user);
 		}
 
 		/// <summary>
@@ -1492,7 +1492,7 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="password">user password in clear-text format</param>
-		public async Task ChangePassword(AdminPolicy policy, string user, string password)
+		public void ChangePassword(AdminPolicy policy, string user, string password)
 		{
 			if (cluster.user == null)
 			{
@@ -1510,12 +1510,12 @@ namespace Aerospike.Client
 			if (Util.ByteArrayEquals(userBytes, cluster.user))
 			{
 				// Change own password.
-				await command.ChangePassword(cluster, policy, userBytes, hash);
+				command.ChangePassword(cluster, policy, userBytes, hash);
 			}
 			else
 			{
 				// Change other user's password by user admin.
-				await command.SetPassword(cluster, policy, userBytes, hash);
+				command.SetPassword(cluster, policy, userBytes, hash);
 			}
 			cluster.ChangePassword(userBytes, passwordBytes, hashBytes);
 		}
@@ -1526,10 +1526,10 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		public async Task GrantRoles(AdminPolicy policy, string user, IList<string> roles)
+		public void GrantRoles(AdminPolicy policy, string user, IList<string> roles)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.GrantRoles(cluster, policy, user, roles);
+			command.GrantRoles(cluster, policy, user, roles);
 		}
 
 		/// <summary>
@@ -1538,10 +1538,10 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name</param>
 		/// <param name="roles">role names.  Predefined roles are listed in Role.cs</param>
-		public async Task RevokeRoles(AdminPolicy policy, string user, IList<string> roles)
+		public void RevokeRoles(AdminPolicy policy, string user, IList<string> roles)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.RevokeRoles(cluster, policy, user, roles);
+			command.RevokeRoles(cluster, policy, user, roles);
 		}
 
 		/// <summary>
@@ -1551,10 +1551,10 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.CreateRole(cluster, policy, roleName, privileges);
+			command.CreateRole(cluster, policy, roleName, privileges);
 		}
 
 		/// <summary>
@@ -1568,10 +1568,10 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist)
+		public void CreateRole(AdminPolicy policy, string roleName, IList<Privilege> privileges, IList<string> whitelist)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.CreateRole(cluster, policy, roleName, privileges, whitelist, 0, 0);
+			command.CreateRole(cluster, policy, roleName, privileges, whitelist, 0, 0);
 		}
 
 		/// <summary>
@@ -1588,7 +1588,7 @@ namespace Aerospike.Client
 		/// <param name="readQuota">optional maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">optional maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task CreateRole
+		public void CreateRole
 		(
 			AdminPolicy policy,
 			string roleName,
@@ -1599,7 +1599,7 @@ namespace Aerospike.Client
 		)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.CreateRole(cluster, policy, roleName, privileges, whitelist, readQuota, writeQuota);
+			command.CreateRole(cluster, policy, roleName, privileges, whitelist, readQuota, writeQuota);
 		}
 
 		/// <summary>
@@ -1608,10 +1608,10 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="roleName">role name</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task DropRole(AdminPolicy policy, string roleName)
+		public void DropRole(AdminPolicy policy, string roleName)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.DropRole(cluster, policy, roleName);
+			command.DropRole(cluster, policy, roleName);
 		}
 
 		/// <summary>
@@ -1621,10 +1621,10 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public void GrantPrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.GrantPrivileges(cluster, policy, roleName, privileges);
+			command.GrantPrivileges(cluster, policy, roleName, privileges);
 		}
 
 		/// <summary>
@@ -1634,10 +1634,10 @@ namespace Aerospike.Client
 		/// <param name="roleName">role name</param>
 		/// <param name="privileges">privileges assigned to the role.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges)
+		public void RevokePrivileges(AdminPolicy policy, string roleName, IList<Privilege> privileges)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.RevokePrivileges(cluster, policy, roleName, privileges);
+			command.RevokePrivileges(cluster, policy, roleName, privileges);
 		}
 
 		/// <summary>
@@ -1650,10 +1650,10 @@ namespace Aerospike.Client
 		/// IP addresses can contain wildcards (ie. 10.1.2.0/24).
 		/// </param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist)
+		public void SetWhitelist(AdminPolicy policy, string roleName, IList<string> whitelist)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.SetWhitelist(cluster, policy, roleName, whitelist);
+			command.SetWhitelist(cluster, policy, roleName, whitelist);
 		}
 
 		/// <summary>
@@ -1665,10 +1665,10 @@ namespace Aerospike.Client
 		/// <param name="readQuota">maximum reads per second limit, pass in zero for no limit.</param>
 		/// <param name="writeQuota">maximum writes per second limit, pass in zero for no limit.</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota)
+		public void SetQuotas(AdminPolicy policy, string roleName, int readQuota, int writeQuota)
 		{
 			AdminCommand command = new AdminCommand();
-			await command.setQuotas(cluster, policy, roleName, readQuota, writeQuota);
+			command.setQuotas(cluster, policy, roleName, readQuota, writeQuota);
 		}
 
 		/// <summary>

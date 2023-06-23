@@ -53,11 +53,11 @@ namespace Aerospike.Demo
 			console.Info("Put: namespace={0} set={1} key={2} bin1={3} value1={4} bin2={5} value2={6}", 
 				key.ns, key.setName, key.userKey, bin1.name, bin1.value, bin2.name, bin2.value);
 
-			client.Put(args.writePolicy, key, bin1, bin2);
+			client.Put(args.writePolicy, key, bin1, bin2).Wait();
 
 			console.Info("Get: namespace={0} set={1} key={2}", key.ns, key.setName, key.userKey);
 
-			Record record = client.Get(args.policy, key);
+			Record record = client.Get(args.policy, key).Result;
 
 			if (record == null)
 			{
@@ -80,12 +80,12 @@ namespace Aerospike.Demo
 			console.Info("Single Bin Put: namespace={0} set={1} key={2} value={3}", 
 				key.ns, key.setName, key.userKey, bin.value);
 
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			console.Info("Single Bin Get: namespace={0} set={1} key={2}", key.ns, 
 				key.setName, key.userKey);
 
-			Record record = client.Get(args.policy, key);
+			Record record = client.Get(args.policy, key).Result;
 
 			if (record == null)
 			{
@@ -120,7 +120,7 @@ namespace Aerospike.Demo
 			Key key = new Key(args.ns, args.set, "putgetkey");
 
 			console.Info("Get record header: namespace={0} set={1} key={2}", key.ns, key.setName, key.userKey);
-			Record record = client.GetHeader(args.policy, key);
+			Record record = client.GetHeader(args.policy, key).Result;
 
 			if (record == null)
 			{

@@ -36,7 +36,7 @@ namespace Aerospike.Test
 			bin1 = Bin.AsNull(binName1); // Set bin value to null to drop bin.
 			client.Put(null, key, bin1).Wait();
 
-			Record record = client.Get(null, key, bin1.name, bin2.name, "bin3").GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin1.name, bin2.name, "bin3").Result;
 			AssertRecordFound(key, record);
 
 			if (record.GetValue("bin1") != null)

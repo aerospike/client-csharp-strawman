@@ -34,7 +34,7 @@ namespace Aerospike.Test
 				Bin bin = new Bin("", "value");
 			
 				client.Put(null, key, bin).Wait();
-				record = client.Get(null, key).GetAwaiter().GetResult();
+				record = client.Get(null, key).Result;
 				AssertBinEqual(key, record, bin);			
 			}
 			else {
@@ -42,12 +42,12 @@ namespace Aerospike.Test
 				Bin bin2 = new Bin("bin2", "value2");
 			
 				client.Put(null, key, bin1, bin2).Wait();
-				record = client.Get(null, key).GetAwaiter().GetResult();
+				record = client.Get(null, key).Result;
 				AssertBinEqual(key, record, bin1);
 				AssertBinEqual(key, record, bin2);			
 			}
 
-			record = client.GetHeader(null, key).GetAwaiter().GetResult();
+			record = client.GetHeader(null, key).Result;
 			AssertRecordFound(key, record);
 
 			// Generation should be greater than zero.  Make sure it's populated.
@@ -68,7 +68,7 @@ namespace Aerospike.Test
 
 			client.Put(null, key, bin1, bin2, bin3, bin4).Wait();
 
-			Record record = client.Get(null, key).GetAwaiter().GetResult();
+			Record record = client.Get(null, key).Result;
 			bool b = record.GetBool(bin1.name);
 			Assert.IsFalse(b);
 			b = record.GetBool(bin2.name);

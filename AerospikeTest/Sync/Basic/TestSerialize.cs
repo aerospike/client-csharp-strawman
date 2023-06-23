@@ -93,7 +93,7 @@ namespace Aerospike.Test
 
 			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertRecordFound(key, record);
 
 			IList received = null;

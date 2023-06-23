@@ -37,7 +37,7 @@ namespace Aerospike.Test
 			policy.recordExistsAction = RecordExistsAction.REPLACE;
 			client.Put(policy, key, bin3).Wait();
 
-			Record record = client.Get(null, key).GetAwaiter().GetResult();
+			Record record = client.Get(null, key).Result;
 			AssertRecordFound(key, record);
 
 			if (record.GetValue(bin1.name) != null)

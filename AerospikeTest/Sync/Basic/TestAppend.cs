@@ -38,7 +38,7 @@ namespace Aerospike.Test
 			bin = new Bin(binName, " World");
 			client.Append(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin.name, "Hello World");
 		}
 
@@ -57,7 +57,7 @@ namespace Aerospike.Test
 			bin = new Bin(binName, "Hello ");
 			client.Prepend(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin.name, "Hello World");
 		}
 	}

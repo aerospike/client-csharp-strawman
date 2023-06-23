@@ -39,7 +39,7 @@ namespace Aerospike.Test
 			bin = new Bin(binName, 5);
 			client.Add(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name).GetAwaiter().GetResult();
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin.name, 15);
 
 			// Test add and get combined.
