@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace Aerospike.Client
 {
-	public sealed class AsyncQueryValidate
+	/*public sealed class AsyncQueryValidate
 	{
 		public interface BeginListener
 		{
@@ -126,5 +126,5 @@ namespace Aerospike.Client
 				listener.OnFailure(ae);
 			}
 		}
-	}	
+	}*/	
 }

@@ -16,7 +16,7 @@
  */
 namespace Aerospike.Client
 {
-	public sealed class AsyncQueryPartition : AsyncMultiCommand
+	/*public sealed class AsyncQueryPartition : AsyncMultiCommand
 	{
 		private readonly AsyncMultiExecutor parent;
 		private readonly Statement statement;
@@ -93,5 +93,5 @@ namespace Aerospike.Client
 			}
 			parent.ChildFailure(ae);
 		}
-	}
+	}*/
 }

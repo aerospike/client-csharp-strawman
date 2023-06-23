@@ -16,7 +16,7 @@
  */
 namespace Aerospike.Client
 {
-	public sealed class AsyncQueryExecutor : AsyncMultiExecutor
+	/*public sealed class AsyncQueryExecutor : AsyncMultiExecutor
 	{
 
 		public AsyncQueryExecutor
@@ -47,5 +47,5 @@ namespace Aerospike.Client
 				Execute(tasks, policy.maxConcurrentNodes);
 			}
 		}
-	}
+	}*/
 }

@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace Aerospike.Client
 {
-	public sealed class AsyncQueryPartitionExecutor : AsyncMultiExecutor
+	/*public sealed class AsyncQueryPartitionExecutor : AsyncMultiExecutor
 	{
 		private readonly QueryPolicy policy;
 		private readonly Statement statement;
@@ -88,5 +88,5 @@ namespace Aerospike.Client
 			ae.Iteration = tracker.iteration;
 			listener.OnFailure(ae);
 		}
-	}
+	}*/
 }

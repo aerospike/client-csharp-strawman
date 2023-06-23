@@ -19,7 +19,7 @@ using System.Xml.Linq;
 
 namespace Aerospike.Client
 {
-	public sealed class QueryRecordCommand : MultiCommand
+	/*public sealed class QueryRecordCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly RecordSet recordSet;
@@ -83,5 +83,5 @@ namespace Aerospike.Client
 			}
 			return true;
 		}
-	}
+	}*/
 }

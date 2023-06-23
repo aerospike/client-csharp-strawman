@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 namespace Aerospike.Client
 {
-	public abstract class AsyncMultiCommand : AsyncCommand
+	/*public abstract class AsyncMultiCommand : AsyncCommand
 	{
 		protected internal readonly Node serverNode;
 		protected internal int info3;
@@ -138,5 +138,5 @@ namespace Aerospike.Client
 		{
 			valid = false;
 		}
-	}
+	}*/
 }

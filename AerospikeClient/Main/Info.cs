@@ -51,9 +51,9 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="node">server node</param>
 		/// <param name="name">name of variable to retrieve</param>
-		public static async Task<string> Request(Node node, string name)
+		public static string Request(Node node, string name)
 		{
-			Connection conn = await node.GetConnection(DEFAULT_TIMEOUT);
+			Connection conn = node.GetConnection(DEFAULT_TIMEOUT);
 
 			try
 			{
@@ -75,10 +75,10 @@ namespace Aerospike.Client
 		/// <param name="policy">info command configuration parameters, pass in null for defaults</param>
 		/// <param name="node">server node</param>
 		/// <param name="name">name of variable to retrieve</param>
-		public static async Task<string> Request(InfoPolicy policy, Node node, string name)
+		public static string Request(InfoPolicy policy, Node node, string name)
 		{
 			int timeout = (policy == null) ? DEFAULT_TIMEOUT : policy.timeout;
-			Connection conn = await node.GetConnection(timeout);
+			Connection conn = node.GetConnection(timeout);
 
 			try
 			{
@@ -101,10 +101,10 @@ namespace Aerospike.Client
 		/// <param name="policy">info command configuration parameters, pass in null for defaults</param>
 		/// <param name="node">server node</param>
 		/// <param name="names">names of variables to retrieve</param>
-		public static async Task<Dictionary<string, string>> Request(InfoPolicy policy, Node node, params string[] names)
+		public static Dictionary<string, string> Request(InfoPolicy policy, Node node, params string[] names)
 		{
 			int timeout = (policy == null) ? DEFAULT_TIMEOUT : policy.timeout;
-			Connection conn = await node.GetConnection(timeout);
+			Connection conn = node.GetConnection(timeout);
 
 			try
 			{
@@ -126,10 +126,10 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">info command configuration parameters, pass in null for defaults</param>
 		/// <param name="node">server node</param>
-		public static async Task<Dictionary<string, string>> Request(InfoPolicy policy, Node node)
+		public static Dictionary<string, string> Request(InfoPolicy policy, Node node)
 		{
 			int timeout = (policy == null) ? DEFAULT_TIMEOUT : policy.timeout;
-			Connection conn = await node.GetConnection(timeout);
+			Connection conn = node.GetConnection(timeout);
 
 			try
 			{

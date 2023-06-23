@@ -21,7 +21,7 @@ using System.Diagnostics;
 
 namespace Aerospike.Client
 {
-	/// <summary>
+	/*/// <summary>
 	/// Asynchronous command handler.
 	/// </summary>
 	public abstract class AsyncCommand : Command, ITimeout
@@ -905,5 +905,5 @@ namespace Aerospike.Client
 		protected internal abstract bool PrepareRetry(bool timeout);
 		protected internal abstract void OnSuccess();
 		protected internal abstract void OnFailure(AerospikeException ae);
-	}
+	}*/
 }

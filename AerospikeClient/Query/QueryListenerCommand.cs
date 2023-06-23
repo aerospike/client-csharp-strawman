@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 namespace Aerospike.Client
 {
-	public sealed class QueryListenerCommand : MultiCommand
+	/*public sealed class QueryListenerCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly ulong taskId;
@@ -97,5 +97,5 @@ namespace Aerospike.Client
 			tracker.SetLast(nodePartitions, key, bval);
 			return true;
 		}
-	}
+	}*/
 }

@@ -16,7 +16,7 @@
  */
 namespace Aerospike.Client
 {
-	public sealed class ServerCommand : MultiCommand
+	/*public sealed class ServerCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly ulong taskId;
@@ -66,5 +66,5 @@ namespace Aerospike.Client
 			}
 			return true;
 		}		
-	}
+	}*/
 }

@@ -16,7 +16,7 @@
  */
 namespace Aerospike.Client
 {
-	public sealed class AsyncQuery : AsyncMultiCommand
+	/*public sealed class AsyncQuery : AsyncMultiCommand
 	{
 		private readonly AsyncMultiExecutor parent;
 		private readonly Statement statement;
@@ -71,5 +71,5 @@ namespace Aerospike.Client
 		{
 			parent.ChildFailure(e);
 		}
-	}
+	}*/
 }

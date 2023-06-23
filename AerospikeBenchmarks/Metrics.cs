@@ -183,7 +183,5 @@ namespace Aerospike.Benchmarks
 				}
 			}
 		}
-
-		
 	}
 }

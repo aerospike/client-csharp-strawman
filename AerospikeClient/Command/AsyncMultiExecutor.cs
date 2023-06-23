@@ -18,7 +18,7 @@ using System.Threading;
 
 namespace Aerospike.Client
 {
-	public abstract class AsyncMultiExecutor
+	/*public abstract class AsyncMultiExecutor
 	{
 		internal readonly Cluster cluster; 
 		private AsyncMultiCommand[] commands;
@@ -206,5 +206,5 @@ namespace Aerospike.Client
 		
 		protected internal abstract void OnSuccess();
 		protected internal abstract void OnFailure(AerospikeException ae);
-	}
+	}*/
 }

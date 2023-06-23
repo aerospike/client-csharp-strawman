@@ -301,6 +301,7 @@ namespace Aerospike.Client
 			// Run cluster tend thread.
 			System.Timers.Timer tendTimer = new (interval: tendInterval);
 			tendTimer.Elapsed += async (sender, e) => await Run();
+			tendTimer.Start();
 		}
 
 		public void AddSeeds(Host[] hosts)

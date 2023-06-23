@@ -214,7 +214,7 @@ namespace Aerospike.Client
 		/// If specified, value must be before the current time.
 		/// Pass in null to delete all records in namespace/set regardless of last update time.
 		/// </param>
-		Task Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate);
+		void Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate);
 
 		//-------------------------------------------------------
 		// Touch Operations
@@ -444,7 +444,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task Execute(WritePolicy policy, Statement statement, params Operation[] operations);
+		//Task Execute(WritePolicy policy, Statement statement, params Operation[] operations);
 
 		//--------------------------------------------------------
 		// Query functions
@@ -457,7 +457,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="action">action methods to be called for each record</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
+		//Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
 
 		/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -467,7 +467,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		Task<RecordSet> Query(QueryPolicy policy, Statement statement);
+		//Task<RecordSet> Query(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
@@ -484,7 +484,7 @@ namespace Aerospike.Client
 		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		Task Query(QueryPolicy policy, Statement statement);
+		//Task Query(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
@@ -509,12 +509,12 @@ namespace Aerospike.Client
 		/// data partition filter. Set to <see cref="PartitionFilter.All"/> for all partitions.
 		/// </param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		Task Query
+		/*Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
 			PartitionFilter partitionFilter
-		);
+		);*/
 
 		/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
@@ -528,12 +528,12 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="partitionFilter">filter on a subset of data partitions</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		RecordSet QueryPartitions
+		/*RecordSet QueryPartitions
 		(
 			QueryPolicy policy,
 			Statement statement,
 			PartitionFilter partitionFilter
-		);
+		);*/
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication
@@ -548,7 +548,7 @@ namespace Aerospike.Client
 		/// <param name="ns">namespace - equivalent to database name</param>
 		/// <param name="filter">expression filter</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter);
+		void SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter);
 
 		//-------------------------------------------------------
 		// User administration

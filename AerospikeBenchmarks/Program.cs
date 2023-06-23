@@ -63,25 +63,17 @@ namespace Aerospike.Benchmarks
             {
                 long keyStart = 0;
                 var metricsWrite = new Metrics(Metrics.MetricTypes.Write, args);
-                ILatencyManager latencyMgrWrite = args.latency
-                                                    ? (args.latencyAltFormat
-                                                        ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
-                                                        : new LatencyManager(args.latencyColumns, args.latencyShift))
-                                                    : null;
+                ILatencyManager latencyMgrWrite = new LatencyManager();
                 Metrics metricsRead = null;
                 ILatencyManager latencyMgrRead = null;
 
                 if (!args.writeonly)
                 {
                     metricsRead = new Metrics(Metrics.MetricTypes.Read, args);
-                    latencyMgrRead = args.latency
-                                        ? (args.latencyAltFormat
-                                            ? new LatencyManagerAlt(args.latencyColumns, args.latencyShift)
-                                            : new LatencyManager(args.latencyColumns, args.latencyShift))
-                                        : null;
+                    latencyMgrRead = new LatencyManager();
                 }
 
-                args.SetServerSpecific(client).Wait();
+                args.SetServerSpecific(client);
 
                 ticker = new Ticker(args,
                                     metricsRead,

@@ -39,20 +39,15 @@ namespace Aerospike.Benchmarks
 		internal BinType binType;
 		internal Value fixedValue;
 		internal int commandMax;
-		internal int threadMax;
 		internal int transactionMax;
 		internal int records;
 		internal int recordsWrite;
 		internal int readPct;
 		internal int binSize;
-		internal int latencyColumns;
-		internal int latencyShift;
 		internal int batchSize;
 		internal int throughput;
 		internal bool writeonly;
-		internal bool sync;
 		internal bool latency;
-		internal bool latencyAltFormat;
 		internal bool debug;
 		internal bool singleBin;
 		internal string LatencyFileJson;
@@ -92,12 +87,6 @@ namespace Aerospike.Benchmarks
 
 			hosts = Host.ParseHosts(section.GetSection("Host").Value, tlsName, port);
 			commandMax = int.Parse(section.GetSection("AsyncMaxCommands").Value);
-			sync = bool.Parse(section.GetSection("Sync").Value);
-
-			if (sync)
-			{
-				threadMax = int.Parse(section.GetSection("SyncThreads").Value);
-			}
 
 			transactionMax = int.Parse(section.GetSection("TransactionMax").Value);
 
@@ -126,20 +115,6 @@ namespace Aerospike.Benchmarks
 
 			if (latency)
 			{
-				latencyColumns = int.Parse(section.GetSection("LatencyColumns").Value);
-				latencyShift = int.Parse(section.GetSection("LatencyShift").Value);
-				latencyAltFormat = bool.Parse(section.GetSection("LatencyAltFormat").Value);
-
-				if (!(latencyColumns >= 2 && latencyColumns <= 10))
-				{
-					throw new Exception("Latency columns must be between 2 and 10 inclusive.");
-				}
-
-				if (!(latencyShift >= 1 && latencyShift <= 5))
-				{
-					throw new Exception("Latency exponent shift must be between 1 and 5 inclusive.");
-				}
-
 				LatencyFileJson = section.GetSection("LatencyFileJson").Value;
 				LatencyFileCSV = section.GetSection("LatencyFileCSV").Value;
 
@@ -189,12 +164,12 @@ namespace Aerospike.Benchmarks
 		/// <summary>
 		/// Some database calls need to know how the server is configured.
 		/// </summary>
-		internal async Task SetServerSpecific(AerospikeClient client)
+		internal void SetServerSpecific(AerospikeClient client)
 		{
 			Node node = client.Nodes[0];
 			string featuresFilter = "features";
 			string namespaceFilter = "namespace/" + ns;
-			Dictionary<string, string> tokens = await Info.Request(null, node, featuresFilter, namespaceFilter);
+			Dictionary<string, string> tokens = Info.Request(null, node, featuresFilter, namespaceFilter);
 
 			string namespaceTokens = tokens[namespaceFilter];
 
@@ -292,9 +267,6 @@ namespace Aerospike.Benchmarks
 			string throughputStr = (throughput == 0)? "unlimited" : throughput.ToString() + " tps";
 			string transactionStr = (transactionMax == 0) ? "unlimited" : transactionMax.ToString();
 
-			Console.WriteLine("threads: " + threadMax + ", transactions: " + transactionStr + 
-				", throughput: " + throughputStr + ", debug: " + debug);
-
 			Console.Write("write policy:");
 			Console.WriteLine(
 				" socketTimeout: " + writePolicy.socketTimeout
@@ -319,10 +291,7 @@ namespace Aerospike.Benchmarks
 			string randStr = fixedValue != null ? "false" : "true";
 			Console.WriteLine(", random values: " + randStr);
 
-			if (! sync)
-			{
-				Console.WriteLine("Async max concurrent commands: " + commandMax);
-			}
+			Console.WriteLine("Async max concurrent commands: " + commandMax);
 			Console.WriteLine();
 		}
 	}

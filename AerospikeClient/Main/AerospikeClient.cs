@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.IO;
-using static Aerospike.Client.AsyncQueryValidate;
 using System.Threading.Tasks;
 
 namespace Aerospike.Client
@@ -578,7 +577,7 @@ namespace Aerospike.Client
 		/// If specified, value must be before the current time.
 		/// Pass in null to delete all records in namespace/set regardless of last update time.
 		/// </param>
-		public async Task Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate)
+		public void Truncate(InfoPolicy policy, string ns, string set, DateTime? beforeLastUpdate)
 		{
 			if (policy == null)
 			{
@@ -610,7 +609,7 @@ namespace Aerospike.Client
 				sb.Append(Util.NanosFromEpoch(beforeLastUpdate.Value));
 			}
 
-			string response = await Info.Request(policy, node, sb.ToString());
+			string response = Info.Request(policy, node, sb.ToString());
 
 			if (!response.Equals("ok", StringComparison.CurrentCultureIgnoreCase))
 			{
@@ -1228,7 +1227,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations)
+		/*public ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations)
 		{
 			if (policy == null)
 			{
@@ -1247,7 +1246,7 @@ namespace Aerospike.Client
 			}
 			executor.Execute(nodes.Length).Wait();
 			return new ExecuteTask(cluster, policy, statement, taskId);
-		}
+		}*/
 
 		//--------------------------------------------------------
 		// Query functions
@@ -1260,7 +1259,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="action">action methods to be called for each record</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action)
+		/*public async Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action)
 		{
 			using (RecordSet rs = await Query(policy, statement))
 			{
@@ -1269,7 +1268,7 @@ namespace Aerospike.Client
 					action(rs.Key, rs.Record);
 				}
 			}
-		}
+		}*/
 
 		/*/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -1317,7 +1316,7 @@ namespace Aerospike.Client
 		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task Query(QueryPolicy policy, Statement statement)
+		/*public async Task Query(QueryPolicy policy, Statement statement)
 		{
 			if (policy == null)
 			{
@@ -1336,7 +1335,7 @@ namespace Aerospike.Client
 				var command = new QueryRecordCommand(cluster, nodes, policy, statement);
 				await command.Execute();
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
@@ -1361,7 +1360,7 @@ namespace Aerospike.Client
 		/// data partition filter. Set to <see cref="PartitionFilter.All"/> for all partitions.
 		/// </param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task Query
+		/*public async Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
@@ -1384,7 +1383,7 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
@@ -1398,7 +1397,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="partitionFilter">filter on a subset of data partitions</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public RecordSet QueryPartitions
+		/*public RecordSet QueryPartitions
 		(
 			QueryPolicy policy,
 			Statement statement,
@@ -1422,7 +1421,7 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "QueryPartitions() not supported");
 			}
-		}
+		}*/
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication
@@ -1437,7 +1436,7 @@ namespace Aerospike.Client
 		/// <param name="ns">namespace - equivalent to database name</param>
 		/// <param name="filter">expression filter</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter)
+		public void SetXDRFilter(InfoPolicy policy, string datacenter, string ns, Expression filter)
 		{
 			if (policy == null)
 			{
@@ -1447,7 +1446,7 @@ namespace Aerospike.Client
 			// Send XDR command to one node. That node will distribute the XDR command to other nodes.
 			string command = "xdr-set-filter:dc=" + datacenter + ";namespace=" + ns + ";exp=" + filter.GetBase64();
 			Node node = cluster.GetRandomNode();
-			string response = await Info.Request(policy, node, command);
+			string response = Info.Request(policy, node, command);
 
 			if (response.Equals("ok", StringComparison.CurrentCultureIgnoreCase))
 			{
@@ -1720,10 +1719,10 @@ namespace Aerospike.Client
 		// Internal Methods
 		//-------------------------------------------------------
 
-		private async Task<string> SendInfoCommand(Policy policy, string command)
+		private string SendInfoCommand(Policy policy, string command)
 		{
 			Node node = cluster.GetRandomNode();
-			Connection conn = await node.GetConnection(policy.socketTimeout);
+			Connection conn = node.GetConnection(policy.socketTimeout);
 			Info info;
 
 			try

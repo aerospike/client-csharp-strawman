@@ -20,7 +20,7 @@ namespace Aerospike.Benchmarks
 {
 	internal interface ILatencyManager
 	{
-		void Add(long elapsedms);
+		void Add(double elapsedms);
 		string PrintHeader();
 		string PrintResults(StringBuilder sb, string prefix);
 		string PrintSummary(StringBuilder sb, string prefix);

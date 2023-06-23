@@ -23,7 +23,7 @@ namespace Aerospike.Client
 		public static ulong ValidateBegin(Node node, string ns)
 		{
 			// Fail when cluster is in migration.
-			string result = Info.Request(node, "cluster-stable:namespace=" + ns).GetAwaiter().GetResult();
+			string result = Info.Request(node, "cluster-stable:namespace=" + ns);
 
 			try
 			{

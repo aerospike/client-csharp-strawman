@@ -71,6 +71,10 @@ namespace Aerospike.Client
 		public void Wait(int sleepInterval)
 		{
 			DateTime deadline = DateTime.UtcNow.AddMilliseconds(policy.timeout);
+			// Sleep first to give task a chance to complete and help avoid case
+			// where task hasn't started yet.
+			Util.Sleep(sleepInterval);
+
 			queryTimer = new(interval: sleepInterval);
 			queryTimer.Elapsed += async (sender, e) =>
 			{
@@ -147,7 +151,7 @@ namespace Aerospike.Client
 					command = cmd3;
 				}
 
-				await Info.Request(policy, node, command)
+				/*await Info.Request(policy, node, command)
 					.ContinueWith(task =>
 					{
 						if (task.IsCompletedSuccessfully)
@@ -199,7 +203,7 @@ namespace Aerospike.Client
 				if (retVal == NOT_FOUND || retVal == IN_PROGRESS) 
 				{
 					return retVal;
-				}
+				}*/
 			}
 
 			return COMPLETE;

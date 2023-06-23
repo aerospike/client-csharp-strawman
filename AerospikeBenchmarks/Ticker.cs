@@ -138,7 +138,7 @@ namespace AerospikeBenchmarks
                             Console.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         }
 
-                        Console.Write($" {metrics.Type}(count={totalCount:###,###,##0} tps={tps:###,###,##0} timeouts={windowBlock.TimeoutCount:#,###,##0} errors={windowBlock.ErrorCount:#,###,##0} cnt={windowBlock.Count:#,###,##0})");
+                        Console.Write($" {metrics.Type}(Total={totalCount:###,###,##0} tps={tps:###,###,##0} timeouts={windowBlock.TimeoutCount:#,###,##0} errors={windowBlock.ErrorCount:#,###,##0} count={windowBlock.Count:#,###,##0})");
                         blockDisplayed = true;                        
                     }
                     return (windowBlock, totalCount, tps);
@@ -161,9 +161,9 @@ namespace AerospikeBenchmarks
                 {
                     if(ticker.WriteMetrics is not null && ticker.ReadMetrics is not null)
                     {
-                        Console.Write(" Total(count={0:#,###,##0} tps={1:#,###,##0} timeouts={2:#,###,##0} errors={3:#,###,##0} cnt={4:#,###,##0})",
+                        Console.Write(" Total(count={0:#,###,##0} tps={1:#,###,##0} timeouts={2:#,###,##0} errors={3:#,###,##0} count={4:#,###,##0})",
                                         writeWindow.totalCount + readWindow.totalCount,
-                                        writeWindow.totalCount + readWindow.totalCount,
+                                        writeWindow.tps + readWindow.tps,
                                         writeWindow.block.TimeoutCount + readWindow.block.TimeoutCount,
                                         writeWindow.block.ErrorCount + readWindow.block.ErrorCount,
                                         writeWindow.block.Count + readWindow.block.Count); 
