@@ -16,14 +16,36 @@
  */
 namespace Aerospike.Client
 {
-	/// <summary>
-	/// This method will be called for each record returned from a sync query. The user may throw a 
-	/// <see cref="Aerospike.Client.AerospikeException.QueryTerminated"/> exception if the query
-	/// should be aborted. If an exception is thrown, parallel query command threads to other nodes
-	/// will also be terminated.
-	/// </summary>
-	/// <param name="key">unique record identifier</param>
-	/// <param name="record">record instance</param>
-	/// <exception cref="AerospikeException">if error occurs or query should be terminated</exception>
-	public delegate void QueryListener(Key key, Record record);
+	public sealed class AsyncQueryExecutor : AsyncMultiExecutor
+	{
+
+		public AsyncQueryExecutor
+		(
+			Cluster cluster,
+			QueryPolicy policy,
+			Statement statement,
+			Node[] nodes
+		) : base(cluster)
+		{
+			// Create commands.
+			ulong taskId = statement.PrepareTaskId();
+			AsyncQuery[] tasks = new AsyncQuery[nodes.Length];
+			int count = 0;
+
+			foreach (Node node in nodes)
+			{
+				tasks[count++] = new AsyncQuery(this, cluster, node, policy, statement, taskId);
+			}
+
+			// Dispatch commands to nodes.
+			if (policy.failOnClusterChange)
+			{
+				ExecuteValidate(tasks, policy.maxConcurrentNodes, statement.ns);
+			}
+			else
+			{
+				Execute(tasks, policy.maxConcurrentNodes);
+			}
+		}
+	}
 }

@@ -883,7 +883,7 @@ namespace Aerospike.Client
 			return tlsPolicy != null && !tlsPolicy.forLoginOnly;
 		}
 
-		/*public ClusterStats GetStats()
+		public ClusterStats GetStats()
 		{
 			// Must copy array reference for copy on write semantics to work.
 			Node[] nodeArray = nodes;
@@ -895,7 +895,7 @@ namespace Aerospike.Client
 				nodeStats[count++] = new NodeStats(node);
 			}
 			return new ClusterStats(nodeStats, invalidNodeCount);
-		}*/
+		}
 		
 		public bool Connected
 		{

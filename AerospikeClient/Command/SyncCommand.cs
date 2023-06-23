@@ -59,7 +59,7 @@ namespace Aerospike.Client
 			await ExecuteCommand();
 		}
 
-		public async Task ExecuteCommand()
+		public virtual async Task ExecuteCommand()
 		{
 			Node node;
 			AerospikeException exception = null;

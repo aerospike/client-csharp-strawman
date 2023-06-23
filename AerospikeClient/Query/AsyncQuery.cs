@@ -14,44 +14,28 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
 namespace Aerospike.Client
 {
-	public sealed class QueryRecordCommand : MultiCommand
+	public sealed class AsyncQuery : AsyncMultiCommand
 	{
+		private readonly AsyncMultiExecutor parent;
 		private readonly Statement statement;
-		private readonly RecordSet recordSet;
 		private readonly ulong taskId;
 
-		public QueryRecordCommand
+		public AsyncQuery
 		(
+			AsyncMultiExecutor parent,
 			Cluster cluster,
-			Node[] nodes,
+			Node node,
 			QueryPolicy policy,
 			Statement statement,
-			ulong taskId,
-			RecordSet recordSet,
-			ulong clusterKey,
-			bool first
-		) : base(cluster, policy, nodes, statement.ns, clusterKey, first)
+			ulong taskId
+		) : base(cluster, policy, node, policy.socketTimeout, policy.totalTimeout)
 		{
+			this.parent = parent;
+			this.listener = listener;
 			this.statement = statement;
 			this.taskId = taskId;
-			this.recordSet = recordSet;
-		}
-
-		public async Task<RecordSet> Execute(QueryRecordCommand[] commands, int maxConcurrent)
-		{
-			var maxConcurrentTasks = (maxConcurrent == 0 || maxConcurrent >= commands.Length) ? commands.Length : maxConcurrent;
-
-			for (int i = 0; i < maxConcurrentTasks; i++)
-			{
-				await commands[i].Execute();
-			}
-
-			yield return this.recordSet;
 		}
 
 		protected internal override void WriteBuffer()
@@ -59,7 +43,7 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, false, null);
 		}
 
-		protected internal override bool ParseRow()
+		protected internal override void ParseRow()
 		{
 			ulong bval;
 			Key key = ParseKey(fieldCount, out bval);
@@ -70,18 +54,22 @@ namespace Aerospike.Client
 			}
 
 			Record record = ParseRecord();
+			listener.OnRecord(key, record);
+		}
 
-			if (!valid)
-			{
-				throw new AerospikeException.QueryTerminated();
-			}
+		protected internal override AsyncCommand CloneCommand()
+		{
+			return null;
+		}
 
-			if (!recordSet.Put(new KeyRecord(key, record)))
-			{
-				Stop();
-				throw new AerospikeException.QueryTerminated();
-			}
-			return true;
+		protected internal override void OnSuccess()
+		{
+			parent.ChildSuccess(node);
+		}
+
+		protected internal override void OnFailure(AerospikeException e)
+		{
+			parent.ChildFailure(e);
 		}
 	}
 }

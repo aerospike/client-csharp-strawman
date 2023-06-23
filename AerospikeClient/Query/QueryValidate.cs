@@ -18,12 +18,12 @@ using System;
 
 namespace Aerospike.Client
 {
-	/*public sealed class QueryValidate
+	public sealed class QueryValidate
 	{
 		public static ulong ValidateBegin(Node node, string ns)
 		{
 			// Fail when cluster is in migration.
-			string result = Info.Request(node, "cluster-stable:namespace=" + ns);
+			string result = Info.Request(node, "cluster-stable:namespace=" + ns).GetAwaiter().GetResult();
 
 			try
 			{
@@ -51,5 +51,5 @@ namespace Aerospike.Client
 				throw new AerospikeException(ResultCode.QUERY_ABORTED, "Cluster is in migration: " + expectedKey + ' ' + clusterKey);
 			}
 		}
-	}*/
+	}
 }

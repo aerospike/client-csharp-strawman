@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.IO;
+using static Aerospike.Client.AsyncQueryValidate;
+using System.Threading.Tasks;
 
 namespace Aerospike.Client
 {
@@ -375,13 +377,13 @@ namespace Aerospike.Client
 			}
 		}
 
-		/*/// <summary>
+		/// <summary>
 		/// Return operating cluster statistics.
 		/// </summary>
 		public ClusterStats GetClusterStats()
 		{
 			return cluster.GetStats();
-		}*/
+		}
 
 		//-------------------------------------------------------
 		// Write Record Operations
@@ -1211,285 +1213,11 @@ namespace Aerospike.Client
 			}
 		}*/
 
-		//---------------------------------------------------------------
-		// User defined functions
-		//---------------------------------------------------------------
-
-		/*/// <summary>
-		/// Register package located in a file containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="clientPath">path of client file containing user defined functions, relative to current directory</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task Register(Policy policy, string clientPath, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			string content = Util.ReadFileEncodeBase64(clientPath);
-			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}*/
-
-		/*/// <summary>
-		/// Register package located in a resource containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="resourceAssembly">assembly where resource is located.  Current assembly can be obtained by: Assembly.GetExecutingAssembly()</param>
-		/// <param name="resourcePath">namespace path where Lua resource is located.  Example: Aerospike.Client.Resources.mypackage.lua</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			string content;
-			using (Stream stream = resourceAssembly.GetManifestResourceStream(resourcePath))
-			{
-				byte[] bytes = new byte[stream.Length];
-				stream.Read(bytes, 0, bytes.Length);
-				content = Convert.ToBase64String(bytes);
-			}
-			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}*/
-
-		/*/// <summary>
-		/// Register UDF functions located in a code string with server. Example:
-		/// <code>
-		/// String code = @"
-		/// local function reducer(val1,val2)
-		///	  return val1 + val2
-		/// end
-		///
-		/// function sum_single_bin(stream,name)
-		///   local function mapper(rec)
-		///     return rec[name]
-		///   end
-		///   return stream : map(mapper) : reduce(reducer)
-		/// end
-		///";
-		///
-		///	client.RegisterUdfString(null, code, "mysum.lua", Language.LUA);
-		/// </code>
-		/// <para>
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="code">code string containing user defined functions</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public async Task RegisterUdfString(Policy policy, string code, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			byte[] bytes = ByteUtil.StringToUtf8(code);
-			string content = Convert.ToBase64String(bytes);
-			return await RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}*/
-
-		/// <summary>
-		/// Remove user defined function from server nodes.
-		/// </summary>
-		/// <param name="policy">info configuration parameters, pass in null for defaults</param>
-		/// <param name="serverPath">location of UDF on server nodes.  Example: mylua.lua </param>
-		/// <exception cref="AerospikeException">if remove fails</exception>
-		public async Task RemoveUdf(InfoPolicy policy, string serverPath)
-		{
-			if (policy == null)
-			{
-				policy = infoPolicyDefault;
-			}
-			// Send UDF command to one node. That node will distribute the UDF command to other nodes.
-			string command = "udf-remove:filename=" + serverPath;
-			Node node = cluster.GetRandomNode();
-			string response = await Info.Request(policy, node, command);
-
-			if (response.Equals("ok", StringComparison.CurrentCultureIgnoreCase))
-			{
-				return;
-			}
-
-			if (response.StartsWith("error=file_not_found"))
-			{
-				// UDF has already been removed.
-				return;
-			}
-			throw new AerospikeException("Remove UDF failed: " + response);
-		}
-
-		/// <summary>
-		/// Execute user defined function on server and return results.
-		/// The function operates on a single record.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="key">unique record identifier</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="args">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException">if transaction fails</exception>
-		public async Task<object> Execute(WritePolicy policy, Key key, string packageName, string functionName, params Value[] args)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			ExecuteCommand command = new ExecuteCommand(cluster, policy, key, packageName, functionName, args);
-			await command.Execute();
-
-			Record record = command.Record;
-
-			if (record == null || record.bins == null)
-			{
-				return null;
-			}
-
-			IDictionary<string, object> map = record.bins;
-			object obj;
-
-			if (map.TryGetValue("SUCCESS", out obj))
-			{
-				return obj;
-			}
-
-			if (map.TryGetValue("FAILURE", out obj))
-			{
-				throw new AerospikeException(obj.ToString());
-			}
-			throw new AerospikeException("Invalid UDF return value");
-		}
-
-		/*/// <summary>
-		/// Execute user defined function on server for each key and return results.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// <para>
-		/// Requires server version 6.0+
-		/// </para>
-		/// </summary>
-		/// <param name="batchPolicy">batch configuration parameters, pass in null for defaults</param>
-		/// <param name="udfPolicy">udf configuration parameters, pass in null for defaults</param>
-		/// <param name="keys">array of unique record identifiers</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="functionArgs">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		public async Task<BatchResults> Execute(BatchPolicy batchPolicy, BatchUDFPolicy udfPolicy, Key[] keys, string packageName, string functionName, params Value[] functionArgs)
-		{
-			if (keys.Length == 0)
-			{
-				return new BatchResults(new BatchRecord[0], true);
-			}
-
-			if (batchPolicy == null)
-			{
-				batchPolicy = batchParentPolicyWriteDefault;
-			}
-
-			if (udfPolicy == null)
-			{
-				udfPolicy = batchUDFPolicyDefault;
-			}
-
-			byte[] argBytes = Packer.Pack(functionArgs);
-
-			BatchAttr attr = new BatchAttr();
-			attr.SetUDF(udfPolicy);
-
-			BatchRecord[] records = new BatchRecord[keys.Length];
-
-			for (int i = 0; i < keys.Length; i++)
-			{
-				records[i] = new BatchRecord(keys[i], attr.hasWrite);
-			}
-
-			try
-			{
-				BatchStatus status = new BatchStatus(true);
-				List<BatchNode> batchNodes = BatchNode.GenerateList(cluster, batchPolicy, keys, records, attr.hasWrite, status);
-				BatchCommand[] commands = new BatchCommand[batchNodes.Count];
-				int count = 0;
-
-				foreach (BatchNode batchNode in batchNodes)
-				{
-					commands[count++] = new BatchUDFCommand(cluster, batchNode, batchPolicy, keys, packageName, functionName, argBytes, records, attr, status);
-				}
-
-				await BatchExecutor.Execute(batchPolicy, commands, status);
-				return new BatchResults(records, status.GetStatus());
-			}
-			catch (Exception e)
-			{
-				// Batch terminated on fatal error.
-				throw new AerospikeException.BatchRecordArray(records, e);
-			}
-		}*/
-
 		//----------------------------------------------------------
 		// Query/Execute
 		//----------------------------------------------------------
 
-		/*/// <summary>
-		/// Apply user defined function on records that match the background query statement filter.
-		/// Records are not returned to the client.
-		/// This asynchronous server call will return before the command is complete.  
-		/// The user can optionally wait for command completion by using the returned 
-		/// ExecuteTask instance.
-		/// </summary>
-		/// <param name="policy">configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">background query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">function name</param>
-		/// <param name="functionArgs">to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-
-			statement.PackageName = packageName;
-			statement.FunctionName = functionName;
-			statement.FunctionArgs = functionArgs;
-
-			ulong taskId = statement.PrepareTaskId();
-			Node[] nodes = cluster.ValidateNodes();
-			Executor executor = new Executor(nodes.Length);
-
-			foreach (Node node in nodes)
-			{
-				ServerCommand command = new ServerCommand(cluster, node, policy, statement, taskId);
-				executor.AddCommand(command);
-			}
-
-			await executor.Execute(nodes.Length);
-			return new ExecuteTask(cluster, policy, statement, taskId);
-		}*/
-
-		/*/// <summary>
+		/// <summary>
 		/// Apply operations on records that match the background query statement filter.
 		/// Records are not returned to the client.
 		/// This asynchronous server call will return before the command is complete.
@@ -1500,7 +1228,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public async Task Execute(WritePolicy policy, Statement statement, params Operation[] operations)
+		public ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations)
 		{
 			if (policy == null)
 			{
@@ -1511,22 +1239,21 @@ namespace Aerospike.Client
 
 			ulong taskId = statement.PrepareTaskId();
 			Node[] nodes = cluster.ValidateNodes();
-			Executor executor = new Executor(nodes.Length);
 
 			foreach (Node node in nodes)
 			{
 				ServerCommand command = new ServerCommand(cluster, node, policy, statement, taskId);
 				executor.AddCommand(command);
 			}
-			await executor.Execute(nodes.Length);
+			executor.Execute(nodes.Length).Wait();
 			return new ExecuteTask(cluster, policy, statement, taskId);
-		}*/
+		}
 
 		//--------------------------------------------------------
 		// Query functions
 		//--------------------------------------------------------
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query and call action for each record returned from server.
 		/// </summary>
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
@@ -1542,7 +1269,7 @@ namespace Aerospike.Client
 					action(rs.Key, rs.Record);
 				}
 			}
-		}*/
+		}
 
 		/*/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -1575,7 +1302,7 @@ namespace Aerospike.Client
 			}
 		}*/
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
 		/// block until the query is complete. Listener callbacks are made within the scope of this call.
 		/// <para>
@@ -1589,9 +1316,8 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task Query(QueryPolicy policy, Statement statement, QueryListener listener)
+		public async Task Query(QueryPolicy policy, Statement statement)
 		{
 			if (policy == null)
 			{
@@ -1603,15 +1329,16 @@ namespace Aerospike.Client
 			if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes);
-				await QueryListenerExecutor.execute(cluster, policy, statement, listener, tracker);
 			}
 			else
 			{
-				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
+				//new AsyncQueryExecutor(cluster, policy, statement, nodes);
+				var command = new QueryRecordCommand(cluster, nodes, policy, statement);
+				await command.Execute();
 			}
-		}*/
+		}
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
 		/// block until the query is complete. Listener callbacks are made within the scope of this call.
 		/// <para>
@@ -1633,14 +1360,12 @@ namespace Aerospike.Client
 		/// <param name="partitionFilter">
 		/// data partition filter. Set to <see cref="PartitionFilter.All"/> for all partitions.
 		/// </param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
 		public async Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
-			PartitionFilter partitionFilter,
-			QueryListener listener
+			PartitionFilter partitionFilter
 		)
 		{
 			if (policy == null)
@@ -1653,15 +1378,15 @@ namespace Aerospike.Client
 			if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes, partitionFilter);
-				await QueryListenerExecutor.execute(cluster, policy, statement, listener, tracker);
+				await QueryListenerExecutor.execute(cluster, policy, statement, tracker);
 			}
 			else
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
 			}
-		}*/
+		}
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
 		/// records on a queue in separate threads.  The calling thread concurrently pops records off
 		/// the queue through the record iterator.
@@ -1697,235 +1422,7 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "QueryPartitions() not supported");
 			}
-		}*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be located in a Lua script file that can be found from the 
-		/// "LuaConfig.PackagePath" paths static variable.  The default package path is "udf/?.lua"
-		/// where "?" is the packageName.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">aggregation function name</param>
-		/// <param name="functionArgs">arguments to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task<ResultSet> QueryAggregate
-		(
-			QueryPolicy policy,
-			Statement statement,
-			string packageName,
-			string functionName,
-			params Value[] functionArgs
-		)
-		{
-			statement.SetAggregateFunction(packageName, functionName, functionArgs);
-			return await QueryAggregate(policy, statement);
-		}*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, call action for each aggregation
-		/// object returned from server. 
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <param name="action">action methods to be called for each aggregation object</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task QueryAggregate(QueryPolicy policy, Statement statement, Action<Object> action)
-		{
-			using (ResultSet rs = await QueryAggregate(policy, statement))
-			{
-				while (rs.Next())
-				{
-					action(rs.Object);
-				}
-			}
-		}*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be initialized via the statement's SetAggregateFunction()
-		/// and should be located in a Lua resource file located in an assembly.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task<ResultSet> QueryAggregate(QueryPolicy policy, Statement statement)
-		{
-			if (policy == null)
-			{
-				policy = queryPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			QueryAggregateExecutor executor = new QueryAggregateExecutor(cluster, policy, statement, nodes);
-			await executor.Execute();
-			return executor.ResultSet;
-		}*/
-
-		//--------------------------------------------------------
-		// Secondary Index functions
-		//--------------------------------------------------------
-
-		/*/// <summary>
-		/// Create scalar secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		public async Task CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType
-		)
-		{
-			return await CreateIndex(policy, ns, setName, indexName, binName, indexType, IndexCollectionType.DEFAULT);	
-		}*/
-
-		/*/// <summary>
-		/// Create complex secondary index on bins containing collections.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <param name="indexCollectionType">index collection type</param>
-		/// <param name="ctx">optional context to index on elements within a CDT</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		public async Task CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			params CTX[] ctx
-		)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-
-			StringBuilder sb = new StringBuilder(1024);
-			sb.Append("sindex-create:ns=");
-			sb.Append(ns);
-
-			if (setName != null && setName.Length > 0)
-			{
-				sb.Append(";set=");
-				sb.Append(setName);
-			}
-
-			sb.Append(";indexname=");
-			sb.Append(indexName);
-
-			if (ctx != null && ctx.Length > 0)
-			{
-				byte[] bytes = PackUtil.Pack(ctx);
-				string base64 = Convert.ToBase64String(bytes);
-
-				sb.Append(";context=");
-				sb.Append(base64);
-			}
-
-			if (indexCollectionType != IndexCollectionType.DEFAULT)
-			{
-				sb.Append(";indextype=");
-				sb.Append(indexCollectionType);
-			}
-
-			sb.Append(";indexdata=");
-			sb.Append(binName);
-			sb.Append(",");
-			sb.Append(indexType);
-
-			// Send index command to one node. That node will distribute the command to other nodes.
-			String response = await SendInfoCommand(policy, sb.ToString());
-
-			if (response.Equals("OK", StringComparison.CurrentCultureIgnoreCase))
-			{
-				// Return task that could optionally be polled for completion.
-				return new IndexTask(cluster, policy, ns, indexName, true);
-			}
-
-			ParseInfoError("Create index failed", response);
-		}*/
-		
-		/*/// <summary>
-		/// Delete secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <exception cref="AerospikeException">if index drop fails</exception>
-		public async Task DropIndex(Policy policy, string ns, string setName, string indexName)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			StringBuilder sb = new StringBuilder(500);
-			sb.Append("sindex-delete:ns=");
-			sb.Append(ns);
-
-			if (setName != null && setName.Length > 0)
-			{
-				sb.Append(";set=");
-				sb.Append(setName);
-			}
-			sb.Append(";indexname=");
-			sb.Append(indexName);
-
-			// Send index command to one node. That node will distribute the command to other nodes.
-			String response = await SendInfoCommand(policy, sb.ToString());
-
-			if (response.Equals("OK", StringComparison.CurrentCultureIgnoreCase))
-			{
-				return new IndexTask(cluster, policy, ns, indexName, false);
-			}
-
-			ParseInfoError("Drop index failed", response);
-		}*/
+		}
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication

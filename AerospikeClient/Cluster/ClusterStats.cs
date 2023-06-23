@@ -99,39 +99,25 @@ namespace Aerospike.Client
 		public readonly Node node;
 
 		/// <summary>
-		/// Connection statistics for sync commands.
+		/// Connection statistics for commands.
 		/// </summary>
-		public readonly ConnectionStats syncStats;
+		public readonly ConnectionStats Stats;
 
 		/// <summary>
-		/// Connection statistics for async commands.
-		/// </summary>
-		public readonly ConnectionStats asyncStats;
-
-		/*/// <summary>
 		/// Node statistics constructor.
 		/// </summary>
 		public NodeStats(Node node)
 		{
 			this.node = node;
-			this.syncStats = node.GetConnectionStats();
-
-			if (node is AsyncNode)
-			{
-				this.asyncStats = ((AsyncNode)node).GetAsyncConnectionStats();
-			}
-			else
-			{
-				this.asyncStats = new ConnectionStats(0, 0, 0, 0);
-			}
-		}*/
+			this.Stats = node.GetConnectionStats();
+		}
 
 		/// <summary>
 		/// Convert statistics to string.
 		/// </summary>
 		public override string ToString()
 		{
-			return node + " sync(" + syncStats + ") async(" + asyncStats + ')';
+			return node + " (" + Stats + ')';
 		}
 	}
 

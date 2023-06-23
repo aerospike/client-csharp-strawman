@@ -86,6 +86,7 @@ namespace Aerospike.Client
 
 		public void Login(Cluster cluster, Connection conn, out byte[] sessionToken, out DateTime? sessionExpiration)
 		{
+			System.Diagnostics.Debugger.Launch();
 			dataOffset = 8;
 
 			conn.SetTimeout(cluster.loginTimeout);

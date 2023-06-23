@@ -103,10 +103,10 @@ namespace Aerospike.Client
 		/// </summary>
 		Node[] Nodes { get; }
 
-		/*/// <summary>
+		/// <summary>
 		/// Return operating cluster statistics.
 		/// </summary>
-		ClusterStats GetClusterStats();*/
+		ClusterStats GetClusterStats();
 
 		//-------------------------------------------------------
 		// Write Record Operations
@@ -377,7 +377,7 @@ namespace Aerospike.Client
 		// Generic Database Operations
 		//-------------------------------------------------------
 
-		/*/// <summary>
+		/// <summary>
 		/// Perform multiple read/write operations on a single key in one batch call.
 		/// An example would be to add an integer value to an existing record and then
 		/// read the result, all in one database call.
@@ -391,7 +391,7 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="operations">database operations to perform</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		Task<Record> Operate(WritePolicy policy, Key key, params Operation[] operations);*/
+		Task<Record> Operate(WritePolicy policy, Key key, params Operation[] operations);
 
 		//-------------------------------------------------------
 		// Batch Read/Write Operations
@@ -429,129 +429,9 @@ namespace Aerospike.Client
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
 		Task<BatchResults> Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops);*/
 
-		//---------------------------------------------------------------
-		// User defined functions
-		//---------------------------------------------------------------
-
-		/*/// <summary>
-		/// Register package located in a file containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="clientPath">path of client file containing user defined functions, relative to current directory</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		//Task Register(Policy policy, string clientPath, string serverPath, Language language);
-
-		/// <summary>
-		/// Register package located in a resource containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="resourceAssembly">assembly where resource is located.  Current assembly can be obtained by: Assembly.GetExecutingAssembly()</param>
-		/// <param name="resourcePath">namespace path where Lua resource is located.  Example: Aerospike.Client.Resources.mypackage.lua</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		//Task Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language);
-
-		/// <summary>
-		/// Register UDF functions located in a code string with server. Example:
-		/// <code>
-		/// String code = @"
-		/// local function reducer(val1,val2)
-		///	  return val1 + val2
-		/// end
-		///
-		/// function sum_single_bin(stream,name)
-		///   local function mapper(rec)
-		///     return rec[name]
-		///   end
-		///   return stream : map(mapper) : reduce(reducer)
-		/// end
-		///";
-		///
-		///	client.RegisterUdfString(null, code, "mysum.lua", Language.LUA);
-		/// </code>
-		/// <para>
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="code">code string containing user defined functions</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		//Task RegisterUdfString(Policy policy, string code, string serverPath, Language language);
-
-		/// <summary>
-		/// Remove user defined function from server nodes.
-		/// </summary>
-		/// <param name="policy">info configuration parameters, pass in null for defaults</param>
-		/// <param name="serverPath">location of UDF on server nodes.  Example: mylua.lua </param>
-		/// <exception cref="AerospikeException">if remove fails</exception>
-		Task RemoveUdf(InfoPolicy policy, string serverPath);
-
-		/// <summary>
-		/// Execute user defined function on server and return results.
-		/// The function operates on a single record.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="key">unique record identifier</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="args">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException">if transaction fails</exception>
-		//Task<object> Execute(WritePolicy policy, Key key, string packageName, string functionName, params Value[] args);
-
-		/// <summary>
-		/// Execute user defined function on server for each key and return results.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// <para>
-		/// Requires server version 6.0+
-		/// </para>
-		/// </summary>
-		/// <param name="batchPolicy">batch configuration parameters, pass in null for defaults</param>
-		/// <param name="udfPolicy">udf configuration parameters, pass in null for defaults</param>
-		/// <param name="keys">array of unique record identifiers</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="functionArgs">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		//Task<BatchResults> Execute(BatchPolicy batchPolicy, BatchUDFPolicy udfPolicy, Key[] keys, string packageName, string functionName, params Value[] functionArgs);
-
 		//----------------------------------------------------------
 		// Query/Execute
 		//----------------------------------------------------------
-
-		/// <summary>
-		/// Apply user defined function on records that match the background query statement filter.
-		/// Records are not returned to the client.
-		/// This asynchronous server call will return before the command is complete.  
-		/// The user can optionally wait for command completion by using the returned 
-		/// ExecuteTask instance.
-		/// </summary>
-		/// <param name="policy">configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">background query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">function name</param>
-		/// <param name="functionArgs">to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if command fails</exception>
-		//Task Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs);
 
 		/// <summary>
 		/// Apply operations on records that match the background query statement filter.
@@ -564,7 +444,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		//Task Execute(WritePolicy policy, Statement statement, params Operation[] operations);
+		Task Execute(WritePolicy policy, Statement statement, params Operation[] operations);
 
 		//--------------------------------------------------------
 		// Query functions
@@ -577,7 +457,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="action">action methods to be called for each record</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		//Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
+		Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action);
 
 		/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -587,7 +467,7 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		//Task<RecordSet> Query(QueryPolicy policy, Statement statement);
+		Task<RecordSet> Query(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
@@ -603,9 +483,8 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		//Task Query(QueryPolicy policy, Statement statement, QueryListener listener);
+		Task Query(QueryPolicy policy, Statement statement);
 
 		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
@@ -629,17 +508,15 @@ namespace Aerospike.Client
 		/// <param name="partitionFilter">
 		/// data partition filter. Set to <see cref="PartitionFilter.All"/> for all partitions.
 		/// </param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		/*Task Query
+		Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
-			PartitionFilter partitionFilter,
-			QueryListener listener
-		);*/
+			PartitionFilter partitionFilter
+		);
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
 		/// records on a queue in separate threads.  The calling thread concurrently pops records off
 		/// the queue through the record iterator.
@@ -656,127 +533,7 @@ namespace Aerospike.Client
 			QueryPolicy policy,
 			Statement statement,
 			PartitionFilter partitionFilter
-		);*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be located in a Lua script file that can be found from the 
-		/// "LuaConfig.PackagePath" paths static variable.  The default package path is "udf/?.lua"
-		/// where "?" is the packageName.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">aggregation function name</param>
-		/// <param name="functionArgs">arguments to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		Task<ResultSet> QueryAggregate
-		(
-			QueryPolicy policy,
-			Statement statement,
-			string packageName,
-			string functionName,
-			params Value[] functionArgs
-		);*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, call action for each aggregation
-		/// object returned from server. 
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <param name="action">action methods to be called for each aggregation object</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		Task QueryAggregate(QueryPolicy policy, Statement statement, Action<Object> action);*/
-
-		/*/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be initialized via the statement's SetAggregateFunction()
-		/// and should be located in a Lua resource file located in an assembly.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		Task<ResultSet> QueryAggregate(QueryPolicy policy, Statement statement);*/
-
-		/*/// <summary>
-		/// Create scalar secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		Task CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType
-		);*/
-
-		/*/// <summary>
-		/// Create complex secondary index on bins containing collections.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <param name="indexCollectionType">index collection type</param>
-		/// <param name="ctx">optional context to index on elements within a CDT</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		Task CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			params CTX[] ctx
-		);*/
-
-		/*/// <summary>
-		/// Delete secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <exception cref="AerospikeException">if index drop fails</exception>
-		Task DropIndex(Policy policy, string ns, string setName, string indexName);*/
+		);
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication

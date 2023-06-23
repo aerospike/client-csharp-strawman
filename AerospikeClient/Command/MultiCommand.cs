@@ -15,6 +15,8 @@
  * the License.
  */
 using System;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Aerospike.Client
 {
@@ -22,7 +24,7 @@ namespace Aerospike.Client
 	{
 		private const int MAX_BUFFER_SIZE = 1024 * 1024 * 128;  // 128 MB
 
-		private readonly Node node;
+		private readonly Node[] nodes;
 		protected internal readonly String ns;
 		private readonly ulong clusterKey;
 		protected internal int info3;
@@ -35,14 +37,15 @@ namespace Aerospike.Client
 		protected internal readonly bool isOperation;
 		private readonly bool first;
 		protected internal volatile bool valid = true;
+		private int maxConcurrent;
 
 		/// <summary>
 		/// Batch and server execute constructor.
 		/// </summary>
-		protected internal MultiCommand(Cluster cluster, Policy policy, Node node, bool isOperation)
+		protected internal MultiCommand(Cluster cluster, Policy policy, Node[] nodes, bool isOperation)
 			: base(cluster, policy)
 		{
-			this.node = node;
+			this.nodes = nodes;
 			this.isOperation = isOperation;
 			this.ns = null;
 			this.clusterKey = 0;
@@ -52,10 +55,10 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Partition scan/query constructor.
 		/// </summary>
-		protected internal MultiCommand(Cluster cluster, Policy policy, Node node, String ns, int socketTimeout, int totalTimeout)
+		protected internal MultiCommand(Cluster cluster, Policy policy, Node[] nodes, String ns, int socketTimeout, int totalTimeout)
 			: base(cluster, policy, socketTimeout, totalTimeout)
 		{
-			this.node = node;
+			this.nodes = nodes;
 			this.isOperation = false;
 			this.ns = ns;
 			this.clusterKey = 0;
@@ -65,10 +68,10 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Legacy scan/query constructor.
 		/// </summary>
-		protected internal MultiCommand(Cluster cluster, Policy policy, Node node, String ns, ulong clusterKey, bool first)
+		protected internal MultiCommand(Cluster cluster, Policy policy, Node[] nodes, String ns, ulong clusterKey, bool first)
 			: base(cluster, policy, policy.socketTimeout, policy.totalTimeout)
 		{
-			this.node = node;
+			this.nodes = nodes;
 			this.isOperation = false;
 			this.ns = ns;
 			this.clusterKey = clusterKey;
@@ -92,9 +95,20 @@ namespace Aerospike.Client
 			}
 		}*/
 
-		protected internal override Node GetNode()
+		/*public void Execute(MultiCommand[] commands, int maxConcurrent)
 		{
-			return node;
+			this.commands = commands;
+			this.maxConcurrent = (maxConcurrent == 0 || maxConcurrent >= commands.Length) ? commands.Length : maxConcurrent;
+
+			for (int i = 0; i < this.maxConcurrent; i++)
+			{
+				yield commands[i].Execute();
+			}
+		}*/
+
+		protected internal Node[] GetNodes()
+		{
+			return nodes;
 		}
 
 		protected internal override bool PrepareRetry(bool timeout)

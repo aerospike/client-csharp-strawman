@@ -14,49 +14,32 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-using System.Collections.Generic;
-
 namespace Aerospike.Client
 {
-	public sealed class QueryPartitionCommand : MultiCommand
+	public sealed class AsyncQueryPartition : AsyncMultiCommand
 	{
+		private readonly AsyncMultiExecutor parent;
 		private readonly Statement statement;
 		private readonly ulong taskId;
-		private readonly RecordSet recordSet;
 		private readonly PartitionTracker tracker;
 		private readonly NodePartitions nodePartitions;
 
-		public QueryPartitionCommand
+		public AsyncQueryPartition
 		(
+			AsyncMultiExecutor parent,
 			Cluster cluster,
-			Policy policy,
+			QueryPolicy policy,
 			Statement statement,
 			ulong taskId,
-			RecordSet recordSet,
 			PartitionTracker tracker,
 			NodePartitions nodePartitions
-		) : base(cluster, policy, nodePartitions.node, statement.ns, tracker.socketTimeout, tracker.totalTimeout)
+		) : base(cluster, policy, nodePartitions.node, tracker.socketTimeout, tracker.totalTimeout)
 		{
+			this.parent = parent;
 			this.statement = statement;
 			this.taskId = taskId;
-			this.recordSet = recordSet;
 			this.tracker = tracker;
 			this.nodePartitions = nodePartitions;
-		}
-
-		public override async Task Execute()
-		{
-			try
-			{
-				await ExecuteCommand();
-			}
-			catch (AerospikeException ae)
-			{
-				if (!tracker.ShouldRetry(nodePartitions, ae))
-				{
-					throw ae;
-				}
-			}
 		}
 
 		protected internal override void WriteBuffer()
@@ -64,7 +47,7 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, false, nodePartitions);
 		}
 
-		protected internal override bool ParseRow()
+		protected internal override void ParseRow()
 		{
 			ulong bval;
 			Key key = ParseKey(fieldCount, out bval);
@@ -78,7 +61,7 @@ namespace Aerospike.Client
 				{
 					tracker.PartitionUnavailable(nodePartitions, generation);
 				}
-				return true;
+				return;
 			}
 
 			if (resultCode != 0)
@@ -87,20 +70,28 @@ namespace Aerospike.Client
 			}
 
 			Record record = ParseRecord();
-
-			if (!valid)
-			{
-				throw new AerospikeException.QueryTerminated();
-			}
-
-			if (!recordSet.Put(new KeyRecord(key, record)))
-			{
-				Stop();
-				throw new AerospikeException.QueryTerminated();
-			}
-
+			listener.OnRecord(key, record);
 			tracker.SetLast(nodePartitions, key, bval);
-			return true;
+		}
+
+		protected internal override AsyncCommand CloneCommand()
+		{
+			return null;
+		}
+
+		protected internal override void OnSuccess()
+		{
+			parent.ChildSuccess(node);
+		}
+
+		protected internal override void OnFailure(AerospikeException ae)
+		{
+			if (tracker.ShouldRetry(nodePartitions, ae))
+			{
+				parent.ChildSuccess(serverNode);
+				return;
+			}
+			parent.ChildFailure(ae);
 		}
 	}
 }

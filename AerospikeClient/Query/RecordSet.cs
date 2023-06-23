@@ -15,22 +15,21 @@
  * the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Threading;
 
 namespace Aerospike.Client
 {
-	/*/// <summary>
+	/// <summary>
 	/// This class manages record retrieval from queries.
 	/// Multiple threads will retrieve records from the server nodes and put these records on the queue.
 	/// The single user thread consumes these records from the queue.
 	/// </summary>
-	public sealed class RecordSet : IDisposable, IRecordSet
+	public sealed class RecordSet : IEnumerable<KeyRecord>
 	{
 		public static readonly KeyRecord END = new KeyRecord(null, null);
 
-		private readonly IQueryExecutor executor;
-		private readonly BlockingCollection<KeyRecord> queue;
 		private readonly CancellationToken cancelToken;
 		private KeyRecord record;
 		private volatile bool valid = true;
@@ -38,10 +37,8 @@ namespace Aerospike.Client
 		/// <summary>
 		/// Initialize record set with underlying producer/consumer queue.
 		/// </summary>
-		public RecordSet(IQueryExecutor executor, int capacity, CancellationToken cancelToken)
+		public RecordSet(CancellationToken cancelToken)
 		{
-			this.executor = executor;
-			this.queue = new BlockingCollection<KeyRecord>(capacity);
 			this.cancelToken = cancelToken;
 		}
 
@@ -58,27 +55,9 @@ namespace Aerospike.Client
 		{
 			if (!valid)
 			{
-				executor.CheckForException();
 				return false;
 			}
 
-			try
-			{
-				record = queue.Take(cancelToken);
-			}
-			catch (OperationCanceledException)
-			{
-				valid = false;
-				executor.CheckForException();
-				return false;
-			}
-
-			if (record == END)
-			{
-				valid = false;
-				executor.CheckForException();
-				return false;
-			}
 			return true;
 		}
 
@@ -96,16 +75,16 @@ namespace Aerospike.Client
 		public void Close()
 		{
 			valid = false;
+		}
 
-			// Check if more records are available.
-			if (record != END)
-			{
-				if (queue.TryTake(out record) && record != END)
-				{
-					// Some query threads may still be running. Stop these threads.
-					executor.StopThreads(new AerospikeException.QueryTerminated());
-				}
-			}
+		public IEnumerator<KeyRecord> GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
 		}
 
 		//-------------------------------------------------------
@@ -144,63 +123,5 @@ namespace Aerospike.Client
 				return cancelToken;
 			}
 		}
-
-		//-------------------------------------------------------
-		// Methods for internal use only.
-		//-------------------------------------------------------
-
-		/// <summary>
-		/// Put a record on the queue.
-		/// </summary>
-		public bool Put(KeyRecord record)
-		{
-			if (!valid)
-			{
-				return false;
-			}
-
-			try
-			{
-				// This add will block if queue capacity is reached.
-				queue.Add(record, cancelToken);
-				return true;
-			}
-			catch (OperationCanceledException)
-			{
-				// Valid may have changed.  Check again.
-				if (valid)
-				{
-					Abort();
-				}
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Abort retrieval with end token.
-		/// </summary>
-		internal void Abort()
-		{
-			valid = false;
-
-			// Send end command to transaction thread.
-			// It's critical that the end token add succeeds.
-			while (!queue.TryAdd(END))
-			{
-				// Queue must be full. Remove one item to make room.
-				KeyRecord tmp;
-				if (!queue.TryTake(out tmp))
-				{
-					// Can't add or take.  Nothing can be done here.
-					/*
-					if (Log.DebugEnabled())
-					{
-						Log.Debug("RecordSet " + executor.statement.taskId + " both add and take failed on abort");
-					}
-					*/
-					/*break;
-				}
-			}
-		}
-	}*/
+	}
 }

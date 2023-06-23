@@ -589,7 +589,7 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="timeoutMillis">connection timeout value in milliseconds if a new connection is created</param>	
 		/// <exception cref="AerospikeException">if a connection could not be provided</exception>
-		public async Task<Connection> GetConnection(int timeoutMillis)
+		public Connection GetConnection(int timeoutMillis)
 		{
             Connection conn = null;
 
