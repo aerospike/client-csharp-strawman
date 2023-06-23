@@ -139,13 +139,10 @@ namespace Aerospike.Client
 		/// One connection will be used for each command.
 		/// </para>
 		/// <para>
-		/// If the value is -1, the value will be set to <see cref="Aerospike.Client.ClientPolicy.maxConnsPerNode"/>.
-		/// </para>
-		/// <para>
-		/// Default: -1 (Use maxConnsPerNode)
+		/// Default: 100
 		/// </para>
 		/// </summary>
-		public int maxConnsPerNode = -1;
+		public int maxConnsPerNode = 100;
 
 		/// <summary>
 		/// Number of synchronous connection pools used for each node.  Machines with 8 cpu cores or
