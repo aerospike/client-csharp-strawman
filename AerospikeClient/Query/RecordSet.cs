@@ -20,7 +20,7 @@ using System.Threading;
 
 namespace Aerospike.Client
 {
-	/*/// <summary>
+	/// <summary>
 	/// This class manages record retrieval from queries.
 	/// Multiple threads will retrieve records from the server nodes and put these records on the queue.
 	/// The single user thread consumes these records from the queue.
@@ -103,7 +103,7 @@ namespace Aerospike.Client
 				if (queue.TryTake(out record) && record != END)
 				{
 					// Some query threads may still be running. Stop these threads.
-					executor.StopThreads(new AerospikeException.QueryTerminated());
+					//executor.StopThreads(new AerospikeException.QueryTerminated());
 				}
 			}
 		}
@@ -192,15 +192,15 @@ namespace Aerospike.Client
 				if (!queue.TryTake(out tmp))
 				{
 					// Can't add or take.  Nothing can be done here.
-					/*
+					
 					if (Log.DebugEnabled())
 					{
-						Log.Debug("RecordSet " + executor.statement.taskId + " both add and take failed on abort");
+						//Log.Debug("RecordSet " + executor.statement.taskId + " both add and take failed on abort");
 					}
-					*/
-					/*break;
+					
+					break;
 				}
 			}
 		}
-	}*/
+	}
 }

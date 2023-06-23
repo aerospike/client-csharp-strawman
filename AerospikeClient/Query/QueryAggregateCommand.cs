@@ -51,7 +51,10 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, false, null);
 		}
 
-		protected internal override bool ParseRow()
+        protected internal override bool ParseRow(out KeyRecord keyRecord)
+			=> throw new NotSupportedException();
+
+        protected internal override bool ParseRow()
 		{
 			SkipKey(fieldCount);
 

@@ -59,200 +59,220 @@ namespace Aerospike.Client
 			await ExecuteCommand();
 		}
 
-		public async Task ExecuteCommand()
+        public virtual IEnumerable<KeyRecord> ExecuteKeyRecordResult()
+        {
+            if (totalTimeout > 0)
+            {
+                deadline = DateTime.UtcNow.AddMilliseconds(totalTimeout);
+            }
+            return ExecuteCommandKeyRecordResult();
+        }
+
+        private async Task<R> ExecuteCommand<R>(Func<Connection, R> parseresultFunc)
 		{
-			Node node;
-			AerospikeException exception = null;
-			bool isClientTimeout;
+            Node node;
+            AerospikeException exception = null;
+            bool isClientTimeout;
 
-			// Execute command until successful, timed out or maximum iterations have been reached.
-			while (true)
-			{
-				try
-				{
-					node = GetNode();
-				}
-				catch (AerospikeException ae)
-				{
-					ae.Policy = policy;
-					ae.Iteration = iteration;
-					ae.SetInDoubt(IsWrite(), commandSentCounter);
-					throw;
-				}
+            // Execute command until successful, timed out or maximum iterations have been reached.
+            while (true)
+            {
+                try
+                {
+                    node = GetNode();
+                }
+                catch (AerospikeException ae)
+                {
+                    ae.Policy = policy;
+                    ae.Iteration = iteration;
+                    ae.SetInDoubt(IsWrite(), commandSentCounter);
+                    throw;
+                }
 
-				try
-				{
-					node.ValidateErrorCount();
-					Connection conn = await node.GetConnection(socketTimeout);
+                try
+                {
+                    node.ValidateErrorCount();
+                    Connection conn = await node.GetConnection(socketTimeout);
 
-					try
-					{
-						// Set command buffer.
-						WriteBuffer();
+                    try
+                    {
+                        // Set command buffer.
+                        WriteBuffer();
 
-						// Send command.
-						await conn.Write(dataBuffer, dataOffset);
-						commandSentCounter++;
+                        // Send command.
+                        await conn.Write(dataBuffer, dataOffset);
+                        commandSentCounter++;
 
-						// Parse results.
-						await ParseResult(conn);
+                        //Perform ParseResult
+                        R returnValue = parseresultFunc(conn);
+                        
+                        // Put connection back in pool.
+                        node.PutConnection(conn);
 
-						// Put connection back in pool.
-						node.PutConnection(conn);
+                        // Command has completed successfully.  Exit method.
+                        return returnValue;
+                    }
+                    catch (AerospikeException ae)
+                    {
+                        if (ae.KeepConnection())
+                        {
+                            // Put connection back in pool.
+                            node.PutConnection(conn);
+                        }
+                        else
+                        {
+                            // Close socket to flush out possible garbage.  Do not put back in pool.
+                            node.CloseConnectionOnError(conn);
+                        }
 
-						// Command has completed successfully.  Exit method.
-						return;
-					}
-					catch (AerospikeException ae)
-					{
-						if (ae.KeepConnection())
-						{
-							// Put connection back in pool.
-							node.PutConnection(conn);
-						}
-						else
-						{
-							// Close socket to flush out possible garbage.  Do not put back in pool.
-							node.CloseConnectionOnError(conn);
-						}
+                        if (ae.Result == ResultCode.TIMEOUT)
+                        {
+                            // Retry on server timeout.
+                            exception = new AerospikeException.Timeout(policy, false);
+                            isClientTimeout = false;
+                            node.IncrErrorCount();
+                        }
+                        else if (ae.Result == ResultCode.DEVICE_OVERLOAD)
+                        {
+                            // Add to circuit breaker error count and retry.
+                            exception = ae;
+                            isClientTimeout = false;
+                            node.IncrErrorCount();
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        // Socket errors are considered temporary anomalies.
+                        // Retry after closing connection.
+                        node.CloseConnectionOnError(conn);
 
-						if (ae.Result == ResultCode.TIMEOUT)
-						{
-							// Retry on server timeout.
-							exception = new AerospikeException.Timeout(policy, false);
-							isClientTimeout = false;
-							node.IncrErrorCount();
-						}
-						else if (ae.Result == ResultCode.DEVICE_OVERLOAD)
-						{
-							// Add to circuit breaker error count and retry.
-							exception = ae;
-							isClientTimeout = false;
-							node.IncrErrorCount();
-						}
-						else
-						{
-							throw;
-						}
-					}
-					catch (SocketException se)
-					{
-						// Socket errors are considered temporary anomalies.
-						// Retry after closing connection.
-						node.CloseConnectionOnError(conn);
+                        if (se.SocketErrorCode == SocketError.TimedOut)
+                        {
+                            isClientTimeout = true;
+                        }
+                        else
+                        {
+                            exception = new AerospikeException.Connection(se);
+                            isClientTimeout = false;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // All other exceptions are considered fatal.  Do not retry.
+                        // Close socket to flush out possible garbage.  Do not put back in pool.
+                        node.CloseConnectionOnError(conn);
+                        throw;
+                    }
+                }
+                catch (SocketException se)
+                {
+                    // This exception might happen after initial connection succeeded, but
+                    // user login failed with a socket error.  Retry.
+                    if (se.SocketErrorCode == SocketError.TimedOut)
+                    {
+                        isClientTimeout = true;
+                    }
+                    else
+                    {
+                        exception = new AerospikeException.Connection(se);
+                        isClientTimeout = false;
+                    }
+                }
+                catch (AerospikeException.Connection ce)
+                {
+                    // Socket connection error has occurred. Retry.
+                    exception = ce;
+                    isClientTimeout = false;
+                }
+                catch (AerospikeException.Backoff be)
+                {
+                    // Node is in backoff state. Retry, hopefully on another node.
+                    exception = be;
+                    isClientTimeout = false;
+                }
+                catch (AerospikeException ae)
+                {
+                    ae.Node = node;
+                    ae.Policy = policy;
+                    ae.Iteration = iteration;
+                    ae.SetInDoubt(IsWrite(), commandSentCounter);
+                    throw;
+                }
 
-						if (se.SocketErrorCode == SocketError.TimedOut)
-						{
-							isClientTimeout = true;
-						}
-						else
-						{
-							exception = new AerospikeException.Connection(se);
-							isClientTimeout = false;
-						}
-					}
-					catch (Exception)
-					{
-						// All other exceptions are considered fatal.  Do not retry.
-						// Close socket to flush out possible garbage.  Do not put back in pool.
-						node.CloseConnectionOnError(conn);
-						throw;
-					}
-				}
-				catch (SocketException se)
-				{
-					// This exception might happen after initial connection succeeded, but
-					// user login failed with a socket error.  Retry.
-					if (se.SocketErrorCode == SocketError.TimedOut)
-					{
-						isClientTimeout = true;
-					}
-					else
-					{
-						exception = new AerospikeException.Connection(se);
-						isClientTimeout = false;
-					}
-				}
-				catch (AerospikeException.Connection ce)
-				{
-					// Socket connection error has occurred. Retry.
-					exception = ce;
-					isClientTimeout = false;
-				}
-				catch (AerospikeException.Backoff be)
-				{
-					// Node is in backoff state. Retry, hopefully on another node.
-					exception = be;
-					isClientTimeout = false;
-				}
-				catch (AerospikeException ae)
-				{
-					ae.Node = node;
-					ae.Policy = policy;
-					ae.Iteration = iteration;
-					ae.SetInDoubt(IsWrite(), commandSentCounter);
-					throw;
-				}
+                // Check maxRetries.
+                if (iteration > maxRetries)
+                {
+                    break;
+                }
 
-				// Check maxRetries.
-				if (iteration > maxRetries)
-				{
-					break;
-				}
+                if (totalTimeout > 0)
+                {
+                    // Check for total timeout.
+                    long remaining = (long)deadline.Subtract(DateTime.UtcNow).TotalMilliseconds - policy.sleepBetweenRetries;
 
-				if (totalTimeout > 0)
-				{
-					// Check for total timeout.
-					long remaining = (long)deadline.Subtract(DateTime.UtcNow).TotalMilliseconds - policy.sleepBetweenRetries;
+                    if (remaining <= 0)
+                    {
+                        break;
+                    }
 
-					if (remaining <= 0)
-					{
-						break;
-					}
+                    if (remaining < totalTimeout)
+                    {
+                        totalTimeout = (int)remaining;
 
-					if (remaining < totalTimeout)
-					{
-						totalTimeout = (int)remaining;
+                        if (socketTimeout > totalTimeout)
+                        {
+                            socketTimeout = totalTimeout;
+                        }
+                    }
+                }
 
-						if (socketTimeout > totalTimeout)
-						{
-							socketTimeout = totalTimeout;
-						}
-					}
-				}
+                if (!isClientTimeout && policy.sleepBetweenRetries > 0)
+                {
+                    // Sleep before trying again.
+                    Util.Sleep(policy.sleepBetweenRetries);
+                }
 
-				if (!isClientTimeout && policy.sleepBetweenRetries > 0)
-				{
-					// Sleep before trying again.
-					Util.Sleep(policy.sleepBetweenRetries);
-				}
+                iteration++;
 
-				iteration++;
+                if (!PrepareRetry(isClientTimeout || exception.Result != ResultCode.SERVER_NOT_AVAILABLE))
+                {
+                    // Batch may be retried in separate commands.
+                    if (RetryBatch(cluster, socketTimeout, totalTimeout, deadline, iteration, commandSentCounter))
+                    {
+                        // Batch was retried in separate commands.  Complete this command.
+                        return default(R);
+                    }
+                }
+            }
 
-				if (!PrepareRetry(isClientTimeout || exception.Result != ResultCode.SERVER_NOT_AVAILABLE))
-				{
-					// Batch may be retried in separate commands.
-					if (RetryBatch(cluster, socketTimeout, totalTimeout, deadline, iteration, commandSentCounter))
-					{
-						// Batch was retried in separate commands.  Complete this command.
-						return;
-					}
-				}
-			}
+            // Retries have been exhausted.  Throw last exception.
+            if (isClientTimeout)
+            {
+                exception = new AerospikeException.Timeout(policy, true);
+            }
+            exception.Node = node;
+            exception.Policy = policy;
+            exception.Iteration = iteration;
+            exception.SetInDoubt(IsWrite(), commandSentCounter);
+            throw exception;
+        }
 
-			// Retries have been exhausted.  Throw last exception.
-			if (isClientTimeout)
-			{
-				exception = new AerospikeException.Timeout(policy, true);
-			}
-			exception.Node = node;
-			exception.Policy = policy;
-			exception.Iteration = iteration;
-			exception.SetInDoubt(IsWrite(), commandSentCounter);
-			throw exception;
-		}
 
-		protected internal sealed override int SizeBuffer()
+        public async Task ExecuteCommand()
+		{
+            await ExecuteCommand(async (conn) => await ParseResult(conn) );
+        }
+
+        public IEnumerable<KeyRecord> ExecuteCommandKeyRecordResult()
+        {
+            return ExecuteCommand((conn) => ParseIntoKeyRecord(conn)).Result;
+        }
+
+        protected internal sealed override int SizeBuffer()
 		{
 			dataBuffer = ThreadLocalData.GetBuffer();
 
@@ -306,6 +326,8 @@ namespace Aerospike.Client
 		protected internal abstract Node GetNode();
 		protected internal abstract void WriteBuffer();
 		protected internal abstract Task ParseResult(Connection conn);
-		protected internal abstract bool PrepareRetry(bool timeout);
+        protected internal abstract IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn);
+
+        protected internal abstract bool PrepareRetry(bool timeout);
 	}
 }

@@ -81,7 +81,12 @@ namespace Aerospike.Client
 			return true;
 		}
 
-		public Record Record
+        protected internal override IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Record Record
 		{
 			get
 			{

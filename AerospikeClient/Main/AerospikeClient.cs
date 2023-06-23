@@ -1544,7 +1544,7 @@ namespace Aerospike.Client
 			}
 		}*/
 
-		/*/// <summary>
+		/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
 		/// separate threads.  The calling thread concurrently pops records off the queue through the 
 		/// record iterator.
@@ -1552,8 +1552,10 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public async Task<RecordSet> Query(QueryPolicy policy, Statement statement)
+		public IEnumerable<KeyRecord> Query(QueryPolicy policy, Statement statement)
 		{
+			System.Diagnostics.Debugger.Launch();
+
 			if (policy == null)
 			{
 				policy = queryPolicyDefault;
@@ -1561,19 +1563,18 @@ namespace Aerospike.Client
 
 			Node[] nodes = cluster.ValidateNodes();
 
-			if (cluster.hasPartitionQuery || statement.filter == null)
+			//if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes);
 				QueryPartitionExecutor executor = new QueryPartitionExecutor(cluster, policy, statement, nodes.Length, tracker);
-				return executor.RecordSet;
+				return executor.Run(null);
 			}
-			else
-			{
-				QueryRecordExecutor executor = new QueryRecordExecutor(cluster, policy, statement, nodes);
-				await executor.Execute();
-				return executor.RecordSet;
-			}
-		}*/
+			//else
+			//{
+			//	QueryRecordExecutor executor = new QueryRecordExecutor(cluster, policy, statement, nodes);
+			//	
+			//}
+		}
 
 		/*/// <summary>
 		/// Execute query on all server nodes and return records via the listener. This method will
