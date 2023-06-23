@@ -93,19 +93,19 @@ namespace Aerospike.Client
 			CloseConnections();
 		}
 
-		public virtual async Task CreateMinConnections()
+		public virtual void CreateMinConnections()
 		{
 			// Create sync connections.
 			if (connectionPools.minSize > 0)
 			{
-				await CreateConnections(connectionPools, connectionPools.minSize);
+				CreateConnections(connectionPools, connectionPools.minSize);
 			}			
 		}
 
 		/// <summary>
 		/// Request current status from server node.
 		/// </summary>
-		public async Task Refresh(Peers peers)
+		public void Refresh(Peers peers)
 		{
 			if (!active)
 			{
@@ -130,7 +130,7 @@ namespace Aerospike.Client
 
 							if (token != null)
 							{
-								bool authenticated = await AdminCommand.Authenticate(cluster, tendConnection, token);
+								bool authenticated = AdminCommand.Authenticate(cluster, tendConnection, token);
 								if (!authenticated)
 								{
 									// Authentication failed. Session token probably expired.
@@ -153,7 +153,7 @@ namespace Aerospike.Client
 				Dictionary<string, string> infoMap = Info.Request(tendConnection, commands);
 
 				VerifyNodeName(infoMap);
-				await VerifyPeersGeneration(infoMap, peers);
+				VerifyPeersGeneration(infoMap, peers);
 				VerifyPartitionGeneration(infoMap);
 
 				if (cluster.rackAware)
@@ -236,7 +236,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private async Task VerifyPeersGeneration(Dictionary<string, string> infoMap, Peers peers)
+		private void VerifyPeersGeneration(Dictionary<string, string> infoMap, Peers peers)
 		{
 			string genString = infoMap["peers-generation"];
 
@@ -257,12 +257,12 @@ namespace Aerospike.Client
 					{
 						Log.Info(cluster.context, "Quick node restart detected: node=" + this + " oldgen=" + peersGeneration + " newgen=" + gen);
 					}
-					await Restart();
+					Restart();
 				}
 			}
 		}
 
-		private async Task Restart()
+		private void Restart()
 		{
 			try
 			{
@@ -279,7 +279,7 @@ namespace Aerospike.Client
 				}
 
 				// Balance connections.
-				await BalanceConnections();
+				BalanceConnections();
 			}
 			catch (Exception e)
 			{
@@ -324,7 +324,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		protected internal async Task RefreshPeers(Peers peers)
+		protected internal void RefreshPeers(Peers peers)
 		{
 			// Do not refresh peers when node connection has already failed during this cluster tend iteration.
 			if (failures > 0 || !active)
@@ -366,7 +366,7 @@ namespace Aerospike.Client
 						{
 							// Attempt connection to host.
 							NodeValidator nv = new NodeValidator();
-							await nv.ValidateNode(cluster, host);
+							nv.ValidateNode(cluster, host);
 
 							if (!peer.nodeName.Equals(nv.name))
 							{
@@ -386,7 +386,7 @@ namespace Aerospike.Client
 							}
 
 							// Create new node.
-							Node node = await cluster.CreateNode(nv, true);
+							Node node = cluster.CreateNode(nv, true);
 							peers.nodes[nv.name] = node;
 							nodeValidated = true;
 							break;
@@ -514,7 +514,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private async Task CreateConnections(Pool<Connection> pool, int count)
+		private void CreateConnections(Pool<Connection> pool, int count)
 		{
 			// Create sync connections.
 			while (count > 0)
@@ -523,7 +523,7 @@ namespace Aerospike.Client
 
 				try
 				{
-					conn = await CreateConnection(connectionPools);
+					conn = CreateConnection(connectionPools);
 				}
 				catch (Exception e)
 				{
@@ -545,7 +545,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private async Task<Connection> CreateConnection(Pool<Connection> pool)
+		private Connection CreateConnection(Pool<Connection> pool)
 		{
 			pool.IncrTotal();
 
@@ -567,7 +567,7 @@ namespace Aerospike.Client
 			{
 				try
 				{
-					bool authenticated = await AdminCommand.Authenticate(cluster, conn, token);
+					bool authenticated = AdminCommand.Authenticate(cluster, conn, token);
 					if (!authenticated)
 					{
 						Interlocked.Exchange(ref performLogin, 1);
@@ -665,7 +665,7 @@ namespace Aerospike.Client
 			conn.Close();
 		}
 
-		public virtual async Task BalanceConnections()
+		public virtual void BalanceConnections()
 		{
 			int excess = connectionPools.Excess();
 
@@ -675,7 +675,7 @@ namespace Aerospike.Client
 			}
 			else if (excess < 0 && ErrorCountWithinLimit())
 			{
-				await CreateConnections(connectionPools, -excess);
+				CreateConnections(connectionPools, -excess);
 			}			
 		}
 

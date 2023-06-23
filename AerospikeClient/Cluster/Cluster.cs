@@ -265,13 +265,13 @@ namespace Aerospike.Client
 			cancelToken = cancel.Token;
 			maxCommands = policy.maxCommands;
 
-			InitTendThread(policy.failIfNotConnected).Wait();
+			InitTendThread(policy.failIfNotConnected);
 		}
 
-		public virtual async Task InitTendThread(bool failIfNotConnected)
+		public virtual void InitTendThread(bool failIfNotConnected)
 		{
 			// Tend cluster until all nodes identified.
-			await WaitTillStabilized(failIfNotConnected);
+			WaitTillStabilized(failIfNotConnected);
 
 			if (Log.DebugEnabled())
 			{
@@ -300,7 +300,7 @@ namespace Aerospike.Client
 
 			// Run cluster tend thread.
 			System.Timers.Timer tendTimer = new (interval: tendInterval);
-			tendTimer.Elapsed += async (sender, e) => await Run();
+			tendTimer.Elapsed += (sender, e) => Run();
 			tendTimer.Start();
 		}
 
@@ -347,11 +347,11 @@ namespace Aerospike.Client
 		/// This helps avoid initial database request timeout issues when
 		/// a large number of threads are initiated at client startup.
 		/// </summary>
-		private async Task WaitTillStabilized(bool failIfNotConnected)
+		private void WaitTillStabilized(bool failIfNotConnected)
 		{
 			// Tend now requests partition maps in same iteration as the nodes
 			// are added, so there is no need to call tend twice anymore.
-			await Tend(failIfNotConnected, true);
+			Tend(failIfNotConnected, true);
 
 			if (nodes.Length == 0)
 			{
@@ -368,14 +368,14 @@ namespace Aerospike.Client
 			}
 		}
 
-		public Task Run()
+		public void Run()
 		{
 			if (tendValid)
 			{
 				// Tend cluster.
 				try
 				{
-					Tend(false, false).Wait();
+					Tend(false, false);
 				}
 				catch (Exception e)
 				{
@@ -400,14 +400,12 @@ namespace Aerospike.Client
 					}
 				}
 			}
-
-			return Task.CompletedTask;
 		}
 
 		/// <summary>
 		/// Check health of all nodes in the cluster.
 		/// </summary>
-		private async Task Tend(bool failIfNotConnected, bool isInit)
+		private void Tend(bool failIfNotConnected, bool isInit)
 		{
 			// Initialize tend iteration node statistics.
 			Peers peers = new Peers(nodes.Length + 16);
@@ -424,7 +422,7 @@ namespace Aerospike.Client
 			// If active nodes don't exist, seed cluster.
 			if (nodes.Length == 0)
 			{
-				await SeedNode(peers, failIfNotConnected);
+				SeedNode(peers, failIfNotConnected);
 
 				// Abort cluster init if all peers of the seed are not reachable and failIfNotConnected is true.
 				if (isInit && failIfNotConnected && nodes.Length == 1 && peers.InvalidCount > 0)
@@ -437,7 +435,7 @@ namespace Aerospike.Client
 				// Refresh all known nodes.
 				foreach (Node node in nodes)
 				{
-					await node.Refresh(peers);
+					node.Refresh(peers);
 				}
 
 				// Refresh peers when necessary.
@@ -448,7 +446,7 @@ namespace Aerospike.Client
 
 					foreach (Node node in nodes)
 					{
-						await node.RefreshPeers(peers);
+						node.RefreshPeers(peers);
 					}
 
 					// Handle nodes changes determined from refreshes.
@@ -465,7 +463,7 @@ namespace Aerospike.Client
 				if (peers.nodes.Count > 0)
 				{
 					AddNodes(peers.nodes);
-					await RefreshPeers(peers);
+					RefreshPeers(peers);
 				}
 			}
 
@@ -492,7 +490,7 @@ namespace Aerospike.Client
 			{
 				foreach (Node node in nodes)
 				{
-					await node.BalanceConnections();
+					node.BalanceConnections();
 				}
 			}
 
@@ -506,7 +504,7 @@ namespace Aerospike.Client
 			}
 		}
 
-		private async Task<bool> SeedNode(Peers peers, bool failIfNotConnected)
+		private bool SeedNode(Peers peers, bool failIfNotConnected)
 		{
 			// Must copy array reference for copy on write semantics to work.
 			Host[] seedArray = seeds;
@@ -519,11 +517,11 @@ namespace Aerospike.Client
 
 				try
 				{
-					Node node = await nv.SeedNode(this, seed, peers);
+					Node node = nv.SeedNode(this, seed, peers);
 
 					if (node != null)
 					{
-						await AddSeedAndPeers(node, peers);
+						AddSeedAndPeers(node, peers);
 						return true;
 					}
 				}
@@ -557,7 +555,7 @@ namespace Aerospike.Client
 				// When a fallback is used, peers refreshCount is reset to zero.
 				// refreshCount should always be one at this point.
 				peers.refreshCount = 1;
-				await AddSeedAndPeers(nv.fallback, peers);
+				AddSeedAndPeers(nv.fallback, peers);
 				return true;
 			}
 
@@ -583,20 +581,20 @@ namespace Aerospike.Client
 			return false;
 		}
 
-		private async Task AddSeedAndPeers(Node seed, Peers peers)
+		private void AddSeedAndPeers(Node seed, Peers peers)
 		{
-			await seed.CreateMinConnections();
+			seed.CreateMinConnections();
 			nodesMap.Clear();
 
 			AddNodes(seed, peers);
 
 			if (peers.nodes.Count > 0)
 			{
-				await RefreshPeers(peers);
+				RefreshPeers(peers);
 			}
 		}
 
-		private async Task RefreshPeers(Peers peers)
+		private void RefreshPeers(Peers peers)
 		{
 			// Iterate until peers have been refreshed and all new peers added.
 			while (true)
@@ -618,7 +616,7 @@ namespace Aerospike.Client
 				// more peers.
 				foreach (Node node in nodeArray)
 				{
-					await node.RefreshPeers(peers);
+					node.RefreshPeers(peers);
 				}
 
 				if (peers.nodes.Count > 0)
@@ -633,13 +631,13 @@ namespace Aerospike.Client
 			}
 		}
 
-		protected internal virtual async Task<Node> CreateNode(NodeValidator nv, bool createMinConn)
+		protected internal virtual Node CreateNode(NodeValidator nv, bool createMinConn)
 		{
 			Node node = new Node(this, nv);
 
 			if (createMinConn)
 			{
-				await node.CreateMinConnections();
+				node.CreateMinConnections();
 			}
 			return node;
 		}
