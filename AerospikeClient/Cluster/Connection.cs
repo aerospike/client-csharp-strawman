@@ -126,7 +126,7 @@ namespace Aerospike.Client
 
 		public virtual async Task ReadFully(byte[] buffer, int length)
 		{
-            if (socket.ReceiveTimeout > 0)
+			/*if (socket.ReceiveTimeout > 0)
 			{
 				// Check if data is available for reading.
 				// Poll is used because the timeout value is respected under 500ms.
@@ -135,13 +135,13 @@ namespace Aerospike.Client
 				{
 					throw new SocketException((int)SocketError.TimedOut);
 				}
-			}
+			}*/
 
             
             //var args = new SocketAsyncEventArgs();
-            args.SetBuffer(buffer, 0, length);
+            //args.SetBuffer(buffer, 0, length);
             //var saw = new SocketAwaitable(args);
-            await socket.ReceiveAsync(saw);
+            await socket.ReceiveAsync(saw, buffer, 0, length);
         
 		}
 

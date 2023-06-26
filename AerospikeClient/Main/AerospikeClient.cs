@@ -197,7 +197,7 @@ namespace Aerospike.Client
 			this.operatePolicyReadDefault = new WritePolicy(this.readPolicyDefault);
 
 			cluster = new Cluster(policy, hosts);
-			cluster.InitTendThread(policy.failIfNotConnected).Wait();
+			cluster.InitTendThread(policy.failIfNotConnected);
 		}
 
 		/// <summary>
@@ -1554,7 +1554,7 @@ namespace Aerospike.Client
 		/// <exception cref="AerospikeException">if query fails</exception>
 		public IEnumerable<KeyRecord> Query(QueryPolicy policy, Statement statement)
 		{
-			System.Diagnostics.Debugger.Launch();
+			//System.Diagnostics.Debugger.Launch();
 
 			if (policy == null)
 			{
@@ -2227,7 +2227,7 @@ namespace Aerospike.Client
 		private async Task<string> SendInfoCommand(Policy policy, string command)
 		{
 			Node node = cluster.GetRandomNode();
-			Connection conn = await node.GetConnection(policy.socketTimeout);
+			Connection conn = node.GetConnection(policy.socketTimeout);
 			Info info;
 
 			try

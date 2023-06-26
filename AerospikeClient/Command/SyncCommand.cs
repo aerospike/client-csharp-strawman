@@ -92,7 +92,7 @@ namespace Aerospike.Client
                 try
                 {
                     node.ValidateErrorCount();
-                    Connection conn = await node.GetConnection(socketTimeout);
+                    Connection conn = node.GetConnection(socketTimeout);
 
                     try
                     {

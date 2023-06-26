@@ -511,7 +511,7 @@ namespace Aerospike.Client
 			WriteSize();
 			Node node = cluster.GetRandomNode();
 			int timeout = (policy == null) ? 1000 : policy.timeout;
-			Connection conn = await node.GetConnection(timeout);
+			Connection conn = node.GetConnection(timeout);
 
 			try
 			{
@@ -541,7 +541,7 @@ namespace Aerospike.Client
 			Node node = cluster.GetRandomNode();
 			int timeout = (policy == null) ? 1000 : policy.timeout;
 			int status = 0;
-			Connection conn = await node.GetConnection(timeout);
+			Connection conn = node.GetConnection(timeout);
 
 			try
 			{

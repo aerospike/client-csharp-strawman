@@ -130,7 +130,7 @@ namespace Aerospike.Client
 
 							if (token != null)
 							{
-								bool authenticated = AdminCommand.Authenticate(cluster, tendConnection, token);
+								bool authenticated = AdminCommand.Authenticate(cluster, tendConnection, token).Result;
 								if (!authenticated)
 								{
 									// Authentication failed. Session token probably expired.
@@ -567,7 +567,7 @@ namespace Aerospike.Client
 			{
 				try
 				{
-					bool authenticated = AdminCommand.Authenticate(cluster, conn, token);
+					bool authenticated = AdminCommand.Authenticate(cluster, conn, token).Result;
 					if (!authenticated)
 					{
 						Interlocked.Exchange(ref performLogin, 1);

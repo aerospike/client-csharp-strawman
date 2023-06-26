@@ -46,7 +46,8 @@ namespace Aerospike.Client
 
 		internal void Reset()
 		{
-			_continuation = null;
+            IsCompleted = false;
+            _continuation = null;
 		}
 		/// <summary>
 		/// This method supports the async/await framework
@@ -57,9 +58,11 @@ namespace Aerospike.Client
 		// for INotifyCompletion
 		void INotifyCompletion.OnCompleted(Action continuation)
 		{
-			if (_continuation == _sentinel ||
-				Interlocked.CompareExchange(
-					ref _continuation, continuation, null) == _sentinel)
+			if (ReferenceEquals(_continuation, _sentinel) ||
+				ReferenceEquals(Interlocked.CompareExchange(ref _continuation,
+															continuation,
+															null),
+								_sentinel))
 			{
 				Task.Run(continuation);
 			}
@@ -68,10 +71,14 @@ namespace Aerospike.Client
 		/// Checks the result of the socket operation, throwing if unsuccessful
 		/// </summary>
 		/// <remarks>This is used by the async/await framework</remarks>
-		public void GetResult()
+		public int GetResult()
 		{
+			this._continuation = null;
+
 			if (EventArgs.SocketError != SocketError.Success)
 				throw new SocketException((int)EventArgs.SocketError);
+
+			return this.EventArgs.BytesTransferred;
 		}
 	}
 
@@ -84,20 +91,72 @@ namespace Aerospike.Client
 		/// <param name="awaitable">An instance of <see cref="SocketAwaitable"/></param>
 		/// <returns><paramref name="awaitable"/></returns>
 		public static SocketAwaitable ReceiveAsync(this Socket socket,
-		SocketAwaitable awaitable)
+													SocketAwaitable awaitable)
 		{
 			awaitable.Reset();
 			if (!socket.ReceiveAsync(awaitable.EventArgs))
 				awaitable.IsCompleted = true;
 			return awaitable;
 		}
-		/// <summary>
-		/// Sends data using the specified awaitable class
-		/// </summary>
-		/// <param name="socket">The socket</param>
-		/// <param name="awaitable">An instance of <see cref="SocketAwaitable"/></param>
-		/// <returns><paramref name="awaitable"/></returns>
-		public static SocketAwaitable SendAsync(this Socket socket,
+
+        /// <summary>
+        /// Receive all data into <paramref name="buffer"/> based on <paramref name="offset"/> and <paramref name="length"/> using the specified awaitable class		
+        /// </summary>
+        /// <param name="socket">The socket</param>
+        /// <param name="awaitable">An instance of <see cref="SocketAwaitable"/></param>
+        /// <param name="args">The <see cref="SocketAsyncEventArgs"/> instance</param>
+        /// <param name="buffer">
+        /// The buffer where the returned data is placed.
+        /// If null, the buffer provided to <paramref name="args"/> is used and the data will be placed into that buffer based on <paramref name="offset"/> and <paramref name="length"/>.
+        /// </param>
+        /// <param name="offset">Offset into <paramref name="buffer"/></param>
+        /// <param name="length">Length of the expected data</param>
+        /// <returns><paramref name="awaitable"/></returns>
+        public static SocketAwaitable ReceiveAsync(this Socket socket,
+                                                    SocketAwaitable awaitable,
+                                                    byte[] buffer, int offset, int length)
+        {
+			if (buffer is null)
+				awaitable.EventArgs.SetBuffer(offset, length);
+			else
+			{
+				awaitable.EventArgs.SetBuffer(buffer, offset, length);
+				awaitable.Reset();
+			}
+            if (!socket.ReceiveAsync(awaitable.EventArgs))
+            {
+                if (awaitable.EventArgs.SocketError == SocketError.Success)
+                {
+                    int received = awaitable.EventArgs.BytesTransferred;
+
+                    if (received <= 0)
+                    {
+                        throw new SocketException((int)SocketError.Shutdown);
+                    }
+
+                    if (received < awaitable.EventArgs.Count)
+                    {
+                        return ReceiveAsync(socket,
+                                            awaitable,
+                                            null,
+                                            awaitable.EventArgs.Offset + received,
+                                            awaitable.EventArgs.Count - received);
+                    }
+
+                    awaitable.IsCompleted = true;
+                }
+            }
+            return awaitable;
+        }
+
+
+        /// <summary>
+        /// Sends data using the specified awaitable class
+        /// </summary>
+        /// <param name="socket">The socket</param>
+        /// <param name="awaitable">An instance of <see cref="SocketAwaitable"/></param>
+        /// <returns><paramref name="awaitable"/></returns>
+        public static SocketAwaitable SendAsync(this Socket socket,
 			SocketAwaitable awaitable)
 		{
 			awaitable.Reset();

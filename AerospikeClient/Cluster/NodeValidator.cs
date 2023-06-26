@@ -404,7 +404,7 @@ namespace Aerospike.Client
 							{
 								if (this.sessionToken != null)
 								{
-									bool authenticated = AdminCommand.Authenticate(cluster, conn, this.sessionToken);
+									bool authenticated = AdminCommand.Authenticate(cluster, conn, this.sessionToken).Result;
 									if (!authenticated)
 									{
 										throw new AerospikeException("Authentication failed");
@@ -495,7 +495,7 @@ namespace Aerospike.Client
 							{
 								if (sessionToken != null)
 								{
-									bool authenticated = AdminCommand.Authenticate(cluster, clearConn, sessionToken);
+									bool authenticated = AdminCommand.Authenticate(cluster, clearConn, sessionToken).Result;
 									if (!authenticated)
 									{
 										throw new AerospikeException("Authentication failed");

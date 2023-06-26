@@ -265,7 +265,7 @@ namespace Aerospike.Client
 			cancelToken = cancel.Token;
 			maxCommands = policy.maxCommands;
 
-			InitTendThread(policy.failIfNotConnected);
+			//InitTendThread(policy.failIfNotConnected);
 		}
 
 		public virtual void InitTendThread(bool failIfNotConnected)
@@ -298,8 +298,8 @@ namespace Aerospike.Client
 				AddSeeds(seedsToAdd.ToArray());
 			}
 
-			// Run cluster tend thread.
-			System.Timers.Timer tendTimer = new (interval: tendInterval);
+			// Run cluster tend thread.			
+            System.Timers.Timer tendTimer = new (interval: tendInterval);
 			tendTimer.Elapsed += (sender, e) => Run();
 			tendTimer.Start();
 		}
@@ -369,7 +369,7 @@ namespace Aerospike.Client
 		}
 
 		public void Run()
-		{
+		{			
 			if (tendValid)
 			{
 				// Tend cluster.
@@ -882,7 +882,7 @@ namespace Aerospike.Client
 			return tlsPolicy != null && !tlsPolicy.forLoginOnly;
 		}
 
-		public ClusterStats GetStats()
+		/*public ClusterStats GetStats()
 		{
 			// Must copy array reference for copy on write semantics to work.
 			Node[] nodeArray = nodes;
@@ -894,7 +894,7 @@ namespace Aerospike.Client
 				nodeStats[count++] = new NodeStats(node);
 			}
 			return new ClusterStats(nodeStats, invalidNodeCount);
-		}
+		}*/
 		
 		public bool Connected
 		{
