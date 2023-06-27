@@ -298,8 +298,8 @@ namespace Aerospike.Client
 				AddSeeds(seedsToAdd.ToArray());
 			}
 
-			// Run cluster tend thread.
-			System.Timers.Timer tendTimer = new (interval: tendInterval);
+			// Run cluster tend thread.			
+            System.Timers.Timer tendTimer = new (interval: tendInterval);
 			tendTimer.Elapsed += (sender, e) => Run();
 			tendTimer.Start();
 		}
@@ -369,7 +369,7 @@ namespace Aerospike.Client
 		}
 
 		public void Run()
-		{
+		{			
 			if (tendValid)
 			{
 				// Tend cluster.

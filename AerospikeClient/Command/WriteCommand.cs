@@ -79,5 +79,10 @@ namespace Aerospike.Client
 			partition.PrepareRetryWrite(timeout);
 			return true;
 		}
-	}
+
+        protected internal override IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
