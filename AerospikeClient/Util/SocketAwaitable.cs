@@ -13,7 +13,7 @@ namespace Aerospike.Client
 	/// </summary>
 	// adapted from Stephen Toub's code at
 	// https://blogs.msdn.microsoft.com/pfxteam/2011/12/15/awaiting-socket-operations/
-	public sealed class SocketAwaitable : INotifyCompletion
+	public sealed class SocketAwaitable : ICriticalNotifyCompletion
 	{
 		// placeholder for when we don't have an actual continuation. does nothing
 		readonly static Action _sentinel = () => { };
@@ -55,18 +55,6 @@ namespace Aerospike.Client
 		/// <returns>Itself</returns>
 		public SocketAwaitable GetAwaiter() { return this; }
 
-		// for INotifyCompletion
-		void INotifyCompletion.OnCompleted(Action continuation)
-		{
-			if (ReferenceEquals(_continuation, _sentinel) ||
-				ReferenceEquals(Interlocked.CompareExchange(ref _continuation,
-															continuation,
-															null),
-								_sentinel))
-			{
-				Task.Run(continuation);
-			}
-		}
 		/// <summary>
 		/// Checks the result of the socket operation, throwing if unsuccessful
 		/// </summary>
@@ -79,6 +67,25 @@ namespace Aerospike.Client
 				throw new SocketException((int)EventArgs.SocketError);
 
 			return this.EventArgs.BytesTransferred;
+		}
+
+
+		// for INotifyCompletion
+		public void OnCompleted(Action continuation)
+		{
+			if (ReferenceEquals(_continuation, _sentinel) ||
+				ReferenceEquals(Interlocked.CompareExchange(ref _continuation,
+															continuation,
+															null),
+								_sentinel))
+			{
+				Task.Run(continuation);
+			}
+		}
+
+		public void UnsafeOnCompleted(Action continuation)
+		{
+			this.OnCompleted(continuation);
 		}
 	}
 
