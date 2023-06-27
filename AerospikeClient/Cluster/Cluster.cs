@@ -265,7 +265,7 @@ namespace Aerospike.Client
 			cancelToken = cancel.Token;
 			maxCommands = policy.maxCommands;
 
-			InitTendThread(policy.failIfNotConnected);
+			//InitTendThread(policy.failIfNotConnected);
 		}
 
 		public virtual void InitTendThread(bool failIfNotConnected)
