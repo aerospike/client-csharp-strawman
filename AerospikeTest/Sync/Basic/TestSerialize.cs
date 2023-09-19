@@ -82,7 +82,7 @@ namespace Aerospike.Test
 			Key key = new Key(args.ns, args.set, "seriallistkey");
 
 			// Delete record if it already exists.
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			List<string> list = new List<string>();
 			list.Add("string1");
@@ -91,9 +91,9 @@ namespace Aerospike.Test
 
 			Bin bin = new Bin(binName, list);
 
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertRecordFound(key, record);
 
 			IList received = null;

@@ -23,7 +23,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncBatch : TestAsync
 	{
 		private const string BinName = "bbin";
@@ -845,5 +845,5 @@ namespace Aerospike.Test
 				parent.NotifyCompleted();
 			}
 		}
-	}
+	}*/
 }

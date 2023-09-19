@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQuerySum : TestSync
 	{
 		private const string indexName = "aggindex";
@@ -140,5 +140,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

@@ -100,7 +100,7 @@ namespace Aerospike.Demo
 			Bin binPositions = new Bin("positions", positionsBytes);
 			Bin binTickers = new Bin("tickers", tickers);
 
-			client.Put(policy, key, binPositions, binTickers);
+			client.Put(policy, key, binPositions, binTickers).Wait();
 		}
 
 		public void Read(AerospikeClient client, BatchPolicy policy, string ns, string set, string accountId)
@@ -221,7 +221,7 @@ namespace Aerospike.Demo
 			Bin binTicker = new Bin("ticker", ticker);
 			// Double not supported directly, so convert to bytes.
 			Bin binPrice = new Bin("price", BitConverter.GetBytes(price));
-			client.Put(policy, key, binTicker, binPrice);
+			client.Put(policy, key, binTicker, binPrice).Wait();
 		}
 
 		public void Validate(Security other)

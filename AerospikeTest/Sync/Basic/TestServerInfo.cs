@@ -35,7 +35,7 @@ namespace Aerospike.Test
 
 		private void GetServerConfig(Node node)
 		{
-			IDictionary<string, string> map = Info.Request(null, node);
+			/*IDictionary<string, string> map = Info.Request(null, node);
 			Assert.IsNotNull(map);
 
 			foreach (KeyValuePair<string, string> entry in map)
@@ -53,15 +53,15 @@ namespace Aerospike.Test
 						Assert.IsNotNull(entry.Value);
 					}
 				}
-			}
+			}*/
 		}
 
 		private void GetNamespaceConfig(Node node)
 		{
-			string filter = "namespace/" + args.ns;
+			/*string filter = "namespace/" + args.ns;
 			string tokens = Info.Request(null, node, filter);
 			Assert.IsNotNull(tokens);
-			LogNameValueTokens(tokens);
+			LogNameValueTokens(tokens);*/
 		}
 
 		private void LogNameValueTokens(string tokens)

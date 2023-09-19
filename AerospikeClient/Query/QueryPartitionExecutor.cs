@@ -15,8 +15,10 @@
  * the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aerospike.Client
 {
@@ -25,16 +27,12 @@ namespace Aerospike.Client
 		private readonly Cluster cluster;
 		private readonly QueryPolicy policy;
 		private readonly Statement statement;
-		private readonly List<QueryThread> threads;
 		private readonly CancellationTokenSource cancel;
 		private readonly PartitionTracker tracker;
-		private readonly RecordSet recordSet;
 		private volatile Exception exception;
 		private int maxConcurrentThreads;
 		private int completedCount;
-		private int done;
-		private bool threadsComplete;
-
+		
 		public QueryPartitionExecutor
 		(
 			Cluster cluster,
@@ -47,88 +45,44 @@ namespace Aerospike.Client
 			this.cluster = cluster;
 			this.policy = policy;
 			this.statement = statement;
-			this.threads = new List<QueryThread>(nodeCapacity);
 			this.cancel = new CancellationTokenSource();
-			this.tracker = tracker;
-			this.recordSet = new RecordSet(this, policy.recordQueueSize, cancel.Token);
-			ThreadPool.UnsafeQueueUserWorkItem(this.Run, null);
-		}
+			this.tracker = tracker;            
+        }
 
-		public void Run(object obj)
-		{
-			try
-			{
-				Execute();
-			}
-			catch (Exception e)
-			{
-				StopThreads(e);
-			}
-		}
+        public IEnumerable<KeyRecord> Run(object obj)
+		=> this.Execute().SelectMany(r => r);
 
-		private void Execute()
-		{
+        public IEnumerable<IEnumerable<KeyRecord>> Execute()
+		{			
 			ulong taskId = statement.PrepareTaskId();
+                       
+            var collection = new ConcurrentBag<IEnumerable<KeyRecord>>();
 
-			while (true)
+            while (true)
 			{
 				List<NodePartitions> list = tracker.AssignPartitionsToNodes(cluster, statement.ns);
+                // Initialize maximum number of nodes to query in parallel.
+                this.maxConcurrentThreads = (policy.maxConcurrentNodes == 0 || policy.maxConcurrentNodes >= list.Count) ? list.Count : policy.maxConcurrentNodes;
+                var parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = maxConcurrentThreads
+                };
 
-				// Initialize maximum number of nodes to query in parallel.
-				maxConcurrentThreads = (policy.maxConcurrentNodes == 0 || policy.maxConcurrentNodes >= list.Count) ? list.Count : policy.maxConcurrentNodes;
-
-				bool parallel = maxConcurrentThreads > 1 && list.Count > 1;
-
-				lock (threads)
+                Parallel.ForEach(list,
+								parallelOptions,
+				(nodePartitions, cancellationToken) =>
 				{
-					// RecordSet thread may have aborted query, so check done under lock.
-					if (done == 1)
-					{
-						break;
-					}
-
-					threads.Clear();
-
-					if (parallel)
-					{
-						foreach (NodePartitions nodePartitions in list)
-						{
-							MultiCommand command = new QueryPartitionCommand(cluster, policy, statement, taskId, recordSet, tracker, nodePartitions);
-							threads.Add(new QueryThread(this, command));
-						}
-
-						for (int i = 0; i < maxConcurrentThreads; i++)
-						{
-							ThreadPool.UnsafeQueueUserWorkItem(threads[i].Run, null);
-						}
-					}
-				}
-
-				if (parallel)
-				{
-					WaitTillComplete();
-				}
-				else
-				{
-					foreach (NodePartitions nodePartitions in list)
-					{
-						MultiCommand command = new QueryPartitionCommand(cluster, policy, statement, taskId, recordSet, tracker, nodePartitions);
-						command.Execute();
-					}
-				}
-
+                    var command = new QueryPartitionCommand(cluster, policy, statement, taskId, tracker, nodePartitions);
+                    collection.Add(command.ExecuteCommandKeyRecordResult());
+                });
+                
 				if (exception != null)
 				{
 					break;
 				}
 
-				// Set done to false so RecordSet thread has chance to close early again.
-				Interlocked.Exchange(ref done, 0);
-
 				if (tracker.IsComplete(cluster, policy))
 				{
-					// All partitions received.
-					recordSet.Put(RecordSet.END);
 					break;
 				}
 
@@ -139,86 +93,15 @@ namespace Aerospike.Client
 				}
 
 				Interlocked.Exchange(ref completedCount, 0);
-				threadsComplete = false;
 				exception = null;
 
 				// taskId must be reset on next pass to avoid server duplicate query detection.
 				taskId = RandomShift.ThreadLocalInstance.NextLong();
 			}
+
+			return collection;
 		}
-
-		private void WaitTillComplete()
-		{
-			lock (this)
-			{
-				while (!threadsComplete)
-				{
-					Monitor.Wait(this);
-				}
-			}
-		}
-
-		private void NotifyCompleted()
-		{
-			lock (this)
-			{
-				threadsComplete = true;
-				Monitor.Pulse(this);
-			}
-		}
-
-		private void ThreadCompleted()
-		{
-			int finished = Interlocked.Increment(ref completedCount);
-
-			if (finished < threads.Count)
-			{
-				int nextThread = finished + maxConcurrentThreads - 1;
-
-				// Determine if a new thread needs to be started.
-				if (nextThread < threads.Count && done == 0)
-				{
-					// Start new thread.
-					ThreadPool.UnsafeQueueUserWorkItem(threads[nextThread].Run, null);
-				}
-			}
-			else
-			{
-				// All threads complete.  Tell RecordSet thread to return complete to user
-				// if an exception has not already occurred.
-				if (Interlocked.Exchange(ref done, 1) == 0)
-				{
-					NotifyCompleted();
-				}
-			}	
-		}
-
-		public bool StopThreads(Exception cause)
-		{
-			// There is no need to stop threads if all threads have already completed.
-			if (Interlocked.Exchange(ref done, 1) == 0)
-			{
-				exception = cause;
-
-				// Send stop signal to threads.
-				// Must synchronize here because this method can be called from the main
-				// RecordSet thread (user calls close() before retrieving all records)
-				// which may conflict with the parallel QueryPartitionExecutor thread.
-				lock (threads)
-				{
-					foreach (QueryThread thread in threads)
-					{
-						thread.Stop();
-					}
-				}
-				cancel.Cancel();
-				recordSet.Abort();
-				NotifyCompleted();
-				return true;
-			}
-			return false;
-		}
-
+		
 		public void CheckForException()
 		{
 			// Throw an exception if an error occurred.
@@ -233,49 +116,5 @@ namespace Aerospike.Client
 			}
 		}
 
-		public RecordSet RecordSet
-		{
-			get
-			{
-				return recordSet;
-			}
-		}
-
-		private sealed class QueryThread
-		{
-			private readonly QueryPartitionExecutor parent;
-			private readonly MultiCommand command;
-
-			public QueryThread(QueryPartitionExecutor parent, MultiCommand command)
-			{
-				this.parent = parent;
-				this.command = command;
-			}
-
-			public void Run(object obj)
-			{
-				try
-				{
-					if (command.IsValid())
-					{
-						command.Execute();
-					}
-					parent.ThreadCompleted();
-				}
-				catch (Exception e)
-				{
-					// Terminate other query threads.
-					parent.StopThreads(e);
-				}
-			}
-
-			/// <summary>
-			/// Send stop signal to each thread.
-			/// </summary>
-			public void Stop()
-			{
-				command.Stop();
-			}
-		}
 	}
 }

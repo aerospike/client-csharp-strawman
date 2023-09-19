@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-	public class AsyncScanPage : AsyncExample
+	/*public class AsyncScanPage : AsyncExample
 	{
 		private const string BinName = "bin";
 		private const string SetName = "apage";
@@ -159,5 +159,5 @@ namespace Aerospike.Demo
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

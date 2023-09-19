@@ -19,9 +19,9 @@ using System.Threading;
 
 namespace Aerospike.Client
 {
-	public sealed class BatchExecutor
+	/*public sealed class BatchExecutor
 	{
-		public static void Execute(BatchPolicy policy, BatchCommand[] commands, BatchStatus status)
+		public static async Task Execute(BatchPolicy policy, BatchCommand[] commands, BatchStatus status)
 		{
 			if (policy.maxConcurrentThreads == 1 || commands.Length <= 1)
 			{
@@ -30,7 +30,7 @@ namespace Aerospike.Client
 				{
 					try
 					{
-						command.Execute();
+						await command.Execute();
 					}
 					catch (AerospikeException ae)
 					{
@@ -72,9 +72,9 @@ namespace Aerospike.Client
 			executor.Execute();
 		}
 
-		public static void Execute(BatchCommand command, BatchStatus status)
+		public static async Task Execute(BatchCommand command, BatchStatus status)
 		{
-			command.Execute();
+			await command.Execute();
 			status.CheckException();
 		}
 
@@ -161,5 +161,5 @@ namespace Aerospike.Client
 				Monitor.Pulse(this);
 			}
 		}
-	}
+	}*/
 }

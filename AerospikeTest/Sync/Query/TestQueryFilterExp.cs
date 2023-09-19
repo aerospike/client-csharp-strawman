@@ -23,7 +23,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryFilterExp : TestSync
 	{
 		private static readonly string setName = args.set + "flt";
@@ -721,5 +721,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

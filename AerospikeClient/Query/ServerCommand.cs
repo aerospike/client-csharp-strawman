@@ -16,7 +16,7 @@
  */
 namespace Aerospike.Client
 {
-	public sealed class ServerCommand : MultiCommand
+	/*public sealed class ServerCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly ulong taskId;
@@ -38,7 +38,10 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, true, null);
 		}
 
-		protected internal override bool ParseRow()
+		protected internal override bool ParseRow(out KeyRecord k)
+			=> throw new NotSupportedException();
+
+        protected internal override bool ParseRow()
 		{
 			SkipKey(fieldCount);
 
@@ -66,5 +69,5 @@ namespace Aerospike.Client
 			}
 			return true;
 		}		
-	}
+	}*/
 }

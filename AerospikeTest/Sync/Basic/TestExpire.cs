@@ -34,15 +34,15 @@ namespace Aerospike.Test
 			// Specify that record expires 2 seconds after it's written.
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.expiration = 2;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			// Read the record before it expires, showing it is there.	
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin);
 
 			// Read the record after it expires, showing it's gone.
 			Util.Sleep(3 * 1000);
-			record = client.Get(null, key, bin.name);
+			record = client.Get(null, key, bin.name).Result;
 			Assert.IsNull(record);
 		}
 
@@ -56,16 +56,16 @@ namespace Aerospike.Test
 			// The "Never Expire" value is -1, or 0xFFFFFFFF.
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.expiration = -1;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			// Read the record, showing it is there.
-			Record record = client.Get(null, key, bin.name);
+			Record record = client.Get(null, key, bin.name).Result;
 			AssertBinEqual(key, record, bin);
 
 			// Read this Record after the Default Expiration, showing it is still there.
 			// We should have set the Namespace TTL at 5 sec.
 			Util.Sleep(10 * 1000);
-			record = client.Get(null, key, bin.name);
+			record = client.Get(null, key, bin.name).Result;
 			Assert.IsNotNull(record);
 		}
 	}

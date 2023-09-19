@@ -133,7 +133,7 @@ namespace Aerospike.Client
 
 			try
 			{
-				Dictionary<string, string> result = Request(conn);
+				Dictionary<string, string> result =	Request(conn);
 				node.PutConnection(conn);
 				return result;
 			}
@@ -338,7 +338,7 @@ namespace Aerospike.Client
 			offset += ByteUtil.StringToUtf8(command, buffer, offset);
 			buffer[offset++] = (byte)'\n';
 
-			SendCommand(conn);
+			SendCommand(conn).Wait();
 		}
 
 		/// <summary>
@@ -380,7 +380,7 @@ namespace Aerospike.Client
 				offset += ByteUtil.StringToUtf8(command, buffer, offset);
 				buffer[offset++] = (byte)'\n';
 			}
-			SendCommand(conn);
+			SendCommand(conn).Wait();
 		}
 
 		/// <summary>
@@ -422,7 +422,7 @@ namespace Aerospike.Client
 				offset += ByteUtil.StringToUtf8(command, buffer, offset);
 				buffer[offset++] = (byte)'\n';
 			}
-			SendCommand(conn);
+			SendCommand(conn).Wait();
 		}
 
 		/// <summary>
@@ -435,7 +435,7 @@ namespace Aerospike.Client
 		{
 			buffer = ThreadLocalData.GetBuffer();
 			offset = 8; // Skip size field.
-			SendCommand(conn);
+			SendCommand(conn).Wait();
 		}
 
 		/// <summary>
@@ -454,7 +454,7 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="conn">socket connection to server node</param>
 		/// <exception cref="AerospikeException">if socket send or receive fails</exception>
-		private void SendCommand(Connection conn)
+		private async Task SendCommand(Connection conn)
 		{
 			try
 			{
@@ -463,15 +463,15 @@ namespace Aerospike.Client
 				ByteUtil.LongToBytes(size, buffer, 0);
 
 				// Write.
-				conn.Write(buffer, offset);
+				await conn.Write(buffer, offset);
 
 				// Read - reuse input buffer.
-				conn.ReadFully(buffer, 8);
+				await conn.ReadFully(buffer, 8);
 
 				size = (ulong)ByteUtil.BytesToLong(buffer, 0);
 				length = (int)(size & 0xFFFFFFFFFFFFL);
 				ResizeBuffer(length);
-				conn.ReadFully(buffer, length);
+				await conn.ReadFully(buffer, length);
 				conn.UpdateLastUsed();
 				offset = 0;
 			}

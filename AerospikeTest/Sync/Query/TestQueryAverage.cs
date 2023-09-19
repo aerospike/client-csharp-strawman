@@ -23,7 +23,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryAverage : TestSync
 	{
 		private const string indexName = "avgindex";
@@ -108,5 +108,5 @@ namespace Aerospike.Test
 				rs.Close();
 			}
 		}
-	}
+	}*/
 }

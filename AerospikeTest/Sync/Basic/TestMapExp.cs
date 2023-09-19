@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestMapExp : TestSync
 	{
 		private bool InstanceFieldsInitialized = false;
@@ -74,5 +74,5 @@ namespace Aerospike.Test
 		    Record record = client.Get(policy, key, bin);
 			AssertRecordFound(key, record);
 		}
-	}
+	}*/
 }

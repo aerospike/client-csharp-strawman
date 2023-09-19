@@ -104,7 +104,7 @@ namespace Aerospike.Client
 		}
 	}
 
-	public sealed class LuaOutputStream : LuaStream
+	/*public sealed class LuaOutputStream : LuaStream
 	{
 		private readonly ResultSet resultSet;
 
@@ -138,5 +138,5 @@ namespace Aerospike.Client
 		{
 			return typeof(LuaOutputStream).FullName;
 		}
-	}
+	}*/
 }

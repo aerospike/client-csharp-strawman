@@ -14,24 +14,132 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+using Aerospike.Client;
+using System.Threading.Tasks;
+using System.Diagnostics;
+
 namespace Aerospike.Benchmarks
 {
-	abstract class ReadWriteTask
+	sealed class ReadWriteTask
 	{
-		internal readonly Args args;
-		internal readonly Metrics metrics;
-		internal bool valid;
+        private readonly AerospikeClient client;
+        private readonly Args args;
+        public readonly Metrics metrics;
+        private readonly long keyStart;
+        private readonly RandomShift random;
+        private readonly ILatencyManager LatencyMgr;
+        private readonly bool useLatency;
+		public readonly WriteTask writeTask;
+        
+        public ReadWriteTask(AerospikeClient client,
+								Args args,
+								Metrics readMetrics,
+								ILatencyManager readLatencyManager,
+                                long keyStart,
+                                WriteTask writeTask)
+        {
+            this.client = client;
+            this.args = args;
+			this.metrics = readMetrics;
+			this.LatencyMgr = readLatencyManager;
+			this.keyStart = keyStart;
+            this.random = new RandomShift();
+			this.useLatency = this.LatencyMgr is not null;
+			this.writeTask = writeTask;
+        }
+        
+        public async Task Run()
+        {
+            
+            int maxConcurrentCommands = args.commandMax;
 
-		public ReadWriteTask(Args args, Metrics metrics)
+            if (maxConcurrentCommands > args.recordsWrite)
+            {
+                maxConcurrentCommands = args.recordsWrite;
+            }
+
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxConcurrentCommands
+            };
+
+            await this.RunCommand(args.recordsWrite, options);
+        }
+
+        public async Task RunCommand(int maxNbrRecs, 
+                                        ParallelOptions parallelOptions)
 		{
-			this.args = args;
-			this.metrics = metrics;
-			this.valid = true;
+            var iterator = new bool[maxNbrRecs];
+
+            //Start metrics processing!
+            this.metrics.Start();
+            this.writeTask.metrics.Start();
+
+            await Parallel.ForEachAsync(iterator,
+                                            parallelOptions,
+                    async (ignore, cancellationToken) =>
+            {
+                // Roll a percentage die.
+                int die = random.Next(0, 100);
+
+                if (die < args.readPct)
+                {
+                    if (args.batchSize <= 1)
+                    {
+                        int key = random.Next(0, args.records);
+                        await Read(key);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException("Batches are not implemented");
+                    }
+                }
+                else
+                {
+                    // Perform Single record write even if in batch mode.
+                    await writeTask.Write(random.Next(0, args.records));
+                }
+            });
 		}
 
-		public void Stop()
+		private async Task Read(long userKey)
 		{
-			valid = false;
+			Key key = new(args.ns, args.set, userKey);
+            var capturedTime = this.useLatency
+                                 ? this.metrics.Elapsed
+                                 : TimeSpan.Zero;
+
+            await client.Get(args.policy, key, args.binName)
+				.ContinueWith(task =>
+				{
+                    if (task.IsCompletedSuccessfully)
+                    {
+                        if (this.useLatency)
+                        {
+                            var latency = this.metrics.Elapsed - capturedTime;
+                            PrefStats.RecordEvent(latency,
+                                                    metrics.Type.ToString(),
+                                                    nameof(Read),
+                                                    key);
+
+                            this.metrics.Success(latency);
+                            this.LatencyMgr?.Add((long)latency.TotalMilliseconds);
+                        }
+                        else
+                        {
+                            this.metrics.Success();
+                        }
+                    }
+                    else if (task.IsFaulted)
+                    {
+                        this.metrics.Failure(task.Exception);
+                    }
+
+                    return true;
+                }, TaskContinuationOptions.AttachedToParent
+                        | TaskContinuationOptions.ExecuteSynchronously);
+			
 		}
+
 	}
 }

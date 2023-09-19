@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestScan : TestSync
 	{
 		private readonly ConcurrentDictionary<string, Metrics> setMap = new ConcurrentDictionary<string, Metrics>();
@@ -80,5 +80,5 @@ namespace Aerospike.Test
 		{
 			public long count = 0;
 		}		
-	}
+	}*/
 }

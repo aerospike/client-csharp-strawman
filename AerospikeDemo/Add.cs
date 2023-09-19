@@ -34,18 +34,18 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("addbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			// Perform some adds and check results.
 			Bin bin = new Bin(binName, 10);
 			console.Info("Initial add will create record.  Initial value is " + bin.value + '.');
-			client.Add(args.writePolicy, key, bin);
+			client.Add(args.writePolicy, key, bin).Wait();
 
 			bin = new Bin(binName, 5);
 			console.Info("Add " + bin.value + " to existing record.");
-			client.Add(args.writePolicy, key, bin);
+			client.Add(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{
@@ -71,7 +71,7 @@ namespace Aerospike.Demo
 			// Demonstrate add and get combined.
 			bin = new Bin(binName, 30);
 			console.Info("Add " + bin.value + " to existing record.");
-			record = client.Operate(args.writePolicy, key, Operation.Add(bin), Operation.Get(bin.name));
+			record = client.Operate(args.writePolicy, key, Operation.Add(bin), Operation.Get(bin.name)).Result;
 
 			expected = 45;
 			received = record.GetInt(bin.name);

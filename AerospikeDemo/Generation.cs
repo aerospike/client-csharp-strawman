@@ -34,23 +34,23 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("genbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			// Set some values for the same record.
 			Bin bin = new Bin(binName, "genvalue1");
 			console.Info("Put: namespace={0} set={1} key={2} bin={3} value={4}", 
 				key.ns, key.setName, key.userKey, bin.name, bin.value);
 
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			bin = new Bin(binName, "genvalue2");
 			console.Info("Put: namespace={0} set={1} key={2} bin={3} value={4}", 
 				key.ns, key.setName, key.userKey, bin.name, bin.value);
 
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			// Retrieve record and its generation count.
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{
@@ -79,7 +79,7 @@ namespace Aerospike.Demo
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.generationPolicy = GenerationPolicy.EXPECT_GEN_EQUAL;
 			writePolicy.generation = record.generation;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			// Set record with invalid generation and check results .
 			bin = new Bin(binName, "genvalue4");
@@ -89,7 +89,7 @@ namespace Aerospike.Demo
 
 			try
 			{
-				client.Put(writePolicy, key, bin);
+				client.Put(writePolicy, key, bin).Wait();
 				throw new Exception("Should have received generation error instead of success.");
 			}
 			catch (AerospikeException ae)
@@ -106,7 +106,7 @@ namespace Aerospike.Demo
 			}
 
 			// Verify results.
-			record = client.Get(args.policy, key, bin.name);
+			record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{

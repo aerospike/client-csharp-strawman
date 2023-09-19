@@ -70,13 +70,13 @@ namespace Aerospike.Client
 		// Random partition replica index. 
 		internal int replicaIndex;
 
-		// Minimum sync connections per node.
+		// Minimum connections per node.
 		internal readonly int minConnsPerNode;
 
-		// Maximum sync connections per node.
+		// Maximum connections per node.
 		internal readonly int maxConnsPerNode;
 
-		// Sync connection pools per node. 
+		// Connection pools per node. 
 		protected internal readonly int connPoolsPerNode;
 
 		// Max errors per node per errorRateWindow.
@@ -110,7 +110,6 @@ namespace Aerospike.Client
 		private int tendCount;
 
 		// Tend thread variables.
-		private Thread tendThread;
 		private CancellationTokenSource cancel;
 		private CancellationToken cancelToken;
 		internal volatile bool tendValid;
@@ -126,6 +125,13 @@ namespace Aerospike.Client
 
 		// Does cluster support query by partition.
 		internal bool hasPartitionQuery;
+
+		// Contiguous pool of byte buffers.
+		//TODO: do we need this?
+		//private readonly BufferPool bufferPool;
+
+		// Maximum number of concurrent asynchronous commands.
+		internal readonly int maxCommands;
 
 		public Cluster(ClientPolicy policy, Host[] hosts)
 		{
@@ -257,6 +263,9 @@ namespace Aerospike.Client
 			partitionMap = new Dictionary<string, Partitions>();
 			cancel = new CancellationTokenSource();
 			cancelToken = cancel.Token;
+			maxCommands = policy.maxCommands;
+
+			//InitTendThread(policy.failIfNotConnected);
 		}
 
 		public virtual void InitTendThread(bool failIfNotConnected)
@@ -289,12 +298,10 @@ namespace Aerospike.Client
 				AddSeeds(seedsToAdd.ToArray());
 			}
 
-			// Run cluster tend thread.
-			tendValid = true;
-			tendThread = new Thread(new ThreadStart(this.Run));
-			tendThread.Name = "tend";
-			tendThread.IsBackground = true;
-			tendThread.Start();
+			// Run cluster tend thread.			
+            System.Timers.Timer tendTimer = new (interval: tendInterval);
+			tendTimer.Elapsed += (sender, e) => Run();
+			tendTimer.Start();
 		}
 
 		public void AddSeeds(Host[] hosts)
@@ -362,8 +369,8 @@ namespace Aerospike.Client
 		}
 
 		public void Run()
-		{
-			while (tendValid)
+		{			
+			if (tendValid)
 			{
 				// Tend cluster.
 				try

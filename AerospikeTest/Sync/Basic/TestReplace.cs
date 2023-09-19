@@ -31,13 +31,13 @@ namespace Aerospike.Test
 			Bin bin2 = new Bin("bin2", "value2");
 			Bin bin3 = new Bin("bin3", "value3");
 
-			client.Put(null, key, bin1, bin2);
+			client.Put(null, key, bin1, bin2).Wait();
 
 			WritePolicy policy = new WritePolicy();
 			policy.recordExistsAction = RecordExistsAction.REPLACE;
-			client.Put(policy, key, bin3);
+			client.Put(policy, key, bin3).Wait();
 
-			Record record = client.Get(null, key);
+			Record record = client.Get(null, key).Result;
 			AssertRecordFound(key, record);
 
 			if (record.GetValue(bin1.name) != null)
@@ -59,13 +59,13 @@ namespace Aerospike.Test
 			Bin bin = new Bin("bin", "value");
 
 			// Delete record if it already exists.
-			client.Delete(null, key);
+			client.Delete(null, key).Wait();
 
 			try
 			{
 				WritePolicy policy = new WritePolicy();
 				policy.recordExistsAction = RecordExistsAction.REPLACE_ONLY;
-				client.Put(policy, key, bin);
+				client.Put(policy, key, bin).Wait();
 
 				Assert.Fail("Failure. This command should have resulted in an error.");
 			}

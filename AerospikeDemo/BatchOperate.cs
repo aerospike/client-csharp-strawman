@@ -21,7 +21,7 @@ using System.Collections;
 
 namespace Aerospike.Demo
 {
-	public class BatchOperate : SyncExample
+	/*public class BatchOperate : SyncExample
 	{
 		private const string KeyPrefix = "bkey";
 		private const string BinName1 = "bin1";
@@ -284,5 +284,5 @@ namespace Aerospike.Demo
 				i++;
 			}
 		}
-	}
+	}*/
 }

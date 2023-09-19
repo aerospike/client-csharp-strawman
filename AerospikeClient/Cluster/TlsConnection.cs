@@ -173,13 +173,13 @@ namespace Aerospike.Client
 			return false;
 		}
 
-		public override void Write(byte[] buffer, int length)
+		public override async Task Write(byte[] buffer, int length)
 		{
-			sslStream.Write(buffer, 0, length);
-			sslStream.Flush();
+			await sslStream.WriteAsync(buffer, 0, length);
+			await sslStream.FlushAsync();
 		}
 
-		public override void ReadFully(byte[] buffer, int length)
+		public override async Task ReadFully(byte[] buffer, int length)
 		{
 			// The SSL stream may have already read the socket data into the stream,
 			// so do not poll when SSL stream is readable.
@@ -198,7 +198,7 @@ namespace Aerospike.Client
 
 			while (pos < length)
 			{
-				int count = sslStream.Read(buffer, pos, length - pos);
+				int count = await sslStream.ReadAsync(buffer, pos, length - pos);
 
 				if (count <= 0)
 				{

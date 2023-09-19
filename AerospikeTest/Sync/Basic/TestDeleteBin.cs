@@ -31,12 +31,12 @@ namespace Aerospike.Test
 			string binName2 = args.GetBinName("bin2");
 			Bin bin1 = new Bin(binName1, "value1");
 			Bin bin2 = new Bin(binName2, "value2");
-			client.Put(null, key, bin1, bin2);
+			client.Put(null, key, bin1, bin2).Wait();
 
 			bin1 = Bin.AsNull(binName1); // Set bin value to null to drop bin.
-			client.Put(null, key, bin1);
+			client.Put(null, key, bin1).Wait();
 
-			Record record = client.Get(null, key, bin1.name, bin2.name, "bin3");
+			Record record = client.Get(null, key, bin1.name, bin2.name, "bin3").Result;
 			AssertRecordFound(key, record);
 
 			if (record.GetValue("bin1") != null)

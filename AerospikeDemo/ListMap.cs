@@ -51,7 +51,7 @@ namespace Aerospike.Demo
 		{
 			console.Info("Read/Write ArrayList<String>");
 			Key key = new Key(args.ns, args.set, "listkey1");
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			List<object> list = new List<object>();
 			list.Add("string1");
@@ -59,9 +59,9 @@ namespace Aerospike.Demo
 			list.Add("string3");
 
 			Bin bin = new Bin(args.GetBinName("listbin1"), list);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			List<object> receivedList = (List<object>) record.GetValue(bin.name);
 
 			ValidateSize(3, receivedList.Count);
@@ -79,7 +79,7 @@ namespace Aerospike.Demo
 		{
 			console.Info("Read/Write ArrayList<Object>");
 			Key key = new Key(args.ns, args.set, "listkey2");
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			byte[] blob = new byte[] {3, 52, 125};
 			List<object> list = new List<object>();
@@ -88,9 +88,9 @@ namespace Aerospike.Demo
 			list.Add(blob);
 
 			Bin bin = new Bin(args.GetBinName("listbin2"), list);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			List<object> receivedList = (List<object>) record.GetValue(bin.name);
 
 			ValidateSize(3, receivedList.Count);
@@ -109,7 +109,7 @@ namespace Aerospike.Demo
 		{
 			console.Info("Read/Write HashMap<String,String>");
 			Key key = new Key(args.ns, args.set, "mapkey1");
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			Dictionary<object, object> map = new Dictionary<object, object>();
 			map["key1"] = "string1";
@@ -117,9 +117,9 @@ namespace Aerospike.Demo
 			map["key3"] = "string3";
 
 			Bin bin = new Bin(args.GetBinName("mapbin1"), map);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			Dictionary<object, object> receivedMap = (Dictionary<object, object>)record.GetValue(bin.name);
 
 			ValidateSize(3, receivedMap.Count);
@@ -137,7 +137,7 @@ namespace Aerospike.Demo
 		{
 			console.Info("Read/Write HashMap<Object,Object>");
 			Key key = new Key(args.ns, args.set, "mapkey2");
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			byte[] blob = new byte[] {3, 52, 125};
 			List<int> list = new List<int>();
@@ -153,9 +153,9 @@ namespace Aerospike.Demo
 			map["key4"] = list;
 
 			Bin bin = new Bin(args.GetBinName("mapbin2"), map);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			Dictionary<object, object> receivedMap = (Dictionary<object, object>)record.GetValue(bin.name);
 
 			ValidateSize(4, receivedMap.Count);
@@ -181,7 +181,7 @@ namespace Aerospike.Demo
 		{
 			console.Info("Read/Write List/HashMap");
 			Key key = new Key(args.ns, args.set, "listmapkey");
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			byte[] blob = new byte[] {3, 52, 125};
 			List<object> inner = new List<object>();
@@ -201,9 +201,9 @@ namespace Aerospike.Demo
 			list.Add(innerMap);
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			List<object> received = (List<object>) record.GetValue(bin.name);
 
 			ValidateSize(4, received.Count);

@@ -37,11 +37,11 @@ namespace Aerospike.Demo
 			console.Info("Create record with 2 second expiration.");
 			WritePolicy writePolicy = new WritePolicy();
 			writePolicy.expiration = 2;
-			client.Put(writePolicy, key, bin);
+			client.Put(writePolicy, key, bin).Wait();
 
 			console.Info("Touch same record with 5 second expiration.");
 			writePolicy.expiration = 5;
-			Record record = client.Operate(writePolicy, key, Operation.Touch(), Operation.GetHeader());
+			Record record = client.Operate(writePolicy, key, Operation.Touch(), Operation.GetHeader()).Result;
 
 			if (record == null)
 			{
@@ -58,7 +58,7 @@ namespace Aerospike.Demo
 			console.Info("Sleep 3 seconds.");
 			Thread.Sleep(3000);
 
-			record = client.Get(args.policy, key, bin.name);
+			record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{
@@ -70,7 +70,7 @@ namespace Aerospike.Demo
 			console.Info("Sleep 4 seconds.");
 			Thread.Sleep(4000);
 
-			record = client.Get(args.policy, key, bin.name);
+			record = client.Get(args.policy, key, bin.name).Result;
 
 			if (record == null)
 			{

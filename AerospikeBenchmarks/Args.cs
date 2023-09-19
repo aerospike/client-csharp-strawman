@@ -20,7 +20,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Aerospike.Benchmarks
 {
-	sealed class Args
+	sealed internal class Args
 	{
 		internal Host[] hosts;
 		internal int port;
@@ -39,41 +39,38 @@ namespace Aerospike.Benchmarks
 		internal BinType binType;
 		internal Value fixedValue;
 		internal int commandMax;
-		internal int threadMax;
 		internal int transactionMax;
 		internal int records;
-		internal int recordsInit;
+		internal int recordsWrite;
 		internal int readPct;
 		internal int binSize;
-		internal int latencyColumns;
-		internal int latencyShift;
 		internal int batchSize;
 		internal int throughput;
-		internal bool initialize;
-		internal bool sync;
+		internal bool writeonly;
 		internal bool latency;
-		internal bool latencyAltFormat;
 		internal bool debug;
 		internal bool singleBin;
+		internal string LatencyFileJson;
+		internal string LatencyFileCSV;
 
 		public Args()
 		{
 			var builder = new ConfigurationBuilder()
 				.AddJsonFile("settings.json", optional: true, reloadOnChange: true);
 			IConfigurationRoot section = builder.Build();
-			
+
 			IConfigurationSection cs = section.GetSection("Port");
-            port = int.Parse(cs.Value);
+			port = int.Parse(cs.Value);
 
 
-            port = int.Parse(section.GetSection("Port").Value);
+			port = int.Parse(section.GetSection("Port").Value);
 			authMode = (AuthMode)Enum.Parse(typeof(AuthMode), section.GetSection("AuthMode").Value, true);
 			user = section.GetSection("User").Value;
 			password = section.GetSection("Password").Value;
 			clusterName = section.GetSection("ClusterName").Value;
 			ns = section.GetSection("Namespace").Value;
 			set = section.GetSection("Set").Value;
-			initialize = bool.Parse(section.GetSection("Initialize").Value);
+			writeonly = bool.Parse(section.GetSection("WriteOnly").Value);
 
 			bool tlsEnable = bool.Parse(section.GetSection("TlsEnable").Value);
 
@@ -90,18 +87,12 @@ namespace Aerospike.Benchmarks
 
 			hosts = Host.ParseHosts(section.GetSection("Host").Value, tlsName, port);
 			commandMax = int.Parse(section.GetSection("AsyncMaxCommands").Value);
-			sync = bool.Parse(section.GetSection("Sync").Value);
-
-			if (sync)
-			{
-				threadMax = int.Parse(section.GetSection("SyncThreads").Value);
-			}
 
 			transactionMax = int.Parse(section.GetSection("TransactionMax").Value);
 
 			records = int.Parse(section.GetSection("Records").Value);
-			int recordsInitPct = int.Parse(section.GetSection("InitPct").Value);
-			recordsInit = records / 100 * recordsInitPct;
+			int recordsWritePct = int.Parse(section.GetSection("WritePct").Value);
+			recordsWrite = records / 100 * recordsWritePct;
 			readPct = int.Parse(section.GetSection("ReadPct").Value);
 
 			if (!(readPct >= 0 && readPct <= 100))
@@ -124,19 +115,10 @@ namespace Aerospike.Benchmarks
 
 			if (latency)
 			{
-				latencyColumns = int.Parse(section.GetSection("LatencyColumns").Value);
-				latencyShift = int.Parse(section.GetSection("LatencyShift").Value);
-				latencyAltFormat = bool.Parse(section.GetSection("LatencyAltFormat").Value);
+				LatencyFileJson = section.GetSection("LatencyFileJson").Value;
+				LatencyFileCSV = section.GetSection("LatencyFileCSV").Value;
 
-				if (!(latencyColumns >= 2 && latencyColumns <= 10))
-				{
-					throw new Exception("Latency columns must be between 2 and 10 inclusive.");
-				}
-
-				if (!(latencyShift >= 1 && latencyShift <= 5))
-				{
-					throw new Exception("Latency exponent shift must be between 1 and 5 inclusive.");
-				}
+				PrefStats.EnableTimings = !(string.IsNullOrEmpty(LatencyFileCSV) &&  string.IsNullOrEmpty(LatencyFileJson));
 			}
 
 			throughput = int.Parse(section.GetSection("ThroughPut").Value);
@@ -150,27 +132,33 @@ namespace Aerospike.Benchmarks
 			ReadModeAP readModeAP = (ReadModeAP)Enum.Parse(typeof(ReadModeAP), section.GetSection("ReadModeAP").Value, true);
 			ReadModeSC readModeSC = (ReadModeSC)Enum.Parse(typeof(ReadModeSC), section.GetSection("ReadModeSC").Value, true);
 
-			policy = new Policy();
-			policy.totalTimeout = timeout;
-			policy.maxRetries = maxRetries;
-			policy.sleepBetweenRetries = sleepBetweenRetries;
-			policy.replica = replica;
-			policy.readModeAP = readModeAP;
-			policy.readModeSC = readModeSC;
+			policy = new Policy()
+			{
+				totalTimeout = timeout,
+				maxRetries = maxRetries,
+				sleepBetweenRetries = sleepBetweenRetries,
+				replica = replica,
+				readModeAP = readModeAP,
+				readModeSC = readModeSC
+			};
 
-			writePolicy = new WritePolicy();
-			writePolicy.totalTimeout = timeout;
-			writePolicy.maxRetries = maxRetries;
-			writePolicy.sleepBetweenRetries = sleepBetweenRetries;
-			writePolicy.replica = replica;
+			writePolicy = new WritePolicy()
+			{
+				totalTimeout = timeout,
+				maxRetries = maxRetries,
+				sleepBetweenRetries = sleepBetweenRetries,
+				replica = replica
+			};
 
-			batchPolicy = new BatchPolicy();
-			batchPolicy.totalTimeout = timeout;
-			batchPolicy.maxRetries = maxRetries;
-			batchPolicy.sleepBetweenRetries = sleepBetweenRetries;
-			batchPolicy.replica = replica;
-			batchPolicy.readModeAP = readModeAP;
-			batchPolicy.readModeSC = readModeSC;
+			batchPolicy = new BatchPolicy()
+			{
+				totalTimeout = timeout,
+				maxRetries = maxRetries,
+				sleepBetweenRetries = sleepBetweenRetries,
+				replica = replica,
+				readModeAP = readModeAP,
+				readModeSC = readModeSC
+			};
 		}
 
 		/// <summary>
@@ -264,9 +252,9 @@ namespace Aerospike.Benchmarks
 
 		public void Print()
 		{
-			if (initialize)
+			if (writeonly)
 			{
-				Console.WriteLine("Initialize " + recordsInit + " records");
+				Console.WriteLine("Write " + recordsWrite + " records");
 			}
 			else
 			{
@@ -278,9 +266,6 @@ namespace Aerospike.Benchmarks
 
 			string throughputStr = (throughput == 0)? "unlimited" : throughput.ToString() + " tps";
 			string transactionStr = (transactionMax == 0) ? "unlimited" : transactionMax.ToString();
-
-			Console.WriteLine("threads: " + threadMax + ", transactions: " + transactionStr + 
-				", throughput: " + throughputStr + ", debug: " + debug);
 
 			Console.Write("write policy:");
 			Console.WriteLine(
@@ -306,10 +291,7 @@ namespace Aerospike.Benchmarks
 			string randStr = fixedValue != null ? "false" : "true";
 			Console.WriteLine(", random values: " + randStr);
 
-			if (! sync)
-			{
-				Console.WriteLine("Async max concurrent commands: " + commandMax);
-			}
+			Console.WriteLine("Async max concurrent commands: " + commandMax);
 			Console.WriteLine();
 		}
 	}

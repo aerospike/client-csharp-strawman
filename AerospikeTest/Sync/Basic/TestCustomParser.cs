@@ -60,7 +60,7 @@ namespace Aerospike.Test
 		private Record Get(Key key, ParseBin parseBin)
 		{
 			var policy = new Policy() { recordParser = new BinParser(parseBin) };
-			return client.Get(policy, key);
+			return client.Get(policy, key).Result;
 		}
 
 		[TestMethod]
@@ -79,7 +79,7 @@ namespace Aerospike.Test
 			map.Add("k7", -1234L);
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), map);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			var received = new Dictionary<object, object>();
 			Record record = Get(key, buffer =>
@@ -153,7 +153,7 @@ namespace Aerospike.Test
 			list.Add(false);
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			var received = new List<object>();
 			Record record = Get(key, buffer =>
@@ -204,7 +204,7 @@ namespace Aerospike.Test
 			l2.Add("some more text");
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			Record record = Get(key, buffer =>
 			{
@@ -289,7 +289,7 @@ namespace Aerospike.Test
 			l2.Add("some more text");
 
 			Bin bin = new Bin(args.GetBinName("listmapbin"), list);
-			client.Put(null, key, bin);
+			client.Put(null, key, bin).Wait();
 
 			Record record = Get(key, buffer =>
 			{

@@ -18,9 +18,9 @@ using System.Text;
 
 namespace Aerospike.Benchmarks
 {
-	interface ILatencyManager
+	internal interface ILatencyManager
 	{
-		void Add(long elapsed);
+		void Add(double elapsedms);
 		string PrintHeader();
 		string PrintResults(StringBuilder sb, string prefix);
 		string PrintSummary(StringBuilder sb, string prefix);

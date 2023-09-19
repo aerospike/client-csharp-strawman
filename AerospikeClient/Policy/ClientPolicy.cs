@@ -66,32 +66,81 @@ namespace Aerospike.Client
 		public int loginTimeout = 5000;
 
 		/// <summary>
-		/// Minimum number of synchronous connections allowed per server node.  Preallocate min connections
+		/// How to handle cases when the asynchronous maximum number of concurrent connections 
+		/// have been reached.  
+		/// </summary>
+		public MaxCommandAction maxCommandAction = MaxCommandAction.BLOCK;
+
+		/// <summary>
+		/// Maximum number of concurrent asynchronous commands that can be active at any point in time.
+		/// Concurrent commands can target different nodes of the Aerospike cluster. Each command will 
+		/// use one concurrent connection. The number of concurrent open connections is therefore
+		/// limited by:
+		/// <para>
+		/// max open connections = asyncMaxCommands
+		/// </para>
+		/// The actual number of open connections to each node of the Aerospike cluster depends on how
+		/// balanced the commands are between nodes and are limited to asyncMaxConnsPerNode for any
+		/// given node. For an extreme case where all commands may be destined to the same node of the
+		/// cluster, asyncMaxCommands should not be set greater than asyncMaxConnsPerNode to avoid
+		/// running out of connections to the node.
+		/// <para>
+		/// Further, this maximum number of open connections across all nodes should not exceed the
+		/// total socket file descriptors available on the client machine. The socket file descriptors
+		/// available can be determined by the following command:
+		/// </para>
+		/// <para>ulimit -n</para>
+		/// <para>Default: 100</para>
+		/// </summary>
+		public int maxCommands = 100;
+
+		/// <summary>
+		/// Maximum number of async commands that can be stored in the delay queue when
+		/// <see cref="maxCommandAction"/> is <see cref="Aerospike.Client.MaxCommandAction.DELAY"/>
+		/// and <see cref="maxCommands"/> is reached.
+		/// Queued commands consume memory, but they do not consume connections.
+		/// <para>
+		/// If this limit is reached, the next async command will be rejected with exception
+		/// <see cref="Aerospike.Client.AerospikeException.CommandRejected"/>.
+		/// If this limit is zero, all async commands will be accepted into the delay queue.
+		/// </para>
+		/// <para>
+		/// The optimal value will depend on your application's magnitude of command bursts and the
+		/// amount of memory available to store commands.
+		/// </para>
+		/// <para>
+		/// Default: 0 (no delay queue limit)
+		/// </para>
+		/// </summary>
+		public int maxCommandsInQueue;
+
+		/// <summary>
+		/// Minimum number of asynchronous connections allowed per server node.  Preallocate min connections
 		/// on client node creation.  The client will periodically allocate new connections if count falls
 		/// below min connections.
 		/// <para>
 		/// Server proto-fd-idle-ms and client <see cref="Aerospike.Client.ClientPolicy.maxSocketIdle"/>
-		/// should be set to zero (no reap) if minConnsPerNode is greater than zero.  Reaping connections
+		/// should be set to zero (no reap) if asyncMinConnsPerNode is greater than zero.  Reaping connections
 		/// can defeat the purpose of keeping connections in reserve for a future burst of activity.
 		/// </para>
-		/// <para>Default: 0</para>
+		/// <para>
+		/// Default: 0
+		/// </para>
 		/// </summary>
 		public int minConnsPerNode;
 
 		/// <summary>
-		/// Maximum number of synchronous connections allowed per server node.  Transactions will go
+		/// Maximum number of asynchronous connections allowed per server node.  Transactions will go
 		/// through retry logic and potentially fail with "ResultCode.NO_MORE_CONNECTIONS" if the maximum
 		/// number of connections would be exceeded.
 		/// <para>
-		/// The number of connections used per node depends on how many concurrent threads issue
-		/// database commands plus sub-threads used for parallel multi-node commands (batch, scan,
-		/// and query). One connection will be used for each thread.
+		/// The number of connections used per node depends on concurrent commands in progress
+		/// plus sub-commands used for parallel multi-node commands (batch, scan, and query).
+		/// One connection will be used for each command.
 		/// </para>
 		/// <para>
-		/// See <see cref="AsyncClientPolicy.asyncMaxConnsPerNode"/> to configure max connections for
-		/// asynchronous commands.
+		/// Default: 100
 		/// </para>
-		/// <para>Default: 100</para>
 		/// </summary>
 		public int maxConnsPerNode = 100;
 
@@ -104,6 +153,26 @@ namespace Aerospike.Client
 		/// <para>Default: 1</para>
 		/// </summary>
 		public int connPoolsPerNode = 1;
+
+		/// <summary>
+		/// Size of buffer allocated for each async command. The size should be a multiple of 8 KB.
+		/// If not, the size is rounded up to the nearest 8 KB increment.
+		/// <para>
+		/// If an async command requires a buffer size less than or equal to asyncBufferSize, the
+		/// buffer pool will be used. If an async command requires a buffer size greater than
+		/// bufferSize, a new single-use buffer will be created on the heap.
+		/// </para>
+		/// <para>
+		/// This field is also used to size the buffer pool for all async commands:
+		/// </para>
+		/// <code>
+		/// buffer pool size = bufferSize * maxCommands
+		/// </code> 
+		/// <para>
+		/// Default: 128 * 1024 (128 KB)
+		/// </para>
+		/// </summary>
+		public int bufferSize = 128 * 1024;
 
 		/// <summary>
 		/// Maximum socket idle in seconds.  Socket connection pools will discard sockets
@@ -311,8 +380,13 @@ namespace Aerospike.Client
 			this.loginTimeout = other.loginTimeout;
 			this.minConnsPerNode = other.minConnsPerNode;
 			this.maxConnsPerNode = other.maxConnsPerNode;
-			this.connPoolsPerNode = other.connPoolsPerNode;
 			this.maxSocketIdle = other.maxSocketIdle;
+			this.maxCommandAction = other.maxCommandAction;
+			this.maxCommands = other.maxCommands;
+			this.maxCommandsInQueue = other.maxCommandsInQueue;
+			this.minConnsPerNode = other.minConnsPerNode;
+			this.maxConnsPerNode = other.maxConnsPerNode;
+			this.bufferSize = other.bufferSize;
 			this.maxErrorRate = other.maxErrorRate;
 			this.errorRateWindow = other.errorRateWindow;
 			this.tendInterval = other.tendInterval;

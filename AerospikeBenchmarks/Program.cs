@@ -15,16 +15,17 @@
  * the License.
  */
 using Aerospike.Client;
+using AerospikeBenchmarks;
 
 namespace Aerospike.Benchmarks
 {
     class Program
     {
-        static void Main(string[] args)
+        async static Task Main(string[] args)
         {
             try
             {
-                RunBenchmarks();
+                await RunBenchmarks();
             }
             catch (Exception e)
             {
@@ -32,77 +33,87 @@ namespace Aerospike.Benchmarks
                 Console.WriteLine(e.StackTrace);
             }
         }
-        private static void RunBenchmarks()
+        private async static Task RunBenchmarks()
         {
             Log.SetCallback(LogCallback);
 
-            Args args = new Args();
+            Args args = new();
             args.Print();
 
             Log.Level level = args.debug ? Log.Level.DEBUG : Log.Level.INFO;
             Log.SetLevel(level);
 
-            Metrics metrics = new Metrics(args);
-
-            if (args.sync)
+            var policy = new ClientPolicy()
             {
-                ClientPolicy policy = new ClientPolicy();
-                policy.user = args.user;
-                policy.password = args.password;
-                policy.tlsPolicy = args.tlsPolicy;
-                policy.authMode = args.authMode;
-                AerospikeClient client = new AerospikeClient(policy, args.hosts);
+                user = args.user,
+                password = args.password,
+                tlsPolicy = args.tlsPolicy,
+                authMode = args.authMode,
+                maxCommands = args.commandMax,
+            	minConnsPerNode = 100,
+            	maxConnsPerNode = 100,
+			    maxErrorRate = 10,
+			    errorRateWindow = 5
+		    };
+            
+            var client = new AerospikeClient(policy, args.hosts);
+            Ticker ticker = null;
 
-                try
+            try
+            {
+                long keyStart = 0;
+                var metricsWrite = new Metrics(Metrics.MetricTypes.Write, args);
+                ILatencyManager latencyMgrWrite = new LatencyManager();
+                Metrics metricsRead = null;
+                ILatencyManager latencyMgrRead = null;
+
+                if (!args.writeonly)
                 {
-                    args.SetServerSpecific(client);
-
-                    if (args.initialize)
-                    {
-                        Initialize prog = new Initialize(args, metrics);
-                        prog.RunSync(client);
-                    }
-                    else
-                    {
-                        ReadWrite prog = new ReadWrite(args, metrics);
-                        prog.RunSync(client);
-                    }
+                    metricsRead = new Metrics(Metrics.MetricTypes.Read, args);
+                    latencyMgrRead = new LatencyManager();
                 }
-                finally
+
+                args.SetServerSpecific(client);
+
+                ticker = new Ticker(args,
+                                    metricsRead,
+                                    metricsWrite,
+                                    latencyMgrRead,
+                                    latencyMgrWrite);
+                ticker.Run();
+
+                var writeTask = new WriteTask(client,
+                                                args,
+                                                metricsWrite,
+                                                keyStart,
+                                                latencyMgrWrite);
+
+                if (metricsRead is null)
                 {
-                    client.Close();
+                    await writeTask.Run();
+                }
+                else
+                {
+                    var readWriteTask = new ReadWriteTask(client,
+                                                            args,
+                                                            metricsRead,
+                                                            latencyMgrRead,
+                                                            keyStart,
+                                                            writeTask);
+                    await readWriteTask.Run();
                 }
             }
-            else
+            finally
             {
-                AsyncClientPolicy policy = new AsyncClientPolicy();
-                policy.user = args.user;
-                policy.password = args.password;
-                policy.tlsPolicy = args.tlsPolicy;
-                policy.authMode = args.authMode;
-                policy.asyncMaxCommands = args.commandMax;
+                client.Close();
+                ticker?.WaitForAllToPrint();
+                //ticker?.Stop();
+            }
 
-                AsyncClient client = new AsyncClient(policy, args.hosts);
-
-                try
-                {
-                    args.SetServerSpecific(client);
-
-                    if (args.initialize)
-                    {
-                        Initialize prog = new Initialize(args, metrics);
-                        prog.RunAsync(client);
-                    }
-                    else
-                    {
-                        ReadWrite prog = new ReadWrite(args, metrics);
-                        prog.RunAsync(client);
-                    }
-                }
-                finally
-                {
-                    client.Close();
-                }
+            if (PrefStats.EnableTimings)
+            {
+                PrefStats.ToCSV(args.LatencyFileCSV);
+                PrefStats.ToJson(args.LatencyFileJson);
             }
         }
 

@@ -14,9 +14,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+using System.Threading.Tasks;
+using System.Xml.Linq;
+
 namespace Aerospike.Client
 {
-	public sealed class QueryRecordCommand : MultiCommand
+	/*public sealed class QueryRecordCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly RecordSet recordSet;
@@ -25,18 +28,30 @@ namespace Aerospike.Client
 		public QueryRecordCommand
 		(
 			Cluster cluster,
-			Node node,
+			Node[] nodes,
 			QueryPolicy policy,
 			Statement statement,
 			ulong taskId,
 			RecordSet recordSet,
 			ulong clusterKey,
 			bool first
-		) : base(cluster, policy, node, statement.ns, clusterKey, first)
+		) : base(cluster, policy, nodes, statement.ns, clusterKey, first)
 		{
 			this.statement = statement;
 			this.taskId = taskId;
 			this.recordSet = recordSet;
+		}
+
+		public async Task<RecordSet> Execute(QueryRecordCommand[] commands, int maxConcurrent)
+		{
+			var maxConcurrentTasks = (maxConcurrent == 0 || maxConcurrent >= commands.Length) ? commands.Length : maxConcurrent;
+
+			for (int i = 0; i < maxConcurrentTasks; i++)
+			{
+				await commands[i].Execute();
+			}
+
+			yield return this.recordSet;
 		}
 
 		protected internal override void WriteBuffer()
@@ -68,5 +83,5 @@ namespace Aerospike.Client
 			}
 			return true;
 		}
-	}
+	}*/
 }

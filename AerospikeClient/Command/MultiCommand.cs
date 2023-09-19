@@ -75,7 +75,7 @@ namespace Aerospike.Client
 			this.first = first;
 		}
 
-		public void ExecuteAndValidate()
+		/*public async Task ExecuteAndValidate()
 		{
 			if (clusterKey != 0)
 			{
@@ -83,14 +83,14 @@ namespace Aerospike.Client
 				{
 					QueryValidate.Validate(node, ns, clusterKey);
 				}
-				base.Execute();
+				await base.Execute();
 				QueryValidate.Validate(node, ns, clusterKey);
 			}
 			else
 			{
-				base.Execute();
+				await base.Execute();
 			}
-		}
+		}*/
 
 		protected internal override Node GetNode()
 		{
@@ -102,7 +102,10 @@ namespace Aerospike.Client
 			return true;
 		}
 
-		protected internal sealed override void ParseResult(Connection conn)
+		protected internal sealed override Task ParseResult(Connection conn)
+			=> throw new NotSupportedException();
+
+		protected internal sealed override IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn)
 		{
 			// Read blocks of records.  Do not use thread local receive buffer because each
 			// block will likely be too big for a cache.  Also, scan callbacks can nest
@@ -116,7 +119,7 @@ namespace Aerospike.Client
 			while (true)
 			{
 				// Read header
-				conn.ReadFully(protoBuf, 8);
+				conn.ReadFully(protoBuf, 8).Wait();
 
 				long proto = ByteUtil.BytesToLong(protoBuf, 0);
 				int size = (int)(proto & 0xFFFFFFFFFFFFL);
@@ -141,7 +144,7 @@ namespace Aerospike.Client
 				}
 
 				// Read remaining message bytes in group.
-				conn.ReadFully(buf, size);
+				conn.ReadFully(buf, size).Wait();
 				conn.UpdateLastUsed();
 
 				ulong type = (ulong)((proto >> 48) & 0xff);
@@ -177,14 +180,47 @@ namespace Aerospike.Client
 					throw new AerospikeException("Invalid proto type: " + type + " Expected: " + Command.AS_MSG_TYPE);
 				}
 
-				if (! ParseGroup(receiveSize))
+
+				while (dataOffset < receiveSize)
 				{
-					break;
+					dataOffset += 3;
+					info3 = dataBuffer[dataOffset];
+					dataOffset += 2;
+					resultCode = dataBuffer[dataOffset];
+
+					// If this is the end marker of the response, do not proceed further.
+					if ((info3 & Command.INFO3_LAST) != 0)
+					{
+						if (resultCode != 0)
+						{
+							// The server returned a fatal error.
+							throw new AerospikeException(resultCode);
+						}
+						yield break;
+					}
+
+					dataOffset++;
+					generation = ByteUtil.BytesToInt(dataBuffer, dataOffset);
+					dataOffset += 4;
+					expiration = ByteUtil.BytesToInt(dataBuffer, dataOffset);
+					dataOffset += 4;
+					batchIndex = ByteUtil.BytesToInt(dataBuffer, dataOffset);
+					dataOffset += 4;
+					fieldCount = ByteUtil.BytesToShort(dataBuffer, dataOffset);
+					dataOffset += 2;
+					opCount = ByteUtil.BytesToShort(dataBuffer, dataOffset);
+					dataOffset += 2;
+
+					// Note: ParseRow() also handles sync error responses.
+					if (ParseRow(out KeyRecord keyRecord))
+					{
+						yield return keyRecord;
+					}
 				}
 			}
 		}
 
-		private bool ParseGroup(int receiveSize)
+		/*private IEnumerable<KeyRecord> ParseGroup(int receiveSize)
 		{
 			while (dataOffset < receiveSize)
 			{
@@ -201,7 +237,7 @@ namespace Aerospike.Client
 						// The server returned a fatal error.
 						throw new AerospikeException(resultCode);
 					}
-					return false;
+					yield break;
 				}
 
 				dataOffset++;
@@ -217,15 +253,15 @@ namespace Aerospike.Client
 				dataOffset += 2;
 
 				// Note: ParseRow() also handles sync error responses.
-				if (! ParseRow())
+				if (ParseRow(out KeyRecord keyRecord))
 				{
-					return false;
+					yield return keyRecord;
 				}
-			}
-			return true;
+			}			
 		}
-
+		*/
 		protected internal abstract bool ParseRow();
+		protected internal abstract bool ParseRow(out KeyRecord keyRecord);
 
 		protected internal Record ParseRecord()
 		{

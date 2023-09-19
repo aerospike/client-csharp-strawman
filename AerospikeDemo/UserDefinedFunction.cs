@@ -58,7 +58,7 @@ namespace Aerospike.Demo
 
 			client.Execute(args.writePolicy, key, "record_example", "writeBin", Value.Get(bin.name), bin.value);
 
-			Record record = client.Get(args.policy, key, bin.name);
+			Record record = client.Get(args.policy, key, bin.name).Result;
 			string expected = bin.value.ToString();
 			string received = (string)record.GetValue(bin.name);
 
@@ -79,7 +79,7 @@ namespace Aerospike.Demo
 			Bin bin = new Bin(args.GetBinName("udfbin2"), "string value");
 
 			// Seed record.
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			// Get record generation.
 			long gen = (long)client.Execute(args.writePolicy, key, "record_example", "getGeneration");
@@ -95,13 +95,13 @@ namespace Aerospike.Demo
 			string binName = "udfbin3";
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			// Write record only if not already exists. This should succeed.
 			client.Execute(args.writePolicy, key, "record_example", "writeUnique", Value.Get(binName), Value.Get("first"));
 
 			// Verify record written.
-			Record record = client.Get(args.policy, key, binName);
+			Record record = client.Get(args.policy, key, binName).Result;
 			string expected = "first";
 			string received = (string)record.GetValue(binName);
 
@@ -120,7 +120,7 @@ namespace Aerospike.Demo
 			client.Execute(args.writePolicy, key, "record_example", "writeUnique", Value.Get(binName), Value.Get("second"));
 
 			// Verify record not written.
-			record = client.Get(args.policy, key, binName);
+			record = client.Get(args.policy, key, binName).Result;
 			received = (string)record.GetValue(binName);
 
 			if (received != null && received.Equals(expected))
@@ -240,7 +240,7 @@ namespace Aerospike.Demo
 
 			Key key = new Key(args.ns, args.set, "udfkey7");
 			Bin bin = new Bin("udfbin7", list);
-			client.Put(args.writePolicy, key, bin);
+			client.Put(args.writePolicy, key, bin).Wait();
 
 			ServerSideExists(client, args.writePolicy, key, bin, 3702, true);
 			ServerSideExists(client, args.writePolicy, key, bin, 65, false);

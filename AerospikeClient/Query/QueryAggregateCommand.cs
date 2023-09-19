@@ -51,6 +51,9 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, false, null);
 		}
 
+		protected internal override bool ParseRow(out KeyRecord keyRecord)
+			=> throw new NotSupportedException();
+
 		protected internal override bool ParseRow()
 		{
 			SkipKey(fieldCount);
@@ -83,7 +86,7 @@ namespace Aerospike.Client
 
 			int particleBytesSize = (int)(opSize - (4 + nameSize));
 
-			if (! name.Equals("SUCCESS"))
+			if (!name.Equals("SUCCESS"))
 			{
 				if (name.Equals("FAILURE"))
 				{

@@ -28,7 +28,6 @@ namespace Aerospike.Test
 		public static Args Instance = new Args();
 
 		public AerospikeClient client;
-		public AsyncClient asyncClient;
 		public Host[] hosts;
 		public int port;
 		public string user;
@@ -76,7 +75,6 @@ namespace Aerospike.Test
         public void Connect()
 		{
 			ConnectSync();
-			ConnectAsync();
 		}
 
 		private void ConnectSync()
@@ -85,6 +83,9 @@ namespace Aerospike.Test
 			policy.clusterName = clusterName;
 			policy.tlsPolicy = tlsPolicy;
 			policy.authMode = authMode;
+			policy.maxCommands = 300;
+			policy.minConnsPerNode = 1;
+			policy.maxConnsPerNode = 50;
 
 			if (user != null && user.Length > 0)
 			{
@@ -106,26 +107,9 @@ namespace Aerospike.Test
             }
 		}
 
-		private void ConnectAsync()
-		{
-			AsyncClientPolicy policy = new AsyncClientPolicy();
-			policy.clusterName = clusterName;
-			policy.tlsPolicy = tlsPolicy;
-			policy.authMode = authMode;
-			policy.asyncMaxCommands = 300;
-
-			if (user != null && user.Length > 0)
-			{
-				policy.user = user;
-				policy.password = password;
-			}
-
-			asyncClient = new AsyncClient(policy, hosts);
-		}
-
 		private void SetServerSpecific()
 		{
-			Node node = client.Nodes[0];
+			/*Node node = client.Nodes[0];
 			string namespaceFilter = "namespace/" + ns;
 			Dictionary<string, string> map = Info.Request(null, node, "edition", namespaceFilter);
 
@@ -139,7 +123,7 @@ namespace Aerospike.Test
 				throw new Exception(string.Format("Failed to get namespace info: host={0} namespace={1}", node, ns));
 			}
 
-			singleBin = ParseBoolean(namespaceTokens, "single-bin");
+			singleBin = ParseBoolean(namespaceTokens, "single-bin");*/
 		}
 
 		private static bool ParseBoolean(String namespaceTokens, String name)
@@ -176,12 +160,6 @@ namespace Aerospike.Test
 			{
 				client.Close();
 				client = null;
-			}
-
-			if (asyncClient != null)
-			{
-				asyncClient.Close();
-				asyncClient = null;
 			}
 		}
 	}

@@ -49,10 +49,10 @@ namespace Aerospike.Client
 			SetWrite(writePolicy, operation, key, bins);
 		}
 
-		protected internal override void ParseResult(Connection conn)
+		protected internal override async Task ParseResult(Connection conn)
 		{
 			// Read header.		
-			conn.ReadFully(dataBuffer, MSG_TOTAL_HEADER_SIZE);
+			await conn.ReadFully(dataBuffer, MSG_TOTAL_HEADER_SIZE);
 			conn.UpdateLastUsed();
 
 			int resultCode = dataBuffer[13];
@@ -79,5 +79,10 @@ namespace Aerospike.Client
 			partition.PrepareRetryWrite(timeout);
 			return true;
 		}
-	}
+
+        protected internal override IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

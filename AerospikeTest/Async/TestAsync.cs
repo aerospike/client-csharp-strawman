@@ -24,7 +24,7 @@ namespace Aerospike.Test
 	public class TestAsync
 	{
 		public static Args args = Args.Instance;
-		public static AsyncClient client = args.asyncClient;
+		public static AerospikeClient client = args.client;
 
 		private AsyncMonitor monitor = new AsyncMonitor();
 

@@ -47,19 +47,19 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("listbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IList inputList = new List<Value>();
 			inputList.Add(Value.Get(55));
 			inputList.Add(Value.Get(77));
 
 			// Write values to empty list.
-			Record record = client.Operate(args.writePolicy, key, ListOperation.AppendItems(binName, inputList));
+			Record record = client.Operate(args.writePolicy, key, ListOperation.AppendItems(binName, inputList)).Result;
 
 			console.Info("Record: " + record);
 
 			// Pop value from end of list and also return new size of list.
-			record = client.Operate(args.writePolicy, key, ListOperation.Pop(binName, -1), ListOperation.Size(binName));
+			record = client.Operate(args.writePolicy, key, ListOperation.Pop(binName, -1), ListOperation.Size(binName)).Result;
 
 			console.Info("Record: " + record);
 
@@ -83,7 +83,7 @@ namespace Aerospike.Demo
 			string binName = args.GetBinName("listbin");
 
 			// Delete record if it already exists.
-			client.Delete(args.writePolicy, key);
+			client.Delete(args.writePolicy, key).Wait();
 
 			IList<Value> l1 = new List<Value>();
 			l1.Add(Value.Get(7));
@@ -107,15 +107,15 @@ namespace Aerospike.Demo
 			inputList.Add(Value.Get(l3));
 
 			// Create list.
-			client.Put(args.writePolicy, key, new Bin(binName, inputList));
+			client.Put(args.writePolicy, key, new Bin(binName, inputList)).Wait();
 
 			// Append value to last list and retrieve all lists.
 			Record record = client.Operate(args.writePolicy, key,
 				ListOperation.Append(binName, Value.Get(11), CTX.ListIndex(-1)),
 				Operation.Get(binName)
-				);
+				).Result;
 
-			record = client.Get(args.policy, key);
+			record = client.Get(args.policy, key).Result;
 			console.Info("Record: " + record);
 		}
 	}

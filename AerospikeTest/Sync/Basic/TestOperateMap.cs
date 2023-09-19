@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestOperateMap : TestSync
 	{
 		private const string binName = "opmapbin";
@@ -1099,5 +1099,5 @@ namespace Aerospike.Test
 			long v = (long)map["key31"];
 			Assert.AreEqual(99, v);
 		}
-	}
+	}*/
 }

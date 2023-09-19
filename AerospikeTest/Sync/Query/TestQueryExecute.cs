@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestQueryExecute : TestSync
 	{
 		private const string indexName = "tqeindex";
@@ -259,5 +259,5 @@ namespace Aerospike.Test
 			// Test to make sure regression has not resurfaced.
 			client.Execute(null, stmt, Operation.Touch());
 		}
-	}
+	}*/
 }

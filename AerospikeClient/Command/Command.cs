@@ -783,7 +783,7 @@ namespace Aerospike.Client
 							break;
 						}
 
-						case BatchRecord.Type.BATCH_UDF:
+						/*case BatchRecord.Type.BATCH_UDF:
 						{
 							BatchUDF bu = (BatchUDF)record;
 
@@ -816,7 +816,7 @@ namespace Aerospike.Client
 							}
 							WriteBatchWrite(key, attr, attr.filterExp, 0, 0);
 							break;
-						}
+						}*/
 					}
 					prev = record;
 				}

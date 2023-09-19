@@ -22,7 +22,7 @@ namespace Aerospike.Client
 	{
 		private readonly Statement statement;
 		private readonly ulong taskId;
-		private readonly RecordSet recordSet;
+		//private readonly RecordSet recordSet;
 		private readonly PartitionTracker tracker;
 		private readonly NodePartitions nodePartitions;
 
@@ -32,39 +32,46 @@ namespace Aerospike.Client
 			Policy policy,
 			Statement statement,
 			ulong taskId,
-			RecordSet recordSet,
+			//RecordSet recordSet,
 			PartitionTracker tracker,
 			NodePartitions nodePartitions
 		) : base(cluster, policy, nodePartitions.node, statement.ns, tracker.socketTimeout, tracker.totalTimeout)
 		{
 			this.statement = statement;
 			this.taskId = taskId;
-			this.recordSet = recordSet;
+			//this.recordSet = recordSet;
 			this.tracker = tracker;
 			this.nodePartitions = nodePartitions;
 		}
 
-		public override void Execute()
+		public override IEnumerable<KeyRecord> ExecuteKeyRecordResult()
 		{
-			try
-			{
-				ExecuteCommand();
-			}
-			catch (AerospikeException ae)
-			{
-				if (!tracker.ShouldRetry(nodePartitions, ae))
-				{
-					throw ae;
-				}
-			}
-		}
+            try
+            {
+                return ExecuteCommandKeyRecordResult();
+            }
+            catch (AerospikeException ae)
+            {
+                if (!tracker.ShouldRetry(nodePartitions, ae))
+                {
+                    throw ae;
+                }
+            }
+			return null;
+        }
+
+        public override Task Execute()
+			=> throw new NotSupportedException();
 
 		protected internal override void WriteBuffer()
 		{
 			SetQuery(cluster, policy, statement, taskId, false, nodePartitions);
 		}
 
-		protected internal override bool ParseRow()
+       protected internal override bool ParseRow()
+			=> throw new NotSupportedException();        
+
+        protected internal override bool ParseRow(out KeyRecord keyRecord)
 		{
 			ulong bval;
 			Key key = ParseKey(fieldCount, out bval);
@@ -78,6 +85,7 @@ namespace Aerospike.Client
 				{
 					tracker.PartitionUnavailable(nodePartitions, generation);
 				}
+				keyRecord = null;
 				return true;
 			}
 
@@ -93,13 +101,10 @@ namespace Aerospike.Client
 				throw new AerospikeException.QueryTerminated();
 			}
 
-			if (!recordSet.Put(new KeyRecord(key, record)))
-			{
-				Stop();
-				throw new AerospikeException.QueryTerminated();
-			}
+            tracker.SetLast(nodePartitions, key, bval);
 
-			tracker.SetLast(nodePartitions, key, bval);
+            keyRecord = new KeyRecord(key, record);
+
 			return true;
 		}
 	}

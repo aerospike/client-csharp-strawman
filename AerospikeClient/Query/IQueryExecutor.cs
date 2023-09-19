@@ -20,7 +20,6 @@ namespace Aerospike.Client
 {
 	public interface IQueryExecutor
 	{
-		bool StopThreads(Exception cause);
 		void CheckForException();
 	}
 }

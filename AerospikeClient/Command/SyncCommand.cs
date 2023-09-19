@@ -50,16 +50,25 @@ namespace Aerospike.Client
 			this.deadline = DateTime.MinValue;
 		}
 
-		public virtual void Execute()
+		public virtual async Task Execute()
 		{
 			if (totalTimeout > 0)
 			{
 				deadline = DateTime.UtcNow.AddMilliseconds(totalTimeout);
 			}
-			ExecuteCommand();
+			await ExecuteCommand();
 		}
 
-		public void ExecuteCommand()
+		public virtual IEnumerable<KeyRecord> ExecuteKeyRecordResult()
+		{
+			if (totalTimeout > 0)
+			{
+				deadline = DateTime.UtcNow.AddMilliseconds(totalTimeout);
+			}
+			return ExecuteCommandKeyRecordResult();
+		}
+
+		private async Task<R> ExecuteCommand<R>(Func<Connection, R> parseresultFunc)
 		{
 			Node node;
 			AerospikeException exception = null;
@@ -91,17 +100,17 @@ namespace Aerospike.Client
 						WriteBuffer();
 
 						// Send command.
-						conn.Write(dataBuffer, dataOffset);
+						await conn.Write(dataBuffer, dataOffset);
 						commandSentCounter++;
 
-						// Parse results.
-						ParseResult(conn);
+						//Perform ParseResult
+						R returnValue = parseresultFunc(conn);
 
 						// Put connection back in pool.
 						node.PutConnection(conn);
 
 						// Command has completed successfully.  Exit method.
-						return;
+						return returnValue;
 					}
 					catch (AerospikeException ae)
 					{
@@ -235,7 +244,7 @@ namespace Aerospike.Client
 					if (RetryBatch(cluster, socketTimeout, totalTimeout, deadline, iteration, commandSentCounter))
 					{
 						// Batch was retried in separate commands.  Complete this command.
-						return;
+						return default(R);
 					}
 				}
 			}
@@ -250,6 +259,17 @@ namespace Aerospike.Client
 			exception.Iteration = iteration;
 			exception.SetInDoubt(IsWrite(), commandSentCounter);
 			throw exception;
+		}
+
+
+		public async Task ExecuteCommand()
+		{
+			await ExecuteCommand(async (conn) => await ParseResult(conn));
+		}
+
+		public IEnumerable<KeyRecord> ExecuteCommandKeyRecordResult()
+		{
+			return ExecuteCommand((conn) => ParseIntoKeyRecord(conn)).Result;
 		}
 
 		protected internal sealed override int SizeBuffer()
@@ -305,7 +325,9 @@ namespace Aerospike.Client
 
 		protected internal abstract Node GetNode();
 		protected internal abstract void WriteBuffer();
-		protected internal abstract void ParseResult(Connection conn);
+		protected internal abstract Task ParseResult(Connection conn);
+		protected internal abstract IEnumerable<KeyRecord> ParseIntoKeyRecord(Connection conn);
+
 		protected internal abstract bool PrepareRetry(bool timeout);
 	}
 }

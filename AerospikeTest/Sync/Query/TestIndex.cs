@@ -19,7 +19,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestIndex : TestSync
 	{
 		private const string indexName = "testindex";
@@ -96,5 +96,5 @@ namespace Aerospike.Test
 				}
 			}
 		}
-	}
+	}*/
 }

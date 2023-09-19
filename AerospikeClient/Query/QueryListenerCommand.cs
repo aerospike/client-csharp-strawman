@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 namespace Aerospike.Client
 {
-	public sealed class QueryListenerCommand : MultiCommand
+	/*public sealed class QueryListenerCommand : MultiCommand
 	{
 		private readonly Statement statement;
 		private readonly ulong taskId;
@@ -44,11 +44,11 @@ namespace Aerospike.Client
 			this.nodePartitions = nodePartitions;
 		}
 
-		public override void Execute()
+		public override async Task Execute()
 		{
 			try
 			{
-				ExecuteCommand();
+				await ExecuteCommand();
 			}
 			catch (AerospikeException ae)
 			{
@@ -64,7 +64,10 @@ namespace Aerospike.Client
 			SetQuery(cluster, policy, statement, taskId, false, nodePartitions);
 		}
 
-		protected internal override bool ParseRow()
+        protected internal override bool ParseRow(out KeyRecord keyRecord)
+            => throw new NotSupportedException();
+
+        protected internal override bool ParseRow()
 		{
 			ulong bval;
 			Key key = ParseKey(fieldCount, out bval);
@@ -97,5 +100,5 @@ namespace Aerospike.Client
 			tracker.SetLast(nodePartitions, key, bval);
 			return true;
 		}
-	}
+	}*/
 }

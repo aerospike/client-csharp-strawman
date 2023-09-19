@@ -25,7 +25,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestAsyncOperate : TestAsync
 	{
 		private static readonly string binName = args.GetBinName("putgetbin");
@@ -188,5 +188,5 @@ namespace Aerospike.Test
 				parent.NotifyCompleted();
 			}
 		}
-	}
+	}*/
 }

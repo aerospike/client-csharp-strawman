@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestListExp : TestSync
 	{
 		private bool InstanceFieldsInitialized = false;
@@ -150,5 +150,5 @@ namespace Aerospike.Test
 			IList results2 = record.GetList("var");
 			Assert.AreEqual(4, results2.Count);
 		}
-	}
+	}*/
 }

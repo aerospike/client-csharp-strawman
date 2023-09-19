@@ -20,7 +20,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Demo
 {
-    public class LuaExample
+    /*public class LuaExample
     {
 		private static readonly string LuaDirectory = DemoForm.RelativeDirectory + "udf" + Path.DirectorySeparatorChar;
 
@@ -35,5 +35,5 @@ namespace Aerospike.Demo
             RegisterTask task = client.Register(policy, path, packageName, Language.LUA);
             task.Wait();
         }
-    }
+    }*/
 }

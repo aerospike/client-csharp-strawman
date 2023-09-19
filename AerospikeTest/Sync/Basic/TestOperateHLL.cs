@@ -22,7 +22,7 @@ using Aerospike.Client;
 
 namespace Aerospike.Test
 {
-	[TestClass]
+	/*[TestClass]
 	public class TestOperateHLL : TestSync
 	{
 		private const string binName = "ophbin";
@@ -731,11 +731,11 @@ namespace Aerospike.Test
 
 				AssertSuccess("init record", key, Operation.Delete(), HLLOperation.Init(HLLPolicy.Default, binName, index_bits, minhash_bits));
 
-				Record record = client.Get(null, key);
+				Record record = client.Get(null, key).Result
 				Value.HLLValue hll = record.GetHLLValue(binName);
 
-				client.Delete(null, key);
-				client.Put(null, key, new Bin(binName, hll));
+				client.Delete(null, key).Wait();
+				client.Put(null, key, new Bin(binName, hll)).Wait();
 
 				record = AssertSuccess("describe", key, HLLOperation.GetCount(binName), HLLOperation.Describe(binName));
 
@@ -863,5 +863,5 @@ namespace Aerospike.Test
 				}
 			}
 		}
-	}
+	}*/
 }

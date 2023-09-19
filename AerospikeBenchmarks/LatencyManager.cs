@@ -22,60 +22,73 @@ namespace Aerospike.Benchmarks
 {
 	public sealed class LatencyManager : ILatencyManager
 	{
-		private readonly Bucket[] buckets;
-		private readonly int lastBucket;
-		private readonly int bitShift;
+		// 0.5 ms, 1 ms, 2 ms, 5 ms, 10 ms, 20 ms, 30 ms, greater
+		private readonly Bucket LessThanPoint5 = new("<=0.5ms");
+		private readonly Bucket LessThan1 = new("<=1ms");
+		private readonly Bucket LessThan2 = new("<=2ms");
+		private readonly Bucket LessThan5 = new("<=5ms");
+		private readonly Bucket LessThan10 = new("<=10ms");
+		private readonly Bucket LessThan20 = new("<=20ms");
+		private readonly Bucket LessThan30 = new("<=30ms");
+		private readonly Bucket GreaterThan30 = new(">30ms");
 
-		public LatencyManager(int columns, int bitShift)
+		public LatencyManager()
 		{
-			this.lastBucket = columns - 1;
-			this.bitShift = bitShift;
-			buckets = new Bucket[columns];
-
-			for (int i = 0; i < buckets.Length; i++)
-			{
-				buckets[i] = new Bucket();
-			}
 		}
 
-		public void Add(long elapsed)
+		public void Add(double elapsedms)
 		{
-			int index = GetIndex(elapsed);
-			buckets[index].Increment();
-		}
-
-		private int GetIndex(long elapsed)
-		{
-			int limit = 1;
-
-			for (int i = 0; i < lastBucket; i++)
+			if (elapsedms <= 0.5)
 			{
-				if (elapsed <= limit)
-				{
-					return i;
-				}
-				limit <<= bitShift;
+				LessThanPoint5.Increment();
 			}
-			return lastBucket;
+            else if (elapsedms > 0.5 &&  elapsedms <= 1)
+            {
+				LessThan1.Increment();
+            }
+			else if (elapsedms > 1 && elapsedms <= 2)
+			{
+				LessThan2.Increment();
+			}
+			else if (elapsedms > 2 && elapsedms <= 5)
+			{
+				LessThan5.Increment();
+			}
+			else if (elapsedms > 5 && elapsedms <= 10)
+			{
+				LessThan10.Increment();
+			}
+			else if (elapsedms > 10 && elapsedms <= 20)
+			{
+				LessThan20.Increment();
+			}
+			else if (elapsedms > 20 && elapsedms <= 30)
+			{
+				LessThan30.Increment();
+			}
+			else if (elapsedms > 30)
+			{
+				GreaterThan30.Increment();
+			}
 		}
 
 		public string PrintHeader()
 		{
-			StringBuilder sb = new StringBuilder(200);
-			int limit = 1;
-			sb.Append("      <=1ms >1ms");
+			StringBuilder sb = new(400);
+			sb.Append($"          {LessThanPoint5.Name}");
+			sb.Append($"    {LessThan1.Name}");
+			sb.Append($"    {LessThan2.Name}");
+			sb.Append($"    {LessThan5.Name}");
+			sb.Append($"    {LessThan10.Name}");
+			sb.Append($"    {LessThan20.Name}");
+			sb.Append($"    {LessThan30.Name}");
+			sb.Append($"    {GreaterThan30.Name}");
 
-			for (int i = 2; i <= lastBucket; i++)
-			{
-				limit <<= bitShift;
-				String s = " >" + limit + "ms";
-				sb.Append(s);
-			}
 			return sb.ToString();
 		}
 
 		/// <summary>
-		/// Print latency percents for specified cumulative ranges.
+		/// Print latency percents for specified ranges.
 		/// This function is not absolutely accurate for a given time slice because this method 
 		/// is not synchronized with the Add() method.  Some values will slip into the next iteration.  
 		/// It is not a good idea to add extra locks just to measure performance since that actually 
@@ -84,23 +97,18 @@ namespace Aerospike.Benchmarks
 		/// </summary>
 		public string PrintResults(StringBuilder sb, string prefix)
 		{
-			// Capture snapshot and make buckets cumulative.
-			int[] array = new int[buckets.Length];
-			int sum = 0;
-			int count;
+			// Capture snapshot and make buckets.
+			var lessThanPoint5Count = LessThanPoint5.Reset();
+			var lessThan1Count = LessThan1.Reset();
+			var lessThan2Count = LessThan2.Reset();
+			var lessThan5Count = LessThan5.Reset();
+			var lessThan10Count = LessThan10.Reset();
+			var lessThan20Count = LessThan20.Reset();
+			var lessThan30Count = LessThan30.Reset();
+			var greaterThan30Count = GreaterThan30.Reset();
+			int sum = lessThanPoint5Count + lessThan1Count + lessThan2Count + lessThan5Count + lessThan10Count + lessThan20Count + lessThan30Count + greaterThan30Count;
 
-			for (int i = buckets.Length - 1; i >= 1; i--)
-			{
-				count = buckets[i].Reset();
-				array[i] = count + sum;
-				sum += count;
-			}
-			// The first bucket (<=1ms) does not need a cumulative adjustment.
-			count = buckets[0].Reset();
-			array[0] = count;
-			sum += count;
-
-			// Print cumulative results.
+			// Print results.
 			sb.Length = 0;
 			sb.Append(prefix);
 			int spaces = 6 - prefix.Length;
@@ -109,39 +117,32 @@ namespace Aerospike.Benchmarks
 			{
 				sb.Append(' ');
 			}
+			
+			PrintColumn(sb, LessThanPoint5.Name, sum, lessThanPoint5Count);
+			PrintColumn(sb, LessThan1.Name, sum, lessThan1Count);
+			PrintColumn(sb, LessThan2.Name, sum, lessThan2Count);
+			PrintColumn(sb, LessThan5.Name, sum, lessThan5Count);
+			PrintColumn(sb, LessThan10.Name, sum, lessThan10Count);
+			PrintColumn(sb, LessThan20.Name, sum, lessThan20Count);
+			PrintColumn(sb, LessThan30.Name, sum, lessThan30Count);
+			PrintColumn(sb, GreaterThan30.Name, sum, greaterThan30Count);
 
-			double sumDouble = (double)sum;
-			int limit = 1;
-
-			PrintColumn(sb, limit, sumDouble, array[0]);
-			PrintColumn(sb, limit, sumDouble, array[1]);
-
-			for (int i = 2; i < array.Length; i++)
-			{
-				limit <<= bitShift;
-				PrintColumn(sb, limit, sumDouble, array[i]);
-			}
 			return sb.ToString();
 		}
 
 		public string PrintSummary(StringBuilder sb, string prefix)
 		{
-			int[] array = new int[buckets.Length];
-			int sum = 0;
-			int count;
+			var lessThanPoint5Sum = LessThanPoint5.Sum;
+			var lessThan1Sum = LessThan1.Sum;
+			var lessThan2Sum = LessThan2.Sum;
+			var lessThan5Sum = LessThan5.Sum;
+			var lessThan10Sum = LessThan10.Sum;
+			var lessThan20Sum = LessThan20.Sum;
+			var lessThan30Sum = LessThan30.Sum;
+			var greaterThan30Sum = GreaterThan30.Sum;
+			int sum = lessThanPoint5Sum + lessThan1Sum + lessThan2Sum + lessThan5Sum + lessThan10Sum + lessThan20Sum + lessThan30Sum + greaterThan30Sum;
 
-			for (int i = buckets.Length - 1; i >= 1; i--)
-			{
-				count = buckets[i].sum;
-				array[i] = count + sum;
-				sum += count;
-			}
-			// The first bucket (<=1ms) does not need a cumulative adjustment.
-			count = buckets[0].sum;
-			array[0] = count;
-			sum += count;
-
-			// Print cumulative results.
+			// Print results.
 			sb.Length = 0;
 			sb.Append(prefix);
 			int spaces = 6 - prefix.Length;
@@ -151,30 +152,28 @@ namespace Aerospike.Benchmarks
 				sb.Append(' ');
 			}
 
-			double sumDouble = (double)sum;
-			int limit = 1;
+			PrintColumn(sb, LessThanPoint5.Name, sum, lessThanPoint5Sum);
+			PrintColumn(sb, LessThan1.Name, sum, lessThan1Sum);
+			PrintColumn(sb, LessThan2.Name, sum, lessThan2Sum);
+			PrintColumn(sb, LessThan5.Name, sum, lessThan5Sum);
+			PrintColumn(sb, LessThan10.Name, sum, lessThan10Sum);
+			PrintColumn(sb, LessThan20.Name, sum, lessThan20Sum);
+			PrintColumn(sb, LessThan30.Name, sum, lessThan30Sum);
+			PrintColumn(sb, GreaterThan30.Name, sum, greaterThan30Sum);
 
-			PrintColumn(sb, limit, sumDouble, array[0]);
-			PrintColumn(sb, limit, sumDouble, array[1]);
-
-			for (int i = 2; i < array.Length; i++)
-			{
-				limit <<= bitShift;
-				PrintColumn(sb, limit, sumDouble, array[i]);
-			}
 			return sb.ToString();
 		}
 
-		private void PrintColumn(StringBuilder sb, int limit, double sum, int value)
+		private static void PrintColumn(StringBuilder sb, string bucketName, int sum, int value)
 		{
-			int percent = 0;
+			float percent = 0;
 
 			if (value > 0)
 			{
-				percent = (int)((double)value * 100.0 / sum + 0.5);
+				percent = (int)(value * 100.0 / sum);
 			}
-			string percentString = Convert.ToString(percent) + "%";
-			int spaces = limit.ToString().Length + 4 - percentString.Length;
+			string percentString = percent.ToString("n2") + "%";
+			int spaces = bucketName.Length + 4 - percentString.Length;
 
 			for (int j = 0; j < spaces; j++)
 			{
@@ -185,18 +184,24 @@ namespace Aerospike.Benchmarks
 
 		private sealed class Bucket
 		{
-			int count = 0;
-			public int sum = 0;
+			int Count = 0;
+			public int Sum = 0;
+			public string Name { get; }
+
+			public Bucket(string name)
+			{
+				this.Name = name;
+			}
 
 			public void Increment()
 			{
-				Interlocked.Increment(ref count);
+				Interlocked.Increment(ref Count);
 			}
 
 			public int Reset()
 			{
-				int c = Interlocked.Exchange(ref count, 0);
-				sum += c;
+				int c = Interlocked.Exchange(ref Count, 0);
+				Sum += c;
 				return c;
 			}
 		}

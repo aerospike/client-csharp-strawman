@@ -38,7 +38,7 @@ namespace Aerospike.Demo
 			Bin bin2 = new Bin("optstringbin", "string value");
 			console.Info("Put: namespace={0} set={1} key={2} binname1={3} binvalue1={4} binname1={5} binvalue1={6}",
 				key.ns, key.setName, key.userKey, bin1.name, bin1.value, bin2.name, bin2.value);
-			client.Put(args.writePolicy, key, bin1, bin2);
+			client.Put(args.writePolicy, key, bin1, bin2).Wait();
 
 			// Add integer, write new string and read record.
 			Bin bin3 = new Bin(bin1.name, 4);
@@ -46,7 +46,7 @@ namespace Aerospike.Demo
 			console.Info("Add: " + bin3.value);
 			console.Info("Write: " + bin4.value);
 			console.Info("Read:");
-			Record record = client.Operate(args.writePolicy, key, Operation.Add(bin3), Operation.Put(bin4), Operation.Get());
+			Record record = client.Operate(args.writePolicy, key, Operation.Add(bin3), Operation.Put(bin4), Operation.Get()).Result;
 
 			if (record == null)
 			{

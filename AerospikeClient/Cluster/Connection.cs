@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace Aerospike.Client
@@ -29,14 +30,21 @@ namespace Aerospike.Client
 	{
 		protected internal readonly Socket socket;
 		protected internal readonly Pool<Connection> pool;
-		private DateTime lastUsed;
+        readonly SocketAsyncEventArgs args;
+        readonly SocketAwaitable saw;
+
+        private DateTime lastUsed;
 
 		/// <summary>
 		/// Create socket with connection timeout.
 		/// </summary>
 		public Connection(IPEndPoint address, int timeoutMillis, Pool<Connection> pool)
 		{
-			this.pool = pool;
+
+            this.args = new SocketAsyncEventArgs();
+            this.saw = new SocketAwaitable(this.args);
+
+            this.pool = pool;
 
 			try
 			{
@@ -108,25 +116,17 @@ namespace Aerospike.Client
 			socket.ReceiveTimeout = timeoutMillis;
 		}
 
-		public virtual void Write(byte[] buffer, int length)
+		public virtual async Task Write(byte[] buffer, int length)
 		{
-			int pos = 0;
-
-			while (pos < length)
-			{
-				int count = socket.Send(buffer, pos, length - pos, SocketFlags.None);
-
-				if (count <= 0)
-				{
-					throw new SocketException((int)SocketError.ConnectionReset);
-				}
-				pos += count;
-			}
+			//var args = new SocketAsyncEventArgs();
+			args.SetBuffer(buffer, 0, length);
+			//var saw = new SocketAwaitable(args);
+			await socket.SendAsync(saw);
 		}
 
-		public virtual void ReadFully(byte[] buffer, int length)
+		public virtual async Task ReadFully(byte[] buffer, int length)
 		{
-			if (socket.ReceiveTimeout > 0)
+			/*if (socket.ReceiveTimeout > 0)
 			{
 				// Check if data is available for reading.
 				// Poll is used because the timeout value is respected under 500ms.
@@ -135,20 +135,14 @@ namespace Aerospike.Client
 				{
 					throw new SocketException((int)SocketError.TimedOut);
 				}
-			}
+			}*/
 
-			int pos = 0;
-
-			while (pos < length)
-			{
-				int count = socket.Receive(buffer, pos, length - pos, SocketFlags.None);
-
-				if (count <= 0)
-				{
-					throw new SocketException((int)SocketError.ConnectionReset);
-				}
-				pos += count;
-			}
+            
+            //var args = new SocketAsyncEventArgs();
+            //args.SetBuffer(buffer, 0, length);
+            //var saw = new SocketAwaitable(args);
+            await socket.ReceiveAsync(saw, buffer, 0, length);
+        
 		}
 
 		public virtual Stream GetStream()

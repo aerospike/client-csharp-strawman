@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Aerospike.Client
 {
@@ -396,14 +397,14 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if write fails</exception>
-		public void Put(WritePolicy policy, Key key, params Bin[] bins)
+		public async Task Put(WritePolicy policy, Key key, params Bin[] bins)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			WriteCommand command = new WriteCommand(cluster, policy, key, bins, Operation.Type.WRITE);
-			command.Execute();
+			await command.Execute();
 		}
 
 		//-------------------------------------------------------
@@ -420,14 +421,14 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if append fails</exception>
-		public void Append(WritePolicy policy, Key key, params Bin[] bins)
+		public async Task Append(WritePolicy policy, Key key, params Bin[] bins)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			WriteCommand command = new WriteCommand(cluster, policy, key, bins, Operation.Type.APPEND);
-			command.Execute();
+			await command.Execute();
 		}
 
 		/// <summary>
@@ -440,14 +441,14 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs </param>
 		/// <exception cref="AerospikeException">if prepend fails</exception>
-		public void Prepend(WritePolicy policy, Key key, params Bin[] bins)
+		public async Task Prepend(WritePolicy policy, Key key, params Bin[] bins)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			WriteCommand command = new WriteCommand(cluster, policy, key, bins, Operation.Type.PREPEND);
-			command.Execute();
+			await command.Execute();
 		}
 
 		//-------------------------------------------------------
@@ -463,14 +464,14 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="bins">array of bin name/value pairs</param>
 		/// <exception cref="AerospikeException">if add fails</exception>
-		public void Add(WritePolicy policy, Key key, params Bin[] bins)
+		public async Task Add(WritePolicy policy, Key key, params Bin[] bins)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			WriteCommand command = new WriteCommand(cluster, policy, key, bins, Operation.Type.ADD);
-			command.Execute();
+			await command.Execute();
 		}
 
 		//-------------------------------------------------------
@@ -485,18 +486,18 @@ namespace Aerospike.Client
 		/// <param name="policy">delete configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if delete fails</exception>
-		public bool Delete(WritePolicy policy, Key key)
+		public async Task<bool> Delete(WritePolicy policy, Key key)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			DeleteCommand command = new DeleteCommand(cluster, policy, key);
-			command.Execute();
+			await command.Execute();
 			return command.Existed();
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Delete records for specified keys. If a key is not found, the corresponding result
 		/// <see cref="BatchRecord.resultCode"/> will be <see cref="ResultCode.KEY_NOT_FOUND_ERROR"/>.
 		/// <para>
@@ -507,7 +508,7 @@ namespace Aerospike.Client
 		/// <param name="deletePolicy">delete configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		public BatchResults Delete(BatchPolicy batchPolicy, BatchDeletePolicy deletePolicy, Key[] keys)
+		public async Task<BatchResults> Delete(BatchPolicy batchPolicy, BatchDeletePolicy deletePolicy, Key[] keys)
 		{
 			if (keys.Length == 0)
 			{
@@ -546,7 +547,7 @@ namespace Aerospike.Client
 					commands[count++] = new BatchOperateArrayCommand(cluster, batchNode, batchPolicy, keys, null, records, attr, status);
 				}
 
-				BatchExecutor.Execute(batchPolicy, commands, status);
+				await BatchExecutor.Execute(batchPolicy, commands, status);
 				return new BatchResults(records, status.GetStatus());
 			}
 			catch (Exception e)
@@ -554,7 +555,7 @@ namespace Aerospike.Client
 				// Batch terminated on fatal error.
 				throw new AerospikeException.BatchRecordArray(records, e);
 			}
-		}
+		}*/
 		
 		/// <summary>
 		/// Remove records in specified namespace/set efficiently.  This method is many orders of magnitude 
@@ -627,14 +628,14 @@ namespace Aerospike.Client
 		/// <param name="policy">write configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if touch fails</exception>
-		public void Touch(WritePolicy policy, Key key)
+		public async Task Touch(WritePolicy policy, Key key)
 		{
 			if (policy == null)
 			{
 				policy = writePolicyDefault;
 			}
 			TouchCommand command = new TouchCommand(cluster, policy, key);
-			command.Execute();
+			await command.Execute();
 		}
 
 		//-------------------------------------------------------
@@ -649,25 +650,25 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public bool Exists(Policy policy, Key key)
+		public async Task<bool> Exists(Policy policy, Key key)
 		{
 			if (policy == null)
 			{
 				policy = readPolicyDefault;
 			}
 			ExistsCommand command = new ExistsCommand(cluster, policy, key);
-			command.Execute();
+			await command.Execute();
 			return command.Exists();
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Check if multiple record keys exist in one batch call.
 		/// The returned boolean array is in positional order with the original key array order.
 		/// </summary>
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchExists">which contains results for keys that did complete</exception>
-		public bool[] Exists(BatchPolicy policy, Key[] keys)
+		public async Task<bool[]> Exists(BatchPolicy policy, Key[] keys)
 		{
 			if (keys.Length == 0)
 			{
@@ -692,7 +693,7 @@ namespace Aerospike.Client
 					Node node = cluster.GetRandomNode();
 					BatchNode batchNode = new BatchNode(node, keys);
 					BatchCommand command = new BatchExistsArrayCommand(cluster, batchNode, policy, keys, existsArray, status);
-					BatchExecutor.Execute(command, status);
+					await BatchExecutor.Execute(command, status);
 					return existsArray;
 				}
 
@@ -704,14 +705,14 @@ namespace Aerospike.Client
 				{
 					commands[count++] = new BatchExistsArrayCommand(cluster, batchNode, policy, keys, existsArray, status);
 				}
-				BatchExecutor.Execute(policy, commands, status);
+				await BatchExecutor.Execute(policy, commands, status);
 				return existsArray;
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchExists(existsArray, e);
 			}
-		}
+		}*/
 		
 		//-------------------------------------------------------
 		// Read Record Operations
@@ -725,14 +726,14 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults </param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		public Record Get(Policy policy, Key key)
+		public async Task<Record> Get(Policy policy, Key key)
 		{
 			if (policy == null)
 			{
 				policy = readPolicyDefault;
 			}
 			ReadCommand command = new ReadCommand(cluster, policy, key);
-			command.Execute();
+			await command.Execute();
 			return command.Record;
 		}
 
@@ -745,14 +746,14 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="binNames">bins to retrieve</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		public Record Get(Policy policy, Key key, params string[] binNames)
+		public async Task<Record> Get(Policy policy, Key key, params string[] binNames)
 		{
 			if (policy == null)
 			{
 				policy = readPolicyDefault;
 			}
 			ReadCommand command = new ReadCommand(cluster, policy, key, binNames);
-			command.Execute();
+			await command.Execute();
 			return command.Record;
 		}
 
@@ -764,14 +765,14 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="key">unique record identifier</param>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		public Record GetHeader(Policy policy, Key key)
+		public async Task<Record> GetHeader(Policy policy, Key key)
 		{
 			if (policy == null)
 			{
 				policy = readPolicyDefault;
 			}
 			ReadHeaderCommand command = new ReadHeaderCommand(cluster, policy, key);
-			command.Execute();
+			await command.Execute();
 			return command.Record;
 		}
 
@@ -779,7 +780,7 @@ namespace Aerospike.Client
 		// Batch Read Operations
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified batch keys in one batch call.
 		/// This method allows different namespaces/bins to be requested for each key in the batch.
 		/// The returned records are located in the same list.
@@ -790,7 +791,7 @@ namespace Aerospike.Client
 		/// The returned records are located in the same list.</param>
 		/// <returns>true if all batch key requests succeeded</returns>
 		/// <exception cref="AerospikeException">if read fails</exception>
-		public bool Get(BatchPolicy policy, List<BatchRead> records)
+		public async Task<bool> Get(BatchPolicy policy, List<BatchRead> records)
 		{
 			if (records.Count == 0)
 			{
@@ -811,11 +812,11 @@ namespace Aerospike.Client
 			{
 				commands[count++] = new BatchReadListCommand(cluster, batchNode, policy, records, status);
 			}
-			BatchExecutor.Execute(policy, commands, status);
+			await BatchExecutor.Execute(policy, commands, status);
 			return status.GetStatus();
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -823,7 +824,7 @@ namespace Aerospike.Client
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		public Record[] Get(BatchPolicy policy, Key[] keys)
+		public async Task<Record[]> Get(BatchPolicy policy, Key[] keys)
 		{
 			if (keys.Length == 0)
 			{
@@ -847,7 +848,7 @@ namespace Aerospike.Client
 					Node node = cluster.GetRandomNode();
 					BatchNode batchNode = new BatchNode(node, keys);
 					BatchCommand command = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, null, records, Command.INFO1_READ | Command.INFO1_GET_ALL, false, status);
-					BatchExecutor.Execute(command, status);
+					await BatchExecutor.Execute(command, status);
 					return records;
 				}
 
@@ -859,16 +860,16 @@ namespace Aerospike.Client
 				{
 					commands[count++] = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, null, records, Command.INFO1_READ | Command.INFO1_GET_ALL, false, status);
 				}
-				BatchExecutor.Execute(policy, commands, status);
+				await BatchExecutor.Execute(policy, commands, status);
 				return records;
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple record headers and bins for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -877,7 +878,7 @@ namespace Aerospike.Client
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <param name="binNames">array of bins to retrieve</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		public Record[] Get(BatchPolicy policy, Key[] keys, params string[] binNames)
+		public async Task<Record[]> Get(BatchPolicy policy, Key[] keys, params string[] binNames)
 		{
 			if (keys.Length == 0)
 			{
@@ -901,7 +902,7 @@ namespace Aerospike.Client
 					Node node = cluster.GetRandomNode();
 					BatchNode batchNode = new BatchNode(node, keys);
 					BatchCommand command = new BatchGetArrayCommand(cluster, batchNode, policy, keys, binNames, null, records, Command.INFO1_READ, false, status);
-					BatchExecutor.Execute(command, status);
+					await BatchExecutor.Execute(command, status);
 					return records;
 				}
 
@@ -913,16 +914,16 @@ namespace Aerospike.Client
 				{
 					commands[count++] = new BatchGetArrayCommand(cluster, batchNode, policy, keys, binNames, null, records, Command.INFO1_READ, false, status);
 				}
-				BatchExecutor.Execute(policy, commands, status);
+				await BatchExecutor.Execute(policy, commands, status);
 				return records;
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple records for specified keys using read operations in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -931,7 +932,7 @@ namespace Aerospike.Client
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <param name="ops">array of read operations on record</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		public Record[] Get(BatchPolicy policy, Key[] keys, params Operation[] ops)
+		public async Task<Record[]> Get(BatchPolicy policy, Key[] keys, params Operation[] ops)
 		{
 			if (keys.Length == 0)
 			{
@@ -955,7 +956,7 @@ namespace Aerospike.Client
 					Node node = cluster.GetRandomNode();
 					BatchNode batchNode = new BatchNode(node, keys);
 					BatchCommand command = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, ops, records, Command.INFO1_READ, true, status);
-					BatchExecutor.Execute(command, status);
+					await BatchExecutor.Execute(command, status);
 					return records;
 				}
 
@@ -967,16 +968,16 @@ namespace Aerospike.Client
 				{
 					commands[count++] = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, ops, records, Command.INFO1_READ, true, status);
 				}
-				BatchExecutor.Execute(policy, commands, status);
+				await BatchExecutor.Execute(policy, commands, status);
 				return records;
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read multiple record header data for specified keys in one batch call.
 		/// The returned records are in positional order with the original key array order.
 		/// If a key is not found, the positional record will be null.
@@ -984,7 +985,7 @@ namespace Aerospike.Client
 		/// <param name="policy">batch configuration parameters, pass in null for defaults</param>
 		/// <param name="keys">array of unique record identifiers</param>
 		/// <exception cref="AerospikeException.BatchRecords">which contains results for keys that did complete</exception>
-		public Record[] GetHeader(BatchPolicy policy, Key[] keys)
+		public async Task<Record[]> GetHeader(BatchPolicy policy, Key[] keys)
 		{
 			if (keys.Length == 0)
 			{
@@ -1008,7 +1009,7 @@ namespace Aerospike.Client
 					Node node = cluster.GetRandomNode();
 					BatchNode batchNode = new BatchNode(node, keys);
 					BatchCommand command = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, null, records, Command.INFO1_READ | Command.INFO1_NOBINDATA, false, status);
-					BatchExecutor.Execute(command, status);
+					await BatchExecutor.Execute(command, status);
 					return records;
 				}
 
@@ -1020,20 +1021,20 @@ namespace Aerospike.Client
 				{
 					commands[count++] = new BatchGetArrayCommand(cluster, batchNode, policy, keys, null, null, records, Command.INFO1_READ | Command.INFO1_NOBINDATA, false, status);
 				}
-				BatchExecutor.Execute(policy, commands, status);
+				await BatchExecutor.Execute(policy, commands, status);
 				return records;
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchRecords(records, e);
 			}
-		}
+		}*/
 
 		//-------------------------------------------------------
 		// Join methods
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read specified bins in left record and then join with right records.  Each join bin name
 		/// (Join.leftKeysBinName) must exist in the left record.  The join bin must contain a list of 
 		/// keys. Those key are used to retrieve other records using a separate batch get.
@@ -1043,7 +1044,7 @@ namespace Aerospike.Client
 		/// <param name="binNames">array of bins to retrieve</param>
 		/// <param name="joins">array of join definitions</param>
 		/// <exception cref="AerospikeException">if main read or join reads fail</exception>
-		public Record Join(BatchPolicy policy, Key key, string[] binNames, params Join[] joins)
+		public async Task<Record> Join(BatchPolicy policy, Key key, string[] binNames, params Join[] joins)
 		{
 			string[] names = new string[binNames.Length + joins.Length];
 			int count = 0;
@@ -1057,12 +1058,12 @@ namespace Aerospike.Client
 			{
 				names[count++] = join.leftKeysBinName;
 			}
-			Record record = Get(policy, key, names);
-			JoinRecords(policy, record, joins);
+			Record record = await Get(policy, key, names);
+			await JoinRecords(policy, record, joins);
 			return record;
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Read all bins in left record and then join with right records.  Each join bin name
 		/// (Join.binNameKeys) must exist in the left record.  The join bin must contain a list of 
 		/// keys. Those key are used to retrieve other records using a separate batch get.
@@ -1071,12 +1072,12 @@ namespace Aerospike.Client
 		/// <param name="key">unique main record identifier</param>
 		/// <param name="joins">array of join definitions</param>
 		/// <exception cref="AerospikeException">if main read or join reads fail</exception>
-		public Record Join(BatchPolicy policy, Key key, params Join[] joins)
+		public async Task<Record> Join(BatchPolicy policy, Key key, params Join[] joins)
 		{
-			Record record = Get(policy, key);
-			JoinRecords(policy, record, joins);
+			Record record = await Get(policy, key);
+			await JoinRecords(policy, record, joins);
 			return record;
-		}
+		}*/
 
 		//-------------------------------------------------------
 		// Generic Database Operations
@@ -1096,11 +1097,11 @@ namespace Aerospike.Client
 		/// <param name="key">unique record identifier</param>
 		/// <param name="operations">database operations to perform</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public Record Operate(WritePolicy policy, Key key, params Operation[] operations)
+		public async Task<Record> Operate(WritePolicy policy, Key key, params Operation[] operations)
 		{
 			OperateArgs args = new OperateArgs(cluster, policy, writePolicyDefault, operatePolicyReadDefault, key, operations);
 			OperateCommand command = new OperateCommand(cluster, key, args);
-			command.Execute();
+			await command.Execute();
 			return command.Record;
 		}
 
@@ -1108,7 +1109,7 @@ namespace Aerospike.Client
 		// Batch Read/Write Operations
 		//-------------------------------------------------------
 
-		/// <summary>
+		/*/// <summary>
 		/// Read/Write multiple records for specified batch keys in one batch call.
 		/// This method allows different namespaces/bins for each key in the batch.
 		/// The returned records are located in the same list.
@@ -1124,7 +1125,7 @@ namespace Aerospike.Client
 		/// <param name="records">list of unique record identifiers and read/write operations</param>
 		/// <returns>true if all batch sub-commands succeeded</returns>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public bool Operate(BatchPolicy policy, List<BatchRecord> records)
+		public async Task<bool> Operate(BatchPolicy policy, List<BatchRecord> records)
 		{
 			if (records.Count == 0)
 			{
@@ -1145,11 +1146,11 @@ namespace Aerospike.Client
 			{
 				commands[count++] = new BatchOperateListCommand(cluster, batchNode, policy, records, status);
 			}
-			BatchExecutor.Execute(policy, commands, status);
+			await BatchExecutor.Execute(policy, commands, status);
 			return status.GetStatus();
-		}
+		}*/
 
-		/// <summary>
+		/*/// <summary>
 		/// Perform read/write operations on multiple keys. If a key is not found, the corresponding result
 		/// <see cref="BatchRecord.resultCode"/> will be <see cref="ResultCode.KEY_NOT_FOUND_ERROR"/>.
 		/// <para>
@@ -1165,7 +1166,7 @@ namespace Aerospike.Client
 		/// results. Instead, use <see cref="Operation.Get(string)"/> for each bin name.
 		/// </param>
 		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		public BatchResults Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops)
+		public async Task<BatchResults> Operate(BatchPolicy batchPolicy, BatchWritePolicy writePolicy, Key[] keys, params Operation[] ops)
 		{
 			if (keys.Length == 0)
 			{
@@ -1202,401 +1203,18 @@ namespace Aerospike.Client
 					commands[count++] = new BatchOperateArrayCommand(cluster, batchNode, batchPolicy, keys, ops, records, attr, status);
 				}
 
-				BatchExecutor.Execute(batchPolicy, commands, status);
+				await BatchExecutor.Execute(batchPolicy, commands, status);
 				return new BatchResults(records, status.GetStatus());
 			}
 			catch (Exception e)
 			{
 				throw new AerospikeException.BatchRecordArray(records, e);
 			}
-		}
-
-		//-------------------------------------------------------
-		// Scan Operations
-		//-------------------------------------------------------
-
-		/// <summary>
-		/// Read all records in specified namespace and set.  If the policy's 
-		/// concurrentNodes is specified, each server node will be read in
-		/// parallel.  Otherwise, server nodes are read in series.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public void ScanAll(ScanPolicy policy, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			PartitionTracker tracker = new PartitionTracker(policy, nodes);
-			ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// The node is specified by name.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="nodeName">server node name</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public void ScanNode(ScanPolicy policy, string nodeName, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			Node node = cluster.GetNode(nodeName);
-			ScanNode(policy, node, ns, setName, callback, binNames);
-		}
-
-		/// <summary>
-		/// Read all records in specified namespace and set for one node only.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="node">server node</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">
-		/// optional bin to retrieve. All bins will be returned if not specified.
-		/// </param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public void ScanNode(ScanPolicy policy, Node node, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			PartitionTracker tracker = new PartitionTracker(policy, node);
-			ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
-		/// <summary>
-		/// Read records in specified namespace, set and partition filter.
-		/// <para>
-		/// This call will block until the scan is complete - callbacks are made
-		/// within the scope of this call.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">scan configuration parameters, pass in null for defaults</param>
-		/// <param name="partitionFilter">filter on a subset of data partitions</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="callback">read callback method - called with record data</param>
-		/// <param name="binNames">optional bin to retrieve. All bins will be returned if not specified.</param>
-		/// <exception cref="AerospikeException">if scan fails</exception>
-		public void ScanPartitions(ScanPolicy policy, PartitionFilter partitionFilter, string ns, string setName, ScanCallback callback, params string[] binNames)
-		{
-			if (policy == null)
-			{
-				policy = scanPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			PartitionTracker tracker = new PartitionTracker(policy, nodes, partitionFilter);
-			ScanExecutor.ScanPartitions(cluster, policy, ns, setName, binNames, callback, tracker);
-		}
-
-		//---------------------------------------------------------------
-		// User defined functions
-		//---------------------------------------------------------------
-
-		/// <summary>
-		/// Register package located in a file containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="clientPath">path of client file containing user defined functions, relative to current directory</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public RegisterTask Register(Policy policy, string clientPath, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			string content = Util.ReadFileEncodeBase64(clientPath);
-			return RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
-
-		/// <summary>
-		/// Register package located in a resource containing user defined functions with server.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="resourceAssembly">assembly where resource is located.  Current assembly can be obtained by: Assembly.GetExecutingAssembly()</param>
-		/// <param name="resourcePath">namespace path where Lua resource is located.  Example: Aerospike.Client.Resources.mypackage.lua</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public RegisterTask Register(Policy policy, Assembly resourceAssembly, string resourcePath, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			string content;
-			using (Stream stream = resourceAssembly.GetManifestResourceStream(resourcePath))
-			{
-				byte[] bytes = new byte[stream.Length];
-				stream.Read(bytes, 0, bytes.Length);
-				content = Convert.ToBase64String(bytes);
-			}
-			return RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
-
-		/// <summary>
-		/// Register UDF functions located in a code string with server. Example:
-		/// <code>
-		/// String code = @"
-		/// local function reducer(val1,val2)
-		///	  return val1 + val2
-		/// end
-		///
-		/// function sum_single_bin(stream,name)
-		///   local function mapper(rec)
-		///     return rec[name]
-		///   end
-		///   return stream : map(mapper) : reduce(reducer)
-		/// end
-		///";
-		///
-		///	client.RegisterUdfString(null, code, "mysum.lua", Language.LUA);
-		/// </code>
-		/// <para>
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// RegisterTask instance.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="code">code string containing user defined functions</param>
-		/// <param name="serverPath">path to store user defined functions on the server, relative to configured script directory.</param>
-		/// <param name="language">language of user defined functions</param>
-		/// <exception cref="AerospikeException">if register fails</exception>
-		public RegisterTask RegisterUdfString(Policy policy, string code, string serverPath, Language language)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			byte[] bytes = ByteUtil.StringToUtf8(code);
-			string content = Convert.ToBase64String(bytes);
-			return RegisterCommand.Register(cluster, policy, content, serverPath, language);
-		}
-
-		/// <summary>
-		/// Remove user defined function from server nodes.
-		/// </summary>
-		/// <param name="policy">info configuration parameters, pass in null for defaults</param>
-		/// <param name="serverPath">location of UDF on server nodes.  Example: mylua.lua </param>
-		/// <exception cref="AerospikeException">if remove fails</exception>
-		public void RemoveUdf(InfoPolicy policy, string serverPath)
-		{
-			if (policy == null)
-			{
-				policy = infoPolicyDefault;
-			}
-			// Send UDF command to one node. That node will distribute the UDF command to other nodes.
-			string command = "udf-remove:filename=" + serverPath;
-			Node node = cluster.GetRandomNode();
-			string response = Info.Request(policy, node, command);
-
-			if (response.Equals("ok", StringComparison.CurrentCultureIgnoreCase))
-			{
-				return;
-			}
-
-			if (response.StartsWith("error=file_not_found"))
-			{
-				// UDF has already been removed.
-				return;
-			}
-			throw new AerospikeException("Remove UDF failed: " + response);
-		}
-
-		/// <summary>
-		/// Execute user defined function on server and return results.
-		/// The function operates on a single record.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="key">unique record identifier</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="args">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException">if transaction fails</exception>
-		public object Execute(WritePolicy policy, Key key, string packageName, string functionName, params Value[] args)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			ExecuteCommand command = new ExecuteCommand(cluster, policy, key, packageName, functionName, args);
-			command.Execute();
-
-			Record record = command.Record;
-
-			if (record == null || record.bins == null)
-			{
-				return null;
-			}
-
-			IDictionary<string, object> map = record.bins;
-			object obj;
-
-			if (map.TryGetValue("SUCCESS", out obj))
-			{
-				return obj;
-			}
-
-			if (map.TryGetValue("FAILURE", out obj))
-			{
-				throw new AerospikeException(obj.ToString());
-			}
-			throw new AerospikeException("Invalid UDF return value");
-		}
-
-		/// <summary>
-		/// Execute user defined function on server for each key and return results.
-		/// The package name is used to locate the udf file location:
-		/// <para>
-		/// udf file = &lt;server udf dir&gt;/&lt;package name&gt;.lua
-		/// </para>
-		/// <para>
-		/// Requires server version 6.0+
-		/// </para>
-		/// </summary>
-		/// <param name="batchPolicy">batch configuration parameters, pass in null for defaults</param>
-		/// <param name="udfPolicy">udf configuration parameters, pass in null for defaults</param>
-		/// <param name="keys">array of unique record identifiers</param>
-		/// <param name="packageName">server package name where user defined function resides</param>
-		/// <param name="functionName">user defined function</param>
-		/// <param name="functionArgs">arguments passed in to user defined function</param>
-		/// <exception cref="AerospikeException.BatchRecordArray">which contains results for keys that did complete</exception>
-		public BatchResults Execute(BatchPolicy batchPolicy, BatchUDFPolicy udfPolicy, Key[] keys, string packageName, string functionName, params Value[] functionArgs)
-		{
-			if (keys.Length == 0)
-			{
-				return new BatchResults(new BatchRecord[0], true);
-			}
-
-			if (batchPolicy == null)
-			{
-				batchPolicy = batchParentPolicyWriteDefault;
-			}
-
-			if (udfPolicy == null)
-			{
-				udfPolicy = batchUDFPolicyDefault;
-			}
-
-			byte[] argBytes = Packer.Pack(functionArgs);
-
-			BatchAttr attr = new BatchAttr();
-			attr.SetUDF(udfPolicy);
-
-			BatchRecord[] records = new BatchRecord[keys.Length];
-
-			for (int i = 0; i < keys.Length; i++)
-			{
-				records[i] = new BatchRecord(keys[i], attr.hasWrite);
-			}
-
-			try
-			{
-				BatchStatus status = new BatchStatus(true);
-				List<BatchNode> batchNodes = BatchNode.GenerateList(cluster, batchPolicy, keys, records, attr.hasWrite, status);
-				BatchCommand[] commands = new BatchCommand[batchNodes.Count];
-				int count = 0;
-
-				foreach (BatchNode batchNode in batchNodes)
-				{
-					commands[count++] = new BatchUDFCommand(cluster, batchNode, batchPolicy, keys, packageName, functionName, argBytes, records, attr, status);
-				}
-
-				BatchExecutor.Execute(batchPolicy, commands, status);
-				return new BatchResults(records, status.GetStatus());
-			}
-			catch (Exception e)
-			{
-				// Batch terminated on fatal error.
-				throw new AerospikeException.BatchRecordArray(records, e);
-			}
-		}
+		}*/
 
 		//----------------------------------------------------------
 		// Query/Execute
 		//----------------------------------------------------------
-
-		/// <summary>
-		/// Apply user defined function on records that match the background query statement filter.
-		/// Records are not returned to the client.
-		/// This asynchronous server call will return before the command is complete.  
-		/// The user can optionally wait for command completion by using the returned 
-		/// ExecuteTask instance.
-		/// </summary>
-		/// <param name="policy">configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">background query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">function name</param>
-		/// <param name="functionArgs">to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if command fails</exception>
-		public ExecuteTask Execute(WritePolicy policy, Statement statement, string packageName, string functionName, params Value[] functionArgs)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-
-			statement.PackageName = packageName;
-			statement.FunctionName = functionName;
-			statement.FunctionArgs = functionArgs;
-
-			ulong taskId = statement.PrepareTaskId();
-			Node[] nodes = cluster.ValidateNodes();
-			Executor executor = new Executor(nodes.Length);
-
-			foreach (Node node in nodes)
-			{
-				ServerCommand command = new ServerCommand(cluster, node, policy, statement, taskId);
-				executor.AddCommand(command);
-			}
-
-			executor.Execute(nodes.Length);
-			return new ExecuteTask(cluster, policy, statement, taskId);
-		}
 
 		/// <summary>
 		/// Apply operations on records that match the background query statement filter.
@@ -1609,7 +1227,7 @@ namespace Aerospike.Client
 		/// <param name="statement">background query definition</param>
 		/// <param name="operations">list of operations to be performed on selected records</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations)
+		/*public ExecuteTask Execute(WritePolicy policy, Statement statement, params Operation[] operations)
 		{
 			if (policy == null)
 			{
@@ -1620,16 +1238,15 @@ namespace Aerospike.Client
 
 			ulong taskId = statement.PrepareTaskId();
 			Node[] nodes = cluster.ValidateNodes();
-			Executor executor = new Executor(nodes.Length);
 
 			foreach (Node node in nodes)
 			{
 				ServerCommand command = new ServerCommand(cluster, node, policy, statement, taskId);
 				executor.AddCommand(command);
 			}
-			executor.Execute(nodes.Length);
+			executor.Execute(nodes.Length).Wait();
 			return new ExecuteTask(cluster, policy, statement, taskId);
-		}
+		}*/
 
 		//--------------------------------------------------------
 		// Query functions
@@ -1642,16 +1259,16 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="action">action methods to be called for each record</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public void Query(QueryPolicy policy, Statement statement, Action<Key, Record> action)
+		/*public async Task Query(QueryPolicy policy, Statement statement, Action<Key, Record> action)
 		{
-			using (RecordSet rs = Query(policy, statement))
+			using (RecordSet rs = await Query(policy, statement))
 			{
 				while (rs.Next())
 				{
 					action(rs.Key, rs.Record);
 				}
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Execute query and return record iterator.  The query executor puts records on a queue in 
@@ -1661,8 +1278,10 @@ namespace Aerospike.Client
 		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public RecordSet Query(QueryPolicy policy, Statement statement)
+		public IEnumerable<KeyRecord> Query(QueryPolicy policy, Statement statement)
 		{
+			//System.Diagnostics.Debugger.Launch();
+
 			if (policy == null)
 			{
 				policy = queryPolicyDefault;
@@ -1670,18 +1289,17 @@ namespace Aerospike.Client
 
 			Node[] nodes = cluster.ValidateNodes();
 
-			if (cluster.hasPartitionQuery || statement.filter == null)
+			//if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes);
 				QueryPartitionExecutor executor = new QueryPartitionExecutor(cluster, policy, statement, nodes.Length, tracker);
-				return executor.RecordSet;
+				return executor.Run(null);
 			}
-			else
-			{
-				QueryRecordExecutor executor = new QueryRecordExecutor(cluster, policy, statement, nodes);
-				executor.Execute();
-				return executor.RecordSet;
-			}
+			//else
+			//{
+			//	QueryRecordExecutor executor = new QueryRecordExecutor(cluster, policy, statement, nodes);
+			//	
+			//}
 		}
 
 		/// <summary>
@@ -1698,9 +1316,8 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
 		/// <param name="statement">query definition</param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public void Query(QueryPolicy policy, Statement statement, QueryListener listener)
+		/*public async Task Query(QueryPolicy policy, Statement statement)
 		{
 			if (policy == null)
 			{
@@ -1712,13 +1329,14 @@ namespace Aerospike.Client
 			if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes);
-				QueryListenerExecutor.execute(cluster, policy, statement, listener, tracker);
 			}
 			else
 			{
-				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
+				//new AsyncQueryExecutor(cluster, policy, statement, nodes);
+				var command = new QueryRecordCommand(cluster, nodes, policy, statement);
+				await command.Execute();
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Execute query for specified partitions and return records via the listener. This method will
@@ -1742,14 +1360,12 @@ namespace Aerospike.Client
 		/// <param name="partitionFilter">
 		/// data partition filter. Set to <see cref="PartitionFilter.All"/> for all partitions.
 		/// </param>
-		/// <param name="listener">where to send results</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public void Query
+		/*public async Task Query
 		(
 			QueryPolicy policy,
 			Statement statement,
-			PartitionFilter partitionFilter,
-			QueryListener listener
+			PartitionFilter partitionFilter
 		)
 		{
 			if (policy == null)
@@ -1762,13 +1378,13 @@ namespace Aerospike.Client
 			if (cluster.hasPartitionQuery || statement.filter == null)
 			{
 				PartitionTracker tracker = new PartitionTracker(policy, statement, nodes, partitionFilter);
-				QueryListenerExecutor.execute(cluster, policy, statement, listener, tracker);
+				await QueryListenerExecutor.execute(cluster, policy, statement, tracker);
 			}
 			else
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "Query by partition is not supported");
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Execute query for specified partitions and return record iterator.  The query executor puts
@@ -1782,7 +1398,7 @@ namespace Aerospike.Client
 		/// <param name="statement">query definition</param>
 		/// <param name="partitionFilter">filter on a subset of data partitions</param>
 		/// <exception cref="AerospikeException">if query fails</exception>
-		public RecordSet QueryPartitions
+		/*public RecordSet QueryPartitions
 		(
 			QueryPolicy policy,
 			Statement statement,
@@ -1806,237 +1422,7 @@ namespace Aerospike.Client
 			{
 				throw new AerospikeException(ResultCode.PARAMETER_ERROR, "QueryPartitions() not supported");
 			}
-		}
-
-		/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be located in a Lua script file that can be found from the 
-		/// "LuaConfig.PackagePath" paths static variable.  The default package path is "udf/?.lua"
-		/// where "?" is the packageName.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">query definition</param>
-		/// <param name="packageName">server package where user defined function resides</param>
-		/// <param name="functionName">aggregation function name</param>
-		/// <param name="functionArgs">arguments to pass to function name, if any</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public ResultSet QueryAggregate
-		(
-			QueryPolicy policy,
-			Statement statement,
-			string packageName,
-			string functionName,
-			params Value[] functionArgs
-		)
-		{
-			statement.SetAggregateFunction(packageName, functionName, functionArgs);
-			return QueryAggregate(policy, statement);
-		}
-
-		/// <summary>
-		/// Execute query, apply statement's aggregation function, call action for each aggregation
-		/// object returned from server. 
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <param name="action">action methods to be called for each aggregation object</param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public void QueryAggregate(QueryPolicy policy, Statement statement, Action<Object> action)
-		{
-			using (ResultSet rs = QueryAggregate(policy, statement))
-			{
-				while (rs.Next())
-				{
-					action(rs.Object);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Execute query, apply statement's aggregation function, and return result iterator. 
-		/// The aggregation function should be initialized via the statement's SetAggregateFunction()
-		/// and should be located in a Lua resource file located in an assembly.
-		/// <para>
-		/// The query executor puts results on a queue in separate threads.  The calling thread 
-		/// concurrently pops results off the queue through the ResultSet iterator.
-		/// The aggregation function is called on both server and client (final reduce).
-		/// Therefore, the Lua script file must also reside on both server and client.
-		/// </para>
-		/// </summary>
-		/// <param name="policy">query configuration parameters, pass in null for defaults</param>
-		/// <param name="statement">
-		/// query definition with aggregate functions already initialized by SetAggregateFunction().
-		/// </param>
-		/// <exception cref="AerospikeException">if query fails</exception>
-		public ResultSet QueryAggregate(QueryPolicy policy, Statement statement)
-		{
-			if (policy == null)
-			{
-				policy = queryPolicyDefault;
-			}
-
-			Node[] nodes = cluster.ValidateNodes();
-			QueryAggregateExecutor executor = new QueryAggregateExecutor(cluster, policy, statement, nodes);
-			executor.Execute();
-			return executor.ResultSet;
-		}
-
-		//--------------------------------------------------------
-		// Secondary Index functions
-		//--------------------------------------------------------
-
-		/// <summary>
-		/// Create scalar secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		public IndexTask CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType
-		)
-		{
-			return CreateIndex(policy, ns, setName, indexName, binName, indexType, IndexCollectionType.DEFAULT);	
-		}
-
-		/// <summary>
-		/// Create complex secondary index on bins containing collections.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <param name="binName">bin name that data is indexed on</param>
-		/// <param name="indexType">underlying data type of secondary index</param>
-		/// <param name="indexCollectionType">index collection type</param>
-		/// <param name="ctx">optional context to index on elements within a CDT</param>
-		/// <exception cref="AerospikeException">if index create fails</exception>
-		public IndexTask CreateIndex
-		(
-			Policy policy,
-			string ns,
-			string setName,
-			string indexName,
-			string binName,
-			IndexType indexType,
-			IndexCollectionType indexCollectionType,
-			params CTX[] ctx
-		)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-
-			StringBuilder sb = new StringBuilder(1024);
-			sb.Append("sindex-create:ns=");
-			sb.Append(ns);
-
-			if (setName != null && setName.Length > 0)
-			{
-				sb.Append(";set=");
-				sb.Append(setName);
-			}
-
-			sb.Append(";indexname=");
-			sb.Append(indexName);
-
-			if (ctx != null && ctx.Length > 0)
-			{
-				byte[] bytes = PackUtil.Pack(ctx);
-				string base64 = Convert.ToBase64String(bytes);
-
-				sb.Append(";context=");
-				sb.Append(base64);
-			}
-
-			if (indexCollectionType != IndexCollectionType.DEFAULT)
-			{
-				sb.Append(";indextype=");
-				sb.Append(indexCollectionType);
-			}
-
-			sb.Append(";indexdata=");
-			sb.Append(binName);
-			sb.Append(",");
-			sb.Append(indexType);
-
-			// Send index command to one node. That node will distribute the command to other nodes.
-			String response = SendInfoCommand(policy, sb.ToString());
-
-			if (response.Equals("OK", StringComparison.CurrentCultureIgnoreCase))
-			{
-				// Return task that could optionally be polled for completion.
-				return new IndexTask(cluster, policy, ns, indexName, true);
-			}
-
-			ParseInfoError("Create index failed", response);
-			return null;
-		}
-		
-		/// <summary>
-		/// Delete secondary index.
-		/// This asynchronous server call will return before command is complete.
-		/// The user can optionally wait for command completion by using the returned
-		/// IndexTask instance.
-		/// </summary>
-		/// <param name="policy">generic configuration parameters, pass in null for defaults</param>
-		/// <param name="ns">namespace - equivalent to database name</param>
-		/// <param name="setName">optional set name - equivalent to database table</param>
-		/// <param name="indexName">name of secondary index</param>
-		/// <exception cref="AerospikeException">if index drop fails</exception>
-		public IndexTask DropIndex(Policy policy, string ns, string setName, string indexName)
-		{
-			if (policy == null)
-			{
-				policy = writePolicyDefault;
-			}
-			StringBuilder sb = new StringBuilder(500);
-			sb.Append("sindex-delete:ns=");
-			sb.Append(ns);
-
-			if (setName != null && setName.Length > 0)
-			{
-				sb.Append(";set=");
-				sb.Append(setName);
-			}
-			sb.Append(";indexname=");
-			sb.Append(indexName);
-
-			// Send index command to one node. That node will distribute the command to other nodes.
-			String response = SendInfoCommand(policy, sb.ToString());
-
-			if (response.Equals("OK", StringComparison.CurrentCultureIgnoreCase))
-			{
-				return new IndexTask(cluster, policy, ns, indexName, false);
-			}
-
-			ParseInfoError("Drop index failed", response);
-			return null;
-		}
+		}*/
 
 		//-----------------------------------------------------------------
 		// XDR - Cross datacenter replication
@@ -2291,20 +1677,20 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="user">user name filter</param>
-		public User QueryUser(AdminPolicy policy, string user)
+		public async Task<User> QueryUser(AdminPolicy policy, string user)
 		{
 			AdminCommand.UserCommand command = new AdminCommand.UserCommand(1);
-			return command.QueryUser(cluster, policy, user);
+			return await command.QueryUser(cluster, policy, user);
 		}
 
 		/// <summary>
 		/// Retrieve all users and their roles.
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
-		public List<User> QueryUsers(AdminPolicy policy)
+		public async Task<List<User>> QueryUsers(AdminPolicy policy)
 		{
 			AdminCommand.UserCommand command = new AdminCommand.UserCommand(100);
-			return command.QueryUsers(cluster, policy);
+			return await command.QueryUsers(cluster, policy);
 		}
 
 		/// <summary>
@@ -2313,10 +1699,10 @@ namespace Aerospike.Client
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <param name="roleName">role name filter</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public Role QueryRole(AdminPolicy policy, string roleName)
+		public async Task<Role> QueryRole(AdminPolicy policy, string roleName)
 		{
 			AdminCommand.RoleCommand command = new AdminCommand.RoleCommand(1);
-			return command.QueryRole(cluster, policy, roleName);
+			return await command.QueryRole(cluster, policy, roleName);
 		}
 
 		/// <summary>
@@ -2324,10 +1710,10 @@ namespace Aerospike.Client
 		/// </summary>
 		/// <param name="policy">admin configuration parameters, pass in null for defaults</param>
 		/// <exception cref="AerospikeException">if command fails</exception>
-		public List<Role> QueryRoles(AdminPolicy policy)
+		public async Task<List<Role>> QueryRoles(AdminPolicy policy)
 		{
 			AdminCommand.RoleCommand command = new AdminCommand.RoleCommand(100);
-			return command.QueryRoles(cluster, policy);
+			return await command.QueryRoles(cluster, policy);
 		}
 
 		//-------------------------------------------------------
@@ -2374,7 +1760,7 @@ namespace Aerospike.Client
 			throw new AerospikeException(message);
 		}
 
-		private void JoinRecords(BatchPolicy policy, Record record, Join[] joins)
+		/*private async Task JoinRecords(BatchPolicy policy, Record record, Join[] joins)
 		{
 			if (record == null)
 			{
@@ -2399,15 +1785,15 @@ namespace Aerospike.Client
 					Record[] records;
 					if (join.rightBinNames == null || join.rightBinNames.Length == 0)
 					{
-						records = Get(policy, keyArray);
+						records = await Get(policy, keyArray);
 					}
 					else
 					{
-						records = Get(policy, keyArray, join.rightBinNames);
+						records = await Get(policy, keyArray, join.rightBinNames);
 					}
 					record.bins[join.leftKeysBinName] = records;
 				}
 			}
-		}
+		}*/
 	}
 }
